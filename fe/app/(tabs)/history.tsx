@@ -16,9 +16,11 @@ import {
 import { useRouter } from 'expo-router';
 import { imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { getImageUrl } from '../../constants/Environment';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
 
 const { width } = Dimensions.get('window');
 
@@ -80,32 +82,37 @@ const HistoryScreen = () => {
 
   const renderImage = ({ item }: { item: ImageItem }) => {
     return (
-      <TouchableOpacity
-        style={styles.imageCard}
-        onPress={() => {
-          setSelectedImage(item);
-          setModalVisible(true);
-        }}
-      >
-        <Image
-          source={{ uri: item.url }}
-          style={styles.image}
-          resizeMode="cover"
-          onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-        />
-        {/* Overlay for loading/error state */}
-        <View style={styles.imageOverlay}>
-          <Ionicons name="image-outline" size={24} color="#ccc" />
-        </View>
-        <View style={styles.captionContainer}>
-          <Text style={styles.caption} numberOfLines={2}>
-            {item.description || 'No caption available'}
-          </Text>
-          <Text style={styles.dateText}>
-            {new Date(item.created_at).toLocaleDateString()}
-          </Text>
-        </View>
-      </TouchableOpacity>
+      <Animatable.View animation="fadeIn" duration={800}>
+        <TouchableOpacity
+          style={styles.imageCard}
+          onPress={() => {
+            setSelectedImage(item);
+            setModalVisible(true);
+          }}
+          activeOpacity={0.9}
+        >
+          <View style={styles.imageWrapper}>
+            <Image
+              source={{ uri: item.url }}
+              style={styles.image}
+              resizeMode="cover"
+              onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+            />
+            {/* Overlay for loading/error state */}
+            <View style={styles.imageOverlay}>
+              <Ionicons name="image-outline" size={24} color="#ccc" />
+            </View>
+          </View>
+          <View style={styles.captionContainer}>
+            <Text style={styles.caption} numberOfLines={2}>
+              {item.description || 'No caption available'}
+            </Text>
+            <Text style={styles.dateText}>
+              {new Date(item.created_at).toLocaleDateString()}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animatable.View>
     );
   };
   
@@ -119,40 +126,55 @@ const HistoryScreen = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <BlurView intensity={80} style={styles.modalContainer}>
-          <TouchableOpacity 
-            style={styles.modalCloseButton}
-            onPress={() => setModalVisible(false)}
-          >
-            <Ionicons name="close-circle" size={30} color="#fff" />
-          </TouchableOpacity>
+        <BlurView intensity={90} style={styles.modalContainer}>
+          <Animatable.View animation="fadeIn" duration={300}>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setModalVisible(false)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="close-circle" size={34} color="#fff" />
+            </TouchableOpacity>
+          </Animatable.View>
           
-          <View style={styles.modalContent}>
-            <Image
-              source={{ uri: selectedImage.url }}
-              style={styles.modalImage}
-              resizeMode="contain"
-            />
+          <Animatable.View animation="zoomIn" duration={400} style={styles.modalContent}>
+            <View style={styles.modalImageContainer}>
+              <Image
+                source={{ uri: selectedImage.url }}
+                style={styles.modalImage}
+                resizeMode="contain"
+              />
+            </View>
             
             <View style={styles.modalCaptionContainer}>
-              <Text style={styles.modalCaptionTitle}>Caption:</Text>
+              <View style={styles.modalCaptionHeader}>
+                <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
+                <Text style={styles.modalCaptionTitle}>Image Caption</Text>
+              </View>
+              
               <Text style={styles.modalCaption}>
-                {selectedImage.description || 'No caption available'}
+                "{selectedImage.description || 'No caption available'}"
               </Text>
               
               {selectedImage.file_name && (
-                <Text style={styles.modalFileName}>
-                  File: {selectedImage.file_name}
-                </Text>
+                <View style={styles.modalInfoRow}>
+                  <Ionicons name="document-outline" size={18} color="#666" />
+                  <Text style={styles.modalFileName}>
+                    {selectedImage.file_name}
+                  </Text>
+                </View>
               )}
               
-              <Text style={styles.modalDate}>
-                Uploaded on: {new Date(selectedImage.created_at).toLocaleString()}
-              </Text>
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="calendar-outline" size={18} color="#666" />
+                <Text style={styles.modalDate}>
+                  {new Date(selectedImage.created_at).toLocaleString()}
+                </Text>
+              </View>
               
               <View style={styles.modalActions}>
                 <TouchableOpacity 
-                  style={styles.actionButton}
+                  style={styles.modalActionButton}
                   onPress={() => {
                     setModalVisible(false);
                     router.push({
@@ -160,13 +182,21 @@ const HistoryScreen = () => {
                       params: { imageId: selectedImage.id }
                     });
                   }}
+                  activeOpacity={0.8}
                 >
-                  <Ionicons name="create-outline" size={20} color="#fff" />
-                  <Text style={styles.actionButtonText}>Edit Caption</Text>
+                  <LinearGradient
+                    colors={['#3498DB', '#2874A6']}
+                    style={styles.modalButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name="create" size={20} color="#fff" />
+                    <Text style={styles.actionButtonText}>Edit Caption</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
-                  style={[styles.actionButton, styles.deleteButton]}
+                  style={styles.modalActionButton}
                   onPress={() => {
                     Alert.alert(
                       'Delete Image',
@@ -191,13 +221,21 @@ const HistoryScreen = () => {
                       ]
                     );
                   }}
+                  activeOpacity={0.8}
                 >
-                  <Ionicons name="trash-outline" size={20} color="#fff" />
-                  <Text style={styles.actionButtonText}>Delete</Text>
+                  <LinearGradient
+                    colors={['#E74C3C', '#C0392B']}
+                    style={styles.modalButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Ionicons name="trash" size={20} color="#fff" />
+                    <Text style={styles.actionButtonText}>Delete</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </Animatable.View>
         </BlurView>
       </Modal>
     );
@@ -206,46 +244,75 @@ const HistoryScreen = () => {
   const renderEmptyList = () => {
     if (loading) {
       return (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color="#2E86C1" />
+        <Animatable.View animation="fadeIn" duration={800} style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color="#1A5276" />
           <Text style={styles.emptyText}>Loading images...</Text>
-        </View>
+        </Animatable.View>
       );
     }
 
     return (
-      <View style={styles.emptyContainer}>
-        <Ionicons name="images-outline" size={80} color="#ccc" />
+      <Animatable.View animation="fadeIn" duration={800} style={styles.emptyContainer}>
+        <View style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons name="image-multiple-outline" size={90} color="#1A5276" />
+        </View>
         <Text style={styles.emptyText}>No images available</Text>
-        <Text style={styles.emptySubtext}>Be the first to upload an image!</Text>
+        <Text style={styles.emptySubtext}>Start by uploading your first image</Text>
         <TouchableOpacity
           style={styles.uploadButton}
           onPress={() => router.push('/(tabs)/captioning')}
+          activeOpacity={0.8}
         >
-          <Text style={styles.uploadButtonText}>Upload Image</Text>
+          <LinearGradient
+            colors={['#2E86C1', '#1A5276']}
+            style={styles.uploadGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+            <Text style={styles.uploadButtonText}>Upload Image</Text>
+          </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </Animatable.View>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {user?.full_name || user?.username || 'User'}!</Text>
-        <Text style={styles.subtitle}>My Images & Captions</Text>
-      </View>
+      <LinearGradient
+        colors={['#1A5276', '#2874A6', '#3498DB']}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+      </LinearGradient>
 
       <View style={styles.content}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Image History</Text>
+        <Animatable.View 
+          animation="fadeInUp" 
+          duration={600}
+          style={styles.sectionHeader}
+        >
+          <View style={styles.titleContainer}>
+            <MaterialCommunityIcons name="image-multiple" size={24} color="#1A5276" />
+            <Text style={styles.sectionTitle}>My Images</Text>
+          </View>
           <TouchableOpacity 
             style={styles.uploadNewButton}
             onPress={() => router.push('/(tabs)/captioning')}
+            activeOpacity={0.8}
           >
-            <Ionicons name="cloud-upload-outline" size={16} color="#fff" />
-            <Text style={styles.uploadNewText}>Upload New</Text>
+            <LinearGradient
+              colors={['#2E86C1', '#1A5276']}
+              style={styles.uploadButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="cloud-upload-outline" size={16} color="#fff" />
+              <Text style={styles.uploadNewText}>Upload New</Text>
+            </LinearGradient>
           </TouchableOpacity>
-        </View>
+        </Animatable.View>
 
         <FlatList
           data={images}
@@ -261,7 +328,7 @@ const HistoryScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#2E86C1']}
+              colors={['#1A5276']}
             />
           }
         />
@@ -280,18 +347,24 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingTop: 10,
-    backgroundColor: '#2E86C1',
+    paddingBottom: 20,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   subtitle: {
     fontSize: 16,
     color: '#fff',
-    opacity: 0.8,
+    opacity: 0.9,
     marginTop: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   content: {
     flex: 1,
@@ -301,25 +374,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
+    paddingHorizontal: 5,
+    paddingVertical: 10,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  uploadNewButton: {
-    backgroundColor: '#2E86C1',
+  titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1A5276',
+    marginLeft: 8,
+  },
+  uploadNewButton: {
     borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  uploadButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
   },
   uploadNewText: {
     fontSize: 14,
     color: '#fff',
-    fontWeight: '500',
+    fontWeight: '600',
     marginLeft: 5,
   },
   imageList: {
@@ -331,14 +418,22 @@ const styles = StyleSheet.create({
   },
   imageCard: {
     width: (width - 40) / 2,
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    marginBottom: 5,
+  },
+  imageWrapper: {
+    width: '100%',
+    height: 150,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
@@ -356,11 +451,11 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   captionContainer: {
-    padding: 10,
+    padding: 12,
   },
   caption: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
   },
   dateText: {
@@ -374,28 +469,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  emptyIconContainer: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(26, 82, 118, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   emptyText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1A5276',
     marginTop: 20,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
     marginTop: 10,
     textAlign: 'center',
+    marginBottom: 20,
   },
   uploadButton: {
-    backgroundColor: '#2E86C1',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
+    width: width * 0.7,
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
     marginTop: 20,
+  },
+  uploadGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   uploadButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 8,
   },
   // Modal styles
   modalContainer: {
@@ -406,39 +524,63 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: width * 0.9,
-    maxHeight: '80%',
+    maxHeight: '85%',
     backgroundColor: '#fff',
-    borderRadius: 15,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  modalImageContainer: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#f0f0f0',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     overflow: 'hidden',
   },
   modalImage: {
     width: '100%',
     height: 250,
-    backgroundColor: '#f0f0f0',
   },
   modalCaptionContainer: {
     padding: 20,
   },
+  modalCaptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
   modalCaptionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    color: '#1A5276',
+    marginLeft: 10,
   },
   modalCaption: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
-    lineHeight: 24,
+    lineHeight: 26,
+    fontStyle: 'italic',
+    marginBottom: 20,
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   modalFileName: {
     fontSize: 14,
     color: '#666',
-    marginTop: 15,
+    marginLeft: 8,
   },
   modalDate: {
     fontSize: 14,
     color: '#666',
-    marginTop: 5,
+    marginLeft: 8,
   },
   modalCloseButton: {
     position: 'absolute',
@@ -449,7 +591,25 @@ const styles = StyleSheet.create({
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 25,
+  },
+  modalActionButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 23,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    marginHorizontal: 5,
+  },
+  modalButtonGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionButton: {
     backgroundColor: '#2E86C1',
@@ -470,6 +630,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     marginLeft: 5,
+    fontSize: 15,
   },
 });
 

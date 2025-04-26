@@ -1,9 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { View, Text, StyleSheet, Platform, Animated } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const styles = StyleSheet.create({
   headerTitleContainer: {
@@ -15,6 +17,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     marginLeft: 8,
+    letterSpacing: 0.5,
   },
   tabIconContainer: {
     alignItems: 'center',
@@ -24,39 +27,30 @@ const styles = StyleSheet.create({
   activeIndicator: {
     position: 'absolute',
     bottom: -5,
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#2E86C1',
+    width: 0, // Set to 0 to remove the dot indicator
+    height: 0, // Set to 0 to remove the dot indicator
+    borderRadius: 0,
+    backgroundColor: 'transparent',
+  },
+  headerGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
 });
 
 export default function TabLayout() {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const isAdmin = user?.role === 'admin';
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2E86C1',
-        tabBarInactiveTintColor: '#888',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#2E86C1',
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0,
-        },
-        headerTitleStyle: {
-          fontWeight: 'bold',
-          fontSize: 18,
-          color: '#fff',
-        },
-        headerTintColor: '#fff',
+        tabBarActiveTintColor: '#1A5276',
+        tabBarInactiveTintColor: '#95a5a6',
         tabBarStyle: {
           backgroundColor: '#fff',
           borderTopWidth: 0,
@@ -69,6 +63,31 @@ export default function TabLayout() {
           paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: 10,
         },
+        tabBarShowLabel: true,
+        headerStyle: {
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 6,
+          borderBottomWidth: 0,
+          height: Platform.OS === 'ios' ? 100 : 80,
+        },
+        headerTitleStyle: {
+          fontWeight: 'bold',
+          fontSize: 18,
+          color: '#fff',
+          letterSpacing: 0.5,
+        },
+        headerBackground: () => (
+          <LinearGradient
+            colors={['#1A5276', '#2980B9']}
+            style={[styles.headerGradient, { paddingTop: insets.top }]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          />
+        ),
+        headerTintColor: '#fff',
         tabBarItemStyle: {
           paddingVertical: 5,
         },
@@ -80,7 +99,7 @@ export default function TabLayout() {
           title: 'Home',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
-              <Ionicons name="home" size={22} color="#fff" />
+              <Ionicons name="home" size={24} color="#fff" />
               <Text style={styles.headerTitleText}>Home</Text>
             </View>
           ),
@@ -96,16 +115,16 @@ export default function TabLayout() {
       <Tabs.Screen
         name="captioning"
         options={{
-          title: 'Image Captioning',
+          title: 'Caption',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
-              <Ionicons name="image" size={22} color="#fff" />
+              <MaterialCommunityIcons name="image-text" size={24} color="#fff" />
               <Text style={styles.headerTitleText}>Image Captioning</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
             <View style={styles.tabIconContainer}>
-              <Ionicons name={focused ? "image" : "image-outline"} size={size} color={color} />
+              <MaterialCommunityIcons name={focused ? "image-text" : "image-outline"} size={size} color={color} />
               {focused && <View style={styles.activeIndicator} />}
             </View>
           ),
@@ -115,11 +134,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'History',
+          title: 'Gallery',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
-              <Ionicons name="images" size={22} color="#fff" />
-              <Text style={styles.headerTitleText}>My Images</Text>
+              <Ionicons name="images" size={24} color="#fff" />
+              <Text style={styles.headerTitleText}>My Gallery</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
@@ -138,13 +157,13 @@ export default function TabLayout() {
             title: 'Admin',
             headerTitle: () => (
               <View style={styles.headerTitleContainer}>
-                <Ionicons name="settings" size={22} color="#fff" />
+                <Ionicons name="shield" size={24} color="#fff" />
                 <Text style={styles.headerTitleText}>Admin Panel</Text>
               </View>
             ),
             tabBarIcon: ({ color, size, focused }) => (
               <View style={styles.tabIconContainer}>
-                <Ionicons name={focused ? "settings" : "settings-outline"} size={size} color={color} />
+                <Ionicons name={focused ? "shield" : "shield-outline"} size={size} color={color} />
                 {focused && <View style={styles.activeIndicator} />}
               </View>
             ),
@@ -158,8 +177,8 @@ export default function TabLayout() {
           title: 'Profile',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
-              <Ionicons name="person" size={22} color="#fff" />
-              <Text style={styles.headerTitleText}>Profile</Text>
+              <Ionicons name="person" size={24} color="#fff" />
+              <Text style={styles.headerTitleText}>My Profile</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (

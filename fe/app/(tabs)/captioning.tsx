@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -10,11 +10,16 @@ import {
     SafeAreaView,
     Alert,
     Platform,
+    Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { imageService } from '../../services/api';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
+
+const { width, height } = Dimensions.get('window');
 
 const CaptioningScreen = () => {
     const [image, setImage] = useState<string | null>(null);
@@ -139,78 +144,183 @@ const CaptioningScreen = () => {
     };
 
     const viewMyImages = () => {
-        // Tạm thời thay đổi hành vi vì có thể route chưa tồn tại
-        // router.push('/(tabs)/captioning/my-images');
-        Alert.alert('Coming Soon', 'View My Images feature will be available soon.');
+        // Navigate to the gallery/history tab
+        router.push('/(tabs)/history');
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Text style={styles.title}>Image Captioning</Text>
-                <Text style={styles.subtitle}>Upload an image to generate a caption</Text>
+            <LinearGradient
+                colors={['rgba(26, 82, 118, 0.05)', 'rgba(255, 255, 255, 0.8)']}
+                style={styles.background}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            >
+                <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+                    <Animatable.View animation="fadeIn" duration={800}>
+                        <Text style={styles.title}>AI Image Captioning</Text>
+                        <Text style={styles.subtitle}>Transform your images into descriptive text</Text>
+                    </Animatable.View>
 
-                {!image ? (
-                    <View style={styles.uploadContainer}>
-                        <Ionicons name="cloud-upload-outline" size={80} color="#2E86C1" />
-                        <Text style={styles.uploadText}>Select an image to caption</Text>
+                    {!image ? (
+                        <Animatable.View 
+                            animation="fadeInUp" 
+                            duration={800} 
+                            delay={300}
+                            style={styles.uploadContainer}
+                        >
+                            <Animatable.View 
+                                animation="pulse" 
+                                iterationCount="infinite" 
+                                duration={2500}
+                                style={styles.iconWrapper}
+                            >
+                                <MaterialCommunityIcons name="image-text" size={90} color="#1A5276" />
+                            </Animatable.View>
+                            <Text style={styles.uploadText}>Select an image to generate a caption</Text>
 
-                        <View style={styles.buttonRow}>
-                            <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
-                                <Ionicons name="images-outline" size={24} color="#fff" />
-                                <Text style={styles.buttonText}>Gallery</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.pickButton} onPress={takePicture}>
-                                <Ionicons name="camera-outline" size={24} color="#fff" />
-                                <Text style={styles.buttonText}>Camera</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity style={styles.myImagesButton} onPress={viewMyImages}>
-                            <Text style={styles.myImagesText}>View My Images</Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    <View style={styles.previewContainer}>
-                        <Image source={{ uri: image }} style={styles.previewImage} />
-
-                        {loading ? (
-                            <View style={styles.loadingContainer}>
-                                <ActivityIndicator size="large" color="#2E86C1" />
-                                <Text style={styles.loadingText}>Generating caption...</Text>
-                            </View>
-                        ) : caption ? (
-                            <View style={styles.captionContainer}>
-                                <Text style={styles.captionTitle}>Generated Caption:</Text>
-                                <Text style={styles.caption}>{caption}</Text>
-
-                                <View style={styles.actionButtons}>
-                                    <TouchableOpacity style={styles.regenerateButton} onPress={regenerateCaption}>
-                                        <Ionicons name="refresh" size={20} color="#fff" />
-                                        <Text style={styles.buttonText}>Regenerate</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity style={styles.newImageButton} onPress={resetImage}>
-                                        <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                                        <Text style={styles.buttonText}>New Image</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        ) : (
-                            <View style={styles.actionContainer}>
-                                <TouchableOpacity style={styles.generateButton} onPress={generateCaption}>
-                                    <Text style={styles.generateButtonText}>Generate Caption</Text>
+                            <View style={styles.buttonRow}>
+                                <TouchableOpacity 
+                                    style={styles.pickButton} 
+                                    onPress={pickImage}
+                                    activeOpacity={0.8}
+                                >
+                                    <LinearGradient
+                                        colors={['#3498DB', '#2874A6']}
+                                        style={styles.buttonGradient}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                    >
+                                        <Ionicons name="images" size={24} color="#fff" />
+                                        <Text style={styles.buttonText}>Gallery</Text>
+                                    </LinearGradient>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity style={styles.cancelButton} onPress={resetImage}>
-                                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                                <TouchableOpacity 
+                                    style={styles.pickButton} 
+                                    onPress={takePicture}
+                                    activeOpacity={0.8}
+                                >
+                                    <LinearGradient
+                                        colors={['#16A085', '#27AE60']}
+                                        style={styles.buttonGradient}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                    >
+                                        <Ionicons name="camera" size={24} color="#fff" />
+                                        <Text style={styles.buttonText}>Camera</Text>
+                                    </LinearGradient>
                                 </TouchableOpacity>
                             </View>
-                        )}
-                    </View>
-                )}
-            </ScrollView>
+
+                            <TouchableOpacity 
+                                style={styles.myImagesButton} 
+                                onPress={viewMyImages}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.myImagesText}>View My Gallery</Text>
+                            </TouchableOpacity>
+                        </Animatable.View>
+                    ) : (
+                        <Animatable.View 
+                            animation="fadeIn" 
+                            duration={800}
+                            style={styles.previewContainer}
+                        >
+                            <View style={styles.imageContainer}>
+                                <Image source={{ uri: image }} style={styles.previewImage} />
+                            </View>
+
+                            {loading ? (
+                                <Animatable.View 
+                                    animation="fadeIn" 
+                                    duration={500}
+                                    style={styles.loadingContainer}
+                                >
+                                    <ActivityIndicator size="large" color="#1A5276" />
+                                    <Text style={styles.loadingText}>Generating caption...</Text>
+                                </Animatable.View>
+                            ) : caption ? (
+                                <Animatable.View 
+                                    animation="fadeInUp" 
+                                    duration={800}
+                                    style={styles.captionContainer}
+                                >
+                                    <View style={styles.captionHeader}>
+                                        <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
+                                        <Text style={styles.captionTitle}>Generated Caption</Text>
+                                    </View>
+                                    <Text style={styles.caption}>"{caption}"</Text>
+
+                                    <View style={styles.actionButtons}>
+                                        <TouchableOpacity 
+                                            style={styles.actionButton} 
+                                            onPress={regenerateCaption}
+                                            activeOpacity={0.8}
+                                        >
+                                            <LinearGradient
+                                                colors={['#3498DB', '#2874A6']}
+                                                style={styles.actionButtonGradient}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 1 }}
+                                            >
+                                                <Ionicons name="refresh" size={20} color="#fff" />
+                                                <Text style={styles.buttonText}>Regenerate</Text>
+                                            </LinearGradient>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity 
+                                            style={styles.actionButton} 
+                                            onPress={resetImage}
+                                            activeOpacity={0.8}
+                                        >
+                                            <LinearGradient
+                                                colors={['#16A085', '#27AE60']}
+                                                style={styles.actionButtonGradient}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 1 }}
+                                            >
+                                                <Ionicons name="add-circle" size={20} color="#fff" />
+                                                <Text style={styles.buttonText}>New Image</Text>
+                                            </LinearGradient>
+                                        </TouchableOpacity>
+                                    </View>
+                                </Animatable.View>
+                            ) : (
+                                <Animatable.View 
+                                    animation="fadeInUp" 
+                                    duration={800}
+                                    style={styles.actionContainer}
+                                >
+                                    <TouchableOpacity 
+                                        style={styles.generateButton} 
+                                        onPress={generateCaption}
+                                        activeOpacity={0.8}
+                                    >
+                                        <LinearGradient
+                                            colors={['#1A5276', '#2874A6']}
+                                            style={styles.generateGradient}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                        >
+                                            <FontAwesome5 name="brain" size={18} color="#fff" />
+                                            <Text style={styles.generateButtonText}>Generate Caption</Text>
+                                        </LinearGradient>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity 
+                                        style={styles.cancelButton} 
+                                        onPress={resetImage}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </Animatable.View>
+                            )}
+                        </Animatable.View>
+                    )}
+                </ScrollView>
+            </LinearGradient>
         </SafeAreaView>
     );
 };
@@ -220,16 +330,22 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+    background: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
     scrollContainer: {
         flexGrow: 1,
         padding: 20,
     },
     title: {
-        fontSize: 28,
+        fontSize: 30,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#1A5276',
         textAlign: 'center',
         marginTop: 10,
+        letterSpacing: 0.5,
     },
     subtitle: {
         fontSize: 16,
@@ -239,19 +355,33 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     uploadContainer: {
-        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f9f9f9',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
         padding: 40,
-        borderRadius: 10,
+        borderRadius: 20,
         marginTop: 20,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+    },
+    iconWrapper: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: 'rgba(26, 82, 118, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
     },
     uploadText: {
         fontSize: 18,
         color: '#333',
         marginTop: 15,
         marginBottom: 30,
+        textAlign: 'center',
     },
     buttonRow: {
         flexDirection: 'row',
@@ -260,14 +390,23 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     pickButton: {
-        backgroundColor: '#2E86C1',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 8,
+        minWidth: 140,
+        height: 50,
+        borderRadius: 25,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        marginHorizontal: 8,
+    },
+    buttonGradient: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        minWidth: 130,
         justifyContent: 'center',
+        paddingHorizontal: 20,
     },
     buttonText: {
         color: '#fff',
@@ -276,77 +415,142 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     myImagesButton: {
-        marginTop: 20,
+        marginTop: 30,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
     },
     myImagesText: {
-        color: '#2E86C1',
+        color: '#1A5276',
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     previewContainer: {
         marginTop: 20,
     },
+    imageContainer: {
+        borderRadius: 15,
+        overflow: 'hidden',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+    },
     previewImage: {
         width: '100%',
         height: 300,
-        borderRadius: 10,
-        marginBottom: 20,
+        borderRadius: 15,
     },
     loadingContainer: {
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 30,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        padding: 20,
+        borderRadius: 15,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
     },
     loadingText: {
-        marginTop: 10,
+        marginTop: 15,
         fontSize: 16,
         color: '#666',
+        fontWeight: '500',
     },
     captionContainer: {
-        backgroundColor: '#f9f9f9',
-        padding: 15,
-        borderRadius: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        padding: 20,
+        borderRadius: 15,
+        marginTop: 20,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    captionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
     },
     captionTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
+        marginLeft: 10,
+        color: '#1A5276',
     },
     caption: {
-        fontSize: 16,
+        fontSize: 18,
         color: '#333',
-        lineHeight: 24,
+        lineHeight: 28,
+        fontStyle: 'italic',
+        marginBottom: 20,
     },
     actionContainer: {
         marginTop: 20,
     },
     generateButton: {
-        backgroundColor: '#2E86C1',
-        paddingVertical: 15,
-        borderRadius: 5,
-        alignItems: 'center',
+        height: 54,
+        borderRadius: 27,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
         marginBottom: 15,
+    },
+    generateGradient: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 20,
     },
     generateButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
+        marginLeft: 10,
     },
     cancelButton: {
         paddingVertical: 15,
-        borderRadius: 5,
+        borderRadius: 25,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#ddd',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
     },
     cancelButtonText: {
         color: '#666',
         fontSize: 16,
+        fontWeight: '500',
     },
     actionButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 20,
+    },
+    actionButton: {
+        flex: 1,
+        height: 50,
+        borderRadius: 25,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        marginHorizontal: 5,
+    },
+    actionButtonGradient: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 15,
     },
     regenerateButton: {
         backgroundColor: '#2E86C1',
@@ -366,4 +570,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CaptioningScreen; 
+export default CaptioningScreen;

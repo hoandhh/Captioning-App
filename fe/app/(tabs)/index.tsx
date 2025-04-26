@@ -1,242 +1,336 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
   Dimensions,
   StatusBar,
+  ImageBackground,
 } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const { user } = useAuth();
+  const router = useRouter();
+
+  const navigateToCaptioning = () => {
+    router.push('/(tabs)/captioning');
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2E86C1" />
-      <Stack.Screen options={{ headerShown: false }} />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1A5276" translucent />
+      <Stack.Screen 
+        options={{ 
+          headerShown: false,
+        }} 
+      />
       
-      <LinearGradient
-        colors={['#2E86C1', '#3498DB', '#5DADE2']}
-        style={styles.header}
+      <ImageBackground
+        source={require('../../assets/images/background.jpg')}
+        style={styles.backgroundImage}
+        imageStyle={{ opacity: 0.15 }}
       >
-        <Animatable.View animation="fadeIn" duration={1000}>
-          <Text style={styles.greeting}>Hello, {user?.full_name || user?.username || 'User'}!</Text>
-          <Text style={styles.subtitle}>Welcome to Image Captioning App</Text>
-        </Animatable.View>
-      </LinearGradient>
+        <LinearGradient
+          colors={['#1A5276', '#2874A6', '#3498DB']}
+          style={styles.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+        </LinearGradient>
 
-      <ScrollView 
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animatable.View 
-          animation="fadeInUp" 
-          duration={800} 
-          delay={300}
-          style={styles.welcomeContainer}
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
           <Animatable.View 
-            animation="pulse" 
-            iterationCount="infinite" 
-            duration={2000}
-          >
-            <Ionicons name="camera" size={80} color="#2E86C1" />
-          </Animatable.View>
-          <Text style={styles.welcomeTitle}>Image Captioning App</Text>
-          <Text style={styles.welcomeText}>
-            Transform your images into words with our AI-powered captioning tool.
-            Upload images, generate captions, and manage your collection.
-          </Text>
-        </Animatable.View>
-        
-        <Animatable.View 
-          animation="fadeInUp" 
-          duration={800} 
-          delay={600}
-          style={styles.featuresContainer}
-        >
-          <Text style={styles.featuresTitle}>Key Features</Text>
-          
-          <Animatable.View 
-            animation="fadeInLeft" 
+            animation="fadeInUp" 
             duration={800} 
-            delay={900}
-            style={styles.featureItem}
+            delay={300}
+            style={styles.heroContainer}
           >
-            <View style={styles.iconContainer}>
-              <Ionicons name="camera-outline" size={24} color="#fff" />
-            </View>
-            <View style={styles.featureTextContainer}>
-              <Text style={styles.featureTitle}>Smart Image Captioning</Text>
-              <Text style={styles.featureDescription}>AI-generated descriptions for your images</Text>
-            </View>
-          </Animatable.View>
-          
-          <Animatable.View 
-            animation="fadeInLeft" 
-            duration={800} 
-            delay={1100}
-            style={styles.featureItem}
-          >
-            <View style={styles.iconContainer}>
-              <Ionicons name="refresh-outline" size={24} color="#fff" />
-            </View>
-            <View style={styles.featureTextContainer}>
-              <Text style={styles.featureTitle}>Caption Regeneration</Text>
-              <Text style={styles.featureDescription}>Not satisfied? Generate a new caption</Text>
-            </View>
-          </Animatable.View>
-          
-          <Animatable.View 
-            animation="fadeInLeft" 
-            duration={800} 
-            delay={1300}
-            style={styles.featureItem}
-          >
-            <View style={styles.iconContainer}>
-              <Ionicons name="cloud-upload-outline" size={24} color="#fff" />
-            </View>
-            <View style={styles.featureTextContainer}>
-              <Text style={styles.featureTitle}>Cloud Storage</Text>
-              <Text style={styles.featureDescription}>Access your images from anywhere</Text>
-            </View>
-          </Animatable.View>
-        </Animatable.View>
-        
-        <Animatable.View 
-          animation="fadeInUp" 
-          duration={800} 
-          delay={1500}
-          style={styles.getStartedContainer}
-        >
-          <TouchableOpacity style={styles.getStartedButton}>
-            <LinearGradient
-              colors={['#2E86C1', '#3498DB']}
-              style={styles.gradient}
+            <Animatable.View 
+              animation="pulse" 
+              iterationCount="infinite" 
+              duration={2500}
+              style={styles.iconWrapper}
             >
-              <Text style={styles.getStartedText}>Get Started</Text>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animatable.View>
-      </ScrollView>
-    </SafeAreaView>
+              <MaterialCommunityIcons name="image-text" size={90} color="#2E86C1" />
+            </Animatable.View>
+            <Text style={styles.heroTitle}>AI-Powered Image Captioning</Text>
+            <Text style={styles.heroText}>
+              Transform your images into descriptive text with our advanced AI technology.
+              Perfect for accessibility, content creation, and image organization.
+            </Text>
+            
+            <TouchableOpacity 
+              style={styles.captioningButton}
+              onPress={navigateToCaptioning}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#2E86C1', '#1A5276']}
+                style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Ionicons name="camera" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Start Captioning</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animatable.View>
+          
+          <Animatable.View 
+            animation="fadeInUp" 
+            duration={800} 
+            delay={600}
+            style={styles.featuresContainer}
+          >
+            <Text style={styles.featuresTitle}>Key Features</Text>
+            
+            <Animatable.View 
+              animation="fadeInLeft" 
+              duration={800} 
+              delay={900}
+              style={styles.featureItem}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: '#3498DB' }]}>
+                <FontAwesome5 name="brain" size={22} color="#fff" />
+              </View>
+              <View style={styles.featureTextContainer}>
+                <Text style={styles.featureTitle}>Smart AI Captioning</Text>
+                <Text style={styles.featureDescription}>Accurate descriptions generated by advanced AI models</Text>
+              </View>
+            </Animatable.View>
+            
+            <Animatable.View 
+              animation="fadeInLeft" 
+              duration={800} 
+              delay={1100}
+              style={styles.featureItem}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: '#16A085' }]}>
+                <Ionicons name="refresh" size={24} color="#fff" />
+              </View>
+              <View style={styles.featureTextContainer}>
+                <Text style={styles.featureTitle}>Caption Regeneration</Text>
+                <Text style={styles.featureDescription}>Not satisfied? Regenerate captions with a single tap</Text>
+              </View>
+            </Animatable.View>
+            
+            <Animatable.View 
+              animation="fadeInLeft" 
+              duration={800} 
+              delay={1300}
+              style={styles.featureItem}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: '#8E44AD' }]}>
+                <Ionicons name="cloud-done" size={24} color="#fff" />
+              </View>
+              <View style={styles.featureTextContainer}>
+                <Text style={styles.featureTitle}>Cloud Storage</Text>
+                <Text style={styles.featureDescription}>Access your captioned images from anywhere, anytime</Text>
+              </View>
+            </Animatable.View>
+
+            <Animatable.View 
+              animation="fadeInLeft" 
+              duration={800} 
+              delay={1500}
+              style={styles.featureItem}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: '#E74C3C' }]}>
+                <Ionicons name="share-social" size={24} color="#fff" />
+              </View>
+              <View style={styles.featureTextContainer}>
+                <Text style={styles.featureTitle}>Easy Sharing</Text>
+                <Text style={styles.featureDescription}>Share your captioned images with friends and social media</Text>
+              </View>
+            </Animatable.View>
+          </Animatable.View>
+          
+          <Animatable.View 
+            animation="fadeInUp" 
+            duration={800} 
+            delay={1700}
+            style={styles.getStartedContainer}
+          >
+            <TouchableOpacity 
+              style={styles.getStartedButton}
+              onPress={navigateToCaptioning}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#2E86C1', '#1A5276']}
+                style={styles.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.getStartedText}>Get Started Now</Text>
+                <Ionicons name="arrow-forward" size={20} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animatable.View>
+        </ScrollView>
+      </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#1A5276',
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#1A5276',
   },
   header: {
-    padding: 25,
-    paddingTop: 60,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 5,
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    paddingTop: 50,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: 6,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
   },
   subtitle: {
     fontSize: 18,
     color: '#fff',
     opacity: 0.9,
     marginTop: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+    textShadowRadius: 2,
   },
   content: {
     padding: 20,
     paddingTop: 30,
   },
-  // Welcome section styles
-  welcomeContainer: {
+  // Hero section styles
+  heroContainer: {
     alignItems: 'center',
     marginBottom: 40,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
-    padding: 25,
-    elevation: 3,
+    padding: 30,
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
-  welcomeTitle: {
-    fontSize: 24,
+  iconWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(46, 134, 193, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  heroTitle: {
+    fontSize: 26,
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 15,
-    color: '#2E86C1',
+    color: '#1A5276',
+    textAlign: 'center',
   },
-  welcomeText: {
+  heroText: {
     fontSize: 16,
     color: '#555',
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 25,
+  },
+  captioningButton: {
+    width: width * 0.8,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#1A5276',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    marginTop: 10,
+  },
+  buttonGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
   // Features section styles
   featuresContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
-    padding: 25,
+    padding: 30,
     marginBottom: 30,
-    elevation: 3,
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   featuresTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#2E86C1',
+    marginBottom: 25,
+    color: '#1A5276',
+    textAlign: 'center',
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: '#fff',
-    padding: 5,
-    borderRadius: 12,
+    marginBottom: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 15,
+    borderRadius: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2E86C1',
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 55,
+    height: 55,
+    borderRadius: 28,
     backgroundColor: '#2E86C1',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowRadius: 3,
   },
   featureTextContainer: {
     marginLeft: 15,
@@ -263,8 +357,8 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     overflow: 'hidden',
-    elevation: 5,
-    shadowColor: '#2E86C1',
+    elevation: 6,
+    shadowColor: '#1A5276',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
