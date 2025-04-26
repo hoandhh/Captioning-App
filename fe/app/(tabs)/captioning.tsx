@@ -506,12 +506,13 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
         flexDirection: 'row',
-        justifyContent: 'space-evenly',
+        justifyContent: 'center',
         width: '100%',
         marginBottom: 20,
+        marginTop: 20,
     },
     pickButton: {
-        minWidth: 140,
+        width: 140,
         height: 50,
         borderRadius: 25,
         overflow: 'hidden',
@@ -520,7 +521,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 3,
-        marginHorizontal: 8,
+        marginHorizontal: 10,
     },
     buttonGradient: {
         flex: 1,
