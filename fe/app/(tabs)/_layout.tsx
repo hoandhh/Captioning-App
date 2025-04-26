@@ -134,11 +134,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'Gallery',
+          title: 'History',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="images" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>My Gallery</Text>
+              <Text style={styles.headerTitleText}>My History</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (

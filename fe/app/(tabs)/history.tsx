@@ -1,18 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  SafeAreaView,
-  Dimensions,
-  Alert,
-  Modal,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, FlatList, SafeAreaView, Alert, RefreshControl, Dimensions, TextInput, Modal, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
 import { imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -38,6 +25,9 @@ const HistoryScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCaption, setEditedCaption] = useState('');
+  const [updateLoading, setUpdateLoading] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
 
@@ -116,6 +106,47 @@ const HistoryScreen = () => {
     );
   };
   
+  const startEditing = () => {
+    if (selectedImage) {
+      setEditedCaption(selectedImage.description || '');
+      setIsEditing(true);
+    }
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditedCaption('');
+  };
+
+  const saveEditedCaption = async () => {
+    if (!selectedImage || !editedCaption.trim()) return;
+    
+    try {
+      setUpdateLoading(true);
+      const response = await imageService.updateCaption(selectedImage.id, editedCaption.trim());
+      
+      // Update the selected image with the new caption
+      setSelectedImage({
+        ...selectedImage,
+        description: response.image.description
+      });
+      
+      // Also update the image in the images array
+      setImages(images.map(img => 
+        img.id === selectedImage.id ? 
+        {...img, description: response.image.description} : 
+        img
+      ));
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating caption:', error);
+      Alert.alert('Error', 'Failed to update caption. Please try again.');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   const renderImageDetailModal = () => {
     if (!selectedImage) return null;
     
@@ -126,8 +157,12 @@ const HistoryScreen = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <BlurView intensity={90} style={styles.modalContainer}>
-          <Animatable.View animation="fadeIn" duration={300}>
+        <TouchableOpacity 
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <BlurView intensity={90} style={styles.modalContainer}>
             <TouchableOpacity 
               style={styles.modalCloseButton}
               onPress={() => setModalVisible(false)}
@@ -135,108 +170,141 @@ const HistoryScreen = () => {
             >
               <Ionicons name="close-circle" size={34} color="#fff" />
             </TouchableOpacity>
-          </Animatable.View>
-          
-          <Animatable.View animation="zoomIn" duration={400} style={styles.modalContent}>
-            <View style={styles.modalImageContainer}>
-              <Image
-                source={{ uri: selectedImage.url }}
-                style={styles.modalImage}
-                resizeMode="contain"
-              />
-            </View>
             
-            <View style={styles.modalCaptionContainer}>
-              <View style={styles.modalCaptionHeader}>
-                <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
-                <Text style={styles.modalCaptionTitle}>Image Caption</Text>
-              </View>
-              
-              <Text style={styles.modalCaption}>
-                "{selectedImage.description || 'No caption available'}"
-              </Text>
-              
-              {selectedImage.file_name && (
-                <View style={styles.modalInfoRow}>
-                  <Ionicons name="document-outline" size={18} color="#666" />
-                  <Text style={styles.modalFileName}>
-                    {selectedImage.file_name}
-                  </Text>
+            <TouchableWithoutFeedback onPress={isEditing ? Keyboard.dismiss : undefined}>
+              <TouchableOpacity 
+                activeOpacity={1} 
+                onPress={(e) => {
+                  e.stopPropagation();
+                  if (isEditing) {
+                    Keyboard.dismiss();
+                  }
+                }}
+              >
+              <Animatable.View animation="zoomIn" duration={400} style={styles.modalContent}>
+                <View style={styles.modalImageContainer}>
+                  <Image
+                    source={{ uri: selectedImage.url }}
+                    style={styles.modalImage}
+                    resizeMode="contain"
+                  />
                 </View>
-              )}
-              
-              <View style={styles.modalInfoRow}>
-                <Ionicons name="calendar-outline" size={18} color="#666" />
-                <Text style={styles.modalDate}>
-                  {new Date(selectedImage.created_at).toLocaleString()}
-                </Text>
-              </View>
-              
-              <View style={styles.modalActions}>
-                <TouchableOpacity 
-                  style={styles.modalActionButton}
-                  onPress={() => {
-                    setModalVisible(false);
-                    router.push({
-                      pathname: '/(tabs)/captioning',
-                      params: { imageId: selectedImage.id }
-                    });
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#3498DB', '#2874A6']}
-                    style={styles.modalButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons name="create" size={20} color="#fff" />
-                    <Text style={styles.actionButtonText}>Edit Caption</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
                 
-                <TouchableOpacity 
-                  style={styles.modalActionButton}
-                  onPress={() => {
-                    Alert.alert(
-                      'Delete Image',
-                      'Are you sure you want to delete this image?',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        { 
-                          text: 'Delete', 
-                          style: 'destructive',
-                          onPress: async () => {
-                            try {
-                              await imageService.deleteImage(selectedImage.id);
-                              setModalVisible(false);
-                              fetchImages();
-                              Alert.alert('Success', 'Image deleted successfully');
-                            } catch (error) {
-                              console.error('Failed to delete image:', error);
-                              Alert.alert('Error', 'Failed to delete image');
-                            }
-                          }
-                        }
-                      ]
-                    );
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#E74C3C', '#C0392B']}
-                    style={styles.modalButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons name="trash" size={20} color="#fff" />
-                    <Text style={styles.actionButtonText}>Delete</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Animatable.View>
-        </BlurView>
+                <View style={styles.modalCaptionContainer}>
+                  <View style={styles.modalCaptionHeader}>
+                    <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
+                    <Text style={styles.modalCaptionTitle}>Caption</Text>
+                  </View>
+                  
+                  {isEditing ? (
+                    <View style={styles.editContainer}>
+                      <View>
+                        <TextInput
+                          style={styles.editInput}
+                          value={editedCaption}
+                          onChangeText={setEditedCaption}
+                          multiline
+                          placeholder="Enter your caption here..."
+                          placeholderTextColor="#888"
+                          autoFocus={true}
+                          blurOnSubmit={false}
+                        />
+                      </View>
+                      <View style={styles.editButtons}>
+                        {updateLoading ? (
+                          <ActivityIndicator size="small" color="#3498DB" />
+                        ) : (
+                          <TouchableOpacity 
+                            style={styles.saveButton} 
+                            onPress={saveEditedCaption}
+                          >
+                            <Text style={styles.editButtonText}>Save</Text>
+                          </TouchableOpacity>
+                        )}
+                        <TouchableOpacity 
+                          style={styles.cancelEditButton} 
+                          onPress={cancelEditing}
+                        >
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text style={styles.modalCaption}>
+                      "{selectedImage.description || 'No caption available'}"
+                    </Text>
+                  )}
+                  
+                  {selectedImage.file_name && (
+                    <View style={styles.modalInfoRow}>
+                      <Ionicons name="document-outline" size={18} color="#666" />
+                      <Text style={styles.modalFileName}>
+                        {selectedImage.file_name}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.modalInfoRow}>
+                    <Ionicons name="calendar-outline" size={18} color="#666" />
+                    <Text style={styles.modalDate}>
+                      {new Date(selectedImage.created_at).toLocaleString()}
+                    </Text>
+                  </View>
+                  
+                  {!isEditing && (
+                    <View style={styles.modalActions}>
+                      <TouchableOpacity 
+                        style={styles.modalActionButton}
+                        onPress={startEditing}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.modalButtonGradient, styles.editButtonMain]}>
+                          <Ionicons name="create-outline" size={20} color="#fff" />
+                          <Text style={styles.actionButtonText}>Edit Caption</Text>
+                        </View>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity 
+                        style={styles.modalActionButton}
+                        onPress={() => {
+                          Alert.alert(
+                            'Delete Image',
+                            'Are you sure you want to delete this image?',
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              { 
+                                text: 'Delete', 
+                                style: 'destructive',
+                                onPress: async () => {
+                                  try {
+                                    await imageService.deleteImage(selectedImage.id);
+                                    setModalVisible(false);
+                                    fetchImages();
+                                    Alert.alert('Success', 'Image deleted successfully');
+                                  } catch (error) {
+                                    console.error('Failed to delete image:', error);
+                                    Alert.alert('Error', 'Failed to delete image');
+                                  }
+                                }
+                              }
+                            ]
+                          );
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.modalButtonGradient, styles.deleteButtonMain]}>
+                          <Ionicons name="trash-outline" size={20} color="#fff" />
+                          <Text style={styles.actionButtonText}>Delete</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              </Animatable.View>
+              </TouchableOpacity>
+            </TouchableWithoutFeedback>
+          </BlurView>
+        </TouchableOpacity>
       </Modal>
     );
   };
@@ -340,6 +408,57 @@ const HistoryScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  editContainer: {
+    marginVertical: 10,
+    width: '100%',
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: '#f9f9f9',
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: 10,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  editButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  saveButton: {
+    backgroundColor: '#3498DB',
+  },
+  cancelEditButton: {
+    backgroundColor: '#f8f8f8',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  editButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -516,6 +635,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   // Modal styles
+  modalBackdrop: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -524,7 +648,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: width * 0.9,
-    maxHeight: '85%',
     backgroundColor: '#fff',
     borderRadius: 20,
     overflow: 'hidden',
@@ -548,6 +671,7 @@ const styles = StyleSheet.create({
   },
   modalCaptionContainer: {
     padding: 20,
+    paddingBottom: 20,
   },
   modalCaptionHeader: {
     flexDirection: 'row',
@@ -591,25 +715,27 @@ const styles = StyleSheet.create({
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 25,
+    marginTop: 15,
+    marginBottom: 5,
+    paddingHorizontal: 0,
+    width: '100%',
   },
   modalActionButton: {
     flex: 1,
-    height: 46,
-    borderRadius: 23,
+    height: 45,
+    borderRadius: 6,
     overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
     marginHorizontal: 5,
+    maxWidth: '48%',
   },
   modalButtonGradient: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 6,
   },
   actionButton: {
     backgroundColor: '#2E86C1',
@@ -622,15 +748,65 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
-  deleteButton: {
+  editButtonMain: {
+    backgroundColor: '#3498DB',
+  },
+  deleteButtonMain: {
     backgroundColor: '#E74C3C',
-    marginRight: 0,
   },
   actionButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    marginLeft: 5,
-    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  editContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: '#f9f9f9',
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: 15,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  saveButton: {
+    backgroundColor: '#27ae60',
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginRight: 10,
+    flex: 1,
+    alignItems: 'center',
+  },
+  cancelEditButton: {
+    backgroundColor: '#95a5a6',
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    flex: 1,
+    alignItems: 'center',
+  },
+  editButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

@@ -11,6 +11,7 @@ import {
     Alert,
     Platform,
     Dimensions,
+    TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { imageService } from '../../services/api';
@@ -26,6 +27,8 @@ const CaptioningScreen = () => {
     const [loading, setLoading] = useState(false);
     const [caption, setCaption] = useState<string | null>(null);
     const [imageId, setImageId] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedCaption, setEditedCaption] = useState<string>('');
     const router = useRouter();
 
     const pickImage = async () => {
@@ -132,6 +135,34 @@ const CaptioningScreen = () => {
         } catch (error) {
             console.error('Error regenerating caption:', error);
             Alert.alert('Error', 'Failed to regenerate caption. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const startEditingCaption = () => {
+        if (caption) {
+            setEditedCaption(caption);
+            setIsEditing(true);
+        }
+    };
+    
+    const cancelEditingCaption = () => {
+        setIsEditing(false);
+        setEditedCaption('');
+    };
+    
+    const saveEditedCaption = async () => {
+        if (!imageId || !editedCaption.trim()) return;
+        
+        try {
+            setLoading(true);
+            const response = await imageService.updateCaption(imageId, editedCaption.trim());
+            setCaption(response.image.description);
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error updating caption:', error);
+            Alert.alert('Error', 'Failed to update caption. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -250,41 +281,87 @@ const CaptioningScreen = () => {
                                         <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
                                         <Text style={styles.captionTitle}>Generated Caption</Text>
                                     </View>
-                                    <Text style={styles.caption}>"{caption}"</Text>
+                                    
+                                    {isEditing ? (
+                                        <View style={styles.editContainer}>
+                                            <TextInput
+                                                style={styles.editInput}
+                                                value={editedCaption}
+                                                onChangeText={setEditedCaption}
+                                                multiline
+                                                placeholder="Enter your caption here..."
+                                                placeholderTextColor="#888"
+                                            />
+                                            <View style={styles.editButtons}>
+                                                <TouchableOpacity 
+                                                    style={[styles.editButton, styles.saveButton]} 
+                                                    onPress={saveEditedCaption}
+                                                >
+                                                    <Text style={styles.editButtonText}>Save</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity 
+                                                    style={[styles.editButton, styles.cancelButton]} 
+                                                    onPress={cancelEditingCaption}
+                                                >
+                                                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    ) : (
+                                        <Text style={styles.caption}>"{caption}"</Text>
+                                    )}
 
-                                    <View style={styles.actionButtons}>
-                                        <TouchableOpacity 
-                                            style={styles.actionButton} 
-                                            onPress={regenerateCaption}
-                                            activeOpacity={0.8}
-                                        >
-                                            <LinearGradient
-                                                colors={['#3498DB', '#2874A6']}
-                                                style={styles.actionButtonGradient}
-                                                start={{ x: 0, y: 0 }}
-                                                end={{ x: 1, y: 1 }}
+                                    {!isEditing && (
+                                        <View style={styles.actionButtons}>
+                                            <TouchableOpacity 
+                                                style={styles.actionButton} 
+                                                onPress={regenerateCaption}
+                                                activeOpacity={0.8}
                                             >
-                                                <Ionicons name="refresh" size={20} color="#fff" />
-                                                <Text style={styles.buttonText}>Regenerate</Text>
-                                            </LinearGradient>
-                                        </TouchableOpacity>
+                                                <LinearGradient
+                                                    colors={['#3498DB', '#2874A6']}
+                                                    style={styles.actionButtonGradient}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <Ionicons name="refresh" size={24} color="#fff" />
+                                                    <Text style={styles.buttonTextCompact} numberOfLines={1}>Regen</Text>
+                                                </LinearGradient>
+                                            </TouchableOpacity>
 
-                                        <TouchableOpacity 
-                                            style={styles.actionButton} 
-                                            onPress={resetImage}
-                                            activeOpacity={0.8}
-                                        >
-                                            <LinearGradient
-                                                colors={['#16A085', '#27AE60']}
-                                                style={styles.actionButtonGradient}
-                                                start={{ x: 0, y: 0 }}
-                                                end={{ x: 1, y: 1 }}
+                                            <TouchableOpacity 
+                                                style={styles.actionButton} 
+                                                onPress={startEditingCaption}
+                                                activeOpacity={0.8}
                                             >
-                                                <Ionicons name="add-circle" size={20} color="#fff" />
-                                                <Text style={styles.buttonText}>New Image</Text>
-                                            </LinearGradient>
-                                        </TouchableOpacity>
-                                    </View>
+                                                <LinearGradient
+                                                    colors={['#9B59B6', '#8E44AD']}
+                                                    style={styles.actionButtonGradient}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <Ionicons name="pencil" size={24} color="#fff" />
+                                                    <Text style={styles.buttonTextCompact} numberOfLines={1}>Edit</Text>
+                                                </LinearGradient>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity 
+                                                style={styles.actionButton} 
+                                                onPress={resetImage}
+                                                activeOpacity={0.8}
+                                            >
+                                                <LinearGradient
+                                                    colors={['#16A085', '#27AE60']}
+                                                    style={styles.actionButtonGradient}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <Ionicons name="add-circle" size={24} color="#fff" />
+                                                    <Text style={styles.buttonTextCompact} numberOfLines={1}>New</Text>
+                                                </LinearGradient>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
                                 </Animatable.View>
                             ) : (
                                 <Animatable.View 
@@ -329,6 +406,50 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+    },
+    editContainer: {
+        marginVertical: 10,
+        width: '100%',
+    },
+    editInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        color: '#333',
+        backgroundColor: '#f9f9f9',
+        minHeight: 100,
+        textAlignVertical: 'top',
+        marginBottom: 10,
+    },
+    editButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+    },
+    editButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        marginHorizontal: 5,
+    },
+    saveButton: {
+        backgroundColor: '#3498DB',
+    },
+    editButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    buttonTextCompact: {
+        color: '#fff',
+        fontWeight: '500',
+        fontSize: 12,
+        marginTop: 2,
     },
     background: {
         flex: 1,
@@ -534,23 +655,18 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     actionButton: {
-        flex: 1,
-        height: 50,
-        borderRadius: 25,
-        overflow: 'hidden',
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
+        height: 70,
+        width: 70,
         marginHorizontal: 5,
+        borderRadius: 35,
+        overflow: 'hidden',
     },
     actionButtonGradient: {
         flex: 1,
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 15,
+        paddingVertical: 10,
     },
     regenerateButton: {
         backgroundColor: '#2E86C1',
