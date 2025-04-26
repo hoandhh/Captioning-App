@@ -1,0 +1,14 @@
+flask==1.1.4
+flask-mongoengine==1.0.0
+flask-jwt-extended==4.3.1
+pymongo==3.12.0
+Werkzeug==1.0.1
+python-dotenv==0.19.1
+MarkupSafe==2.0.1
+git+https://github.com/huggingface/transformers.git@main
+flask_cors
+bcrypt
+faker
+googletrans==4.0.0-rc1
+gTTs
+playsound==1.2.2
