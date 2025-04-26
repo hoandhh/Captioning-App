@@ -37,13 +37,13 @@ export default function TabLayout() {
           ),
         }}
       />
-
+      
       <Tabs.Screen
-        name="profile"
+        name="history"
         options={{
-          title: 'Profile',
+          title: 'History',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="images" size={size} color={color} />
           ),
         }}
       />
@@ -59,6 +59,16 @@ export default function TabLayout() {
           }}
         />
       )}
+      
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
