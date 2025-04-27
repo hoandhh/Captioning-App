@@ -78,7 +78,7 @@ const WelcomeScreen = () => {
                     <Animatable.View animation="fadeIn" duration={1000} style={styles.logoContainer}>
                         <Image source={logoImage} style={styles.logo} />
                         <Animatable.Text animation="fadeInUp" delay={300} style={styles.appName}>
-                            AI Image Captioning
+                            Ứng dụng Mô tả Hình ảnh AI
                         </Animatable.Text>
                         <Animatable.Text animation="fadeInUp" delay={500} style={styles.tagline}>
                             Biến đổi ảnh thành lời thông qua trí tuệ nhân tạo

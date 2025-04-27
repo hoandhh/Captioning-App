@@ -137,7 +137,7 @@ const ProfileScreen = () => {
 
                 <View style={styles.profileSection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Profile Information</Text>
+                        <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
                         {!isEditing ? (
                             <TouchableOpacity onPress={() => setIsEditing(true)}>
                                 <Ionicons name="create-outline" size={24} color="#2E86C1" />
@@ -150,16 +150,16 @@ const ProfileScreen = () => {
                     </View>
 
                     <View style={styles.infoContainer}>
-                        <Text style={styles.label}>Full Name</Text>
+                        <Text style={styles.label}>Họ và tên</Text>
                         {isEditing ? (
                             <TextInput
                                 style={styles.input}
                                 value={fullName}
                                 onChangeText={setFullName}
-                                placeholder="Enter your full name"
+                                placeholder="Nhập họ và tên của bạn"
                             />
                         ) : (
-                            <Text style={styles.infoText}>{fullName || 'Not provided'}</Text>
+                            <Text style={styles.infoText}>{fullName || 'Chưa cung cấp'}</Text>
                         )}
                     </View>
 
@@ -170,7 +170,7 @@ const ProfileScreen = () => {
                                 style={styles.input}
                                 value={email}
                                 onChangeText={setEmail}
-                                placeholder="Enter your email"
+                                placeholder="Nhập email của bạn"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                             />
@@ -188,7 +188,7 @@ const ProfileScreen = () => {
                             {loading ? (
                                 <ActivityIndicator color="#fff" size="small" />
                             ) : (
-                                <Text style={styles.saveButtonText}>Save Changes</Text>
+                                <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
                             )}
                         </TouchableOpacity>
                     )}
@@ -196,7 +196,7 @@ const ProfileScreen = () => {
 
                 <View style={styles.profileSection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Security</Text>
+                        <Text style={styles.sectionTitle}>Bảo mật</Text>
                         {!showPasswordFields ? (
                             <TouchableOpacity onPress={() => setShowPasswordFields(true)}>
                                 <Ionicons name="key-outline" size={24} color="#2E86C1" />
@@ -211,34 +211,34 @@ const ProfileScreen = () => {
                     {showPasswordFields ? (
                         <View style={styles.passwordSection}>
                             <View style={styles.infoContainer}>
-                                <Text style={styles.label}>Current Password</Text>
+                                <Text style={styles.label}>Mật khẩu hiện tại</Text>
                                 <TextInput
                                     style={styles.input}
                                     value={currentPassword}
                                     onChangeText={setCurrentPassword}
-                                    placeholder="Enter current password"
+                                    placeholder="Nhập mật khẩu hiện tại"
                                     secureTextEntry
                                 />
                             </View>
 
                             <View style={styles.infoContainer}>
-                                <Text style={styles.label}>New Password</Text>
+                                <Text style={styles.label}>Mật khẩu mới</Text>
                                 <TextInput
                                     style={styles.input}
                                     value={newPassword}
                                     onChangeText={setNewPassword}
-                                    placeholder="Enter new password"
+                                    placeholder="Nhập mật khẩu mới"
                                     secureTextEntry
                                 />
                             </View>
 
                             <View style={styles.infoContainer}>
-                                <Text style={styles.label}>Confirm New Password</Text>
+                                <Text style={styles.label}>Xác nhận mật khẩu mới</Text>
                                 <TextInput
                                     style={styles.input}
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    placeholder="Confirm new password"
+                                    placeholder="Xác nhận mật khẩu mới"
                                     secureTextEntry
                                 />
                             </View>
@@ -251,7 +251,7 @@ const ProfileScreen = () => {
                                 {loading ? (
                                     <ActivityIndicator color="#fff" size="small" />
                                 ) : (
-                                    <Text style={styles.saveButtonText}>Change Password</Text>
+                                    <Text style={styles.saveButtonText}>Đổi mật khẩu</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -261,14 +261,14 @@ const ProfileScreen = () => {
                             onPress={() => setShowPasswordFields(true)}
                         >
                             <Ionicons name="lock-closed-outline" size={20} color="#333" />
-                            <Text style={styles.passwordButtonText}>Change Password</Text>
+                            <Text style={styles.passwordButtonText}>Đổi mật khẩu</Text>
                         </TouchableOpacity>
                     )}
                 </View>
 
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                     <Ionicons name="log-out-outline" size={20} color="#fff" />
-                    <Text style={styles.logoutText}>Logout</Text>
+                    <Text style={styles.logoutText}>Đăng xuất</Text>
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>

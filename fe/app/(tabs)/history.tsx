@@ -193,7 +193,7 @@ const HistoryScreen = () => {
                 <View style={styles.modalCaptionContainer}>
                   <View style={styles.modalCaptionHeader}>
                     <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
-                    <Text style={styles.modalCaptionTitle}>Caption</Text>
+                    <Text style={styles.modalCaptionTitle}>Mô tả</Text>
                   </View>
                   
                   {isEditing ? (
@@ -204,7 +204,7 @@ const HistoryScreen = () => {
                           value={editedCaption}
                           onChangeText={setEditedCaption}
                           multiline
-                          placeholder="Enter your caption here..."
+                          placeholder="Nhập mô tả của bạn ở đây..."
                           placeholderTextColor="#888"
                           autoFocus={true}
                           blurOnSubmit={false}
@@ -218,20 +218,20 @@ const HistoryScreen = () => {
                             style={styles.saveButton} 
                             onPress={saveEditedCaption}
                           >
-                            <Text style={styles.editButtonText}>Save</Text>
+                            <Text style={styles.editButtonText}>Lưu</Text>
                           </TouchableOpacity>
                         )}
                         <TouchableOpacity 
                           style={styles.cancelEditButton} 
                           onPress={cancelEditing}
                         >
-                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                          <Text style={styles.cancelButtonText}>Hủy</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   ) : (
                     <Text style={styles.modalCaption}>
-                      "{selectedImage.description || 'No caption available'}"
+                      "{selectedImage.description || 'Chưa có mô tả'}"
                     </Text>
                   )}
                   
@@ -260,7 +260,7 @@ const HistoryScreen = () => {
                       >
                         <View style={[styles.modalButtonGradient, styles.editButtonMain]}>
                           <Ionicons name="create-outline" size={20} color="#fff" />
-                          <Text style={styles.actionButtonText}>Edit Caption</Text>
+                          <Text style={styles.actionButtonText}>Sửa mô tả</Text>
                         </View>
                       </TouchableOpacity>
                       
@@ -268,22 +268,22 @@ const HistoryScreen = () => {
                         style={styles.modalActionButton}
                         onPress={() => {
                           Alert.alert(
-                            'Delete Image',
-                            'Are you sure you want to delete this image?',
+                            'Xóa ảnh',
+                            'Bạn có chắc chắn muốn xóa ảnh này?',
                             [
-                              { text: 'Cancel', style: 'cancel' },
+                              { text: 'Hủy', style: 'cancel' },
                               { 
-                                text: 'Delete', 
+                                text: 'Xóa', 
                                 style: 'destructive',
                                 onPress: async () => {
                                   try {
                                     await imageService.deleteImage(selectedImage.id);
                                     setModalVisible(false);
                                     fetchImages();
-                                    Alert.alert('Success', 'Image deleted successfully');
+                                    Alert.alert('Thành công', 'Ảnh đã được xóa thành công');
                                   } catch (error) {
                                     console.error('Failed to delete image:', error);
-                                    Alert.alert('Error', 'Failed to delete image');
+                                    Alert.alert('Lỗi', 'Không thể xóa ảnh');
                                   }
                                 }
                               }
@@ -294,7 +294,7 @@ const HistoryScreen = () => {
                       >
                         <View style={[styles.modalButtonGradient, styles.deleteButtonMain]}>
                           <Ionicons name="trash-outline" size={20} color="#fff" />
-                          <Text style={styles.actionButtonText}>Delete</Text>
+                          <Text style={styles.actionButtonText}>Xóa</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
@@ -314,7 +314,7 @@ const HistoryScreen = () => {
       return (
         <Animatable.View animation="fadeIn" duration={800} style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#1A5276" />
-          <Text style={styles.emptyText}>Loading images...</Text>
+          <Text style={styles.emptyText}>Đang tải ảnh...</Text>
         </Animatable.View>
       );
     }
@@ -324,8 +324,8 @@ const HistoryScreen = () => {
         <View style={styles.emptyIconContainer}>
           <MaterialCommunityIcons name="image-multiple-outline" size={90} color="#1A5276" />
         </View>
-        <Text style={styles.emptyText}>No images available</Text>
-        <Text style={styles.emptySubtext}>Start by uploading your first image</Text>
+        <Text style={styles.emptyText}>Chưa có ảnh nào</Text>
+        <Text style={styles.emptySubtext}>Bắt đầu bằng cách tải lên ảnh đầu tiên</Text>
         <TouchableOpacity
           style={styles.uploadButton}
           onPress={() => router.push('/(tabs)/captioning')}
@@ -338,7 +338,7 @@ const HistoryScreen = () => {
             end={{ x: 1, y: 1 }}
           >
             <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-            <Text style={styles.uploadButtonText}>Upload Image</Text>
+            <Text style={styles.uploadButtonText}>Tải ảnh lên</Text>
           </LinearGradient>
         </TouchableOpacity>
       </Animatable.View>
@@ -363,7 +363,7 @@ const HistoryScreen = () => {
         >
           <View style={styles.titleContainer}>
             <MaterialCommunityIcons name="image-multiple" size={24} color="#1A5276" />
-            <Text style={styles.sectionTitle}>My Images</Text>
+            <Text style={styles.sectionTitle}>Ảnh của tôi</Text>
           </View>
           <TouchableOpacity 
             style={styles.uploadNewButton}

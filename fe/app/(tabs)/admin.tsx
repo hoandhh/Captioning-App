@@ -9,6 +9,7 @@ import {
     SafeAreaView,
     Alert,
     ScrollView,
+    Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { adminService } from '../../services/api';
@@ -40,7 +41,7 @@ const AdminScreen = () => {
 
     useEffect(() => {
         if (user?.role !== 'admin') {
-            Alert.alert('Access Denied', 'You do not have admin privileges.');
+            Alert.alert('Từ chối truy cập', 'Bạn không có quyền quản trị.');
             router.replace('/(tabs)');
         } else {
             fetchDashboardData();
@@ -54,7 +55,7 @@ const AdminScreen = () => {
             setStats(statsData);
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
-            Alert.alert('Error', 'Failed to load dashboard data. Please try again.');
+            Alert.alert('Lỗi', 'Không thể tải dữ liệu bảng điều khiển. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
@@ -67,7 +68,7 @@ const AdminScreen = () => {
             setUsers(userData.users || []);
         } catch (error) {
             console.error('Failed to fetch users:', error);
-            Alert.alert('Error', 'Failed to load users. Please try again.');
+            Alert.alert('Lỗi', 'Không thể tải danh sách người dùng. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
@@ -91,10 +92,10 @@ const AdminScreen = () => {
                     user.id === userId ? { ...user, is_active: !isActive } : user
                 )
             );
-            Alert.alert('Success', `User ${!isActive ? 'activated' : 'deactivated'} successfully.`);
+            Alert.alert('Thành công', `Người dùng đã ${!isActive ? 'kích hoạt' : 'vô hiệu hóa'} thành công.`);
         } catch (error) {
             console.error('Failed to toggle user status:', error);
-            Alert.alert('Error', 'Failed to update user status. Please try again.');
+            Alert.alert('Lỗi', 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
         }
     };
 
@@ -107,10 +108,10 @@ const AdminScreen = () => {
                     user.id === userId ? { ...user, role: newRole } : user
                 )
             );
-            Alert.alert('Success', `User role changed to ${newRole} successfully.`);
+            Alert.alert('Thành công', `Vai trò người dùng đã được thay đổi thành ${newRole} thành công.`);
         } catch (error) {
             console.error('Failed to change user role:', error);
-            Alert.alert('Error', 'Failed to update user role. Please try again.');
+            Alert.alert('Lỗi', 'Không thể cập nhật vai trò người dùng. Vui lòng thử lại.');
         }
     };
 
@@ -120,28 +121,23 @@ const AdminScreen = () => {
                 <Text style={styles.username}>{item.username}</Text>
                 <Text style={styles.email}>{item.email}</Text>
                 <Text style={styles.details}>
-                    Name: {item.full_name || 'Not provided'} • Role: {item.role}
+                    Tên: {item.full_name || 'Chưa cung cấp'} • Vai trò: {item.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
                 </Text>
-                <View
-                    style={[
-                        styles.statusBadge,
-                        { backgroundColor: item.is_active ? '#2ECC71' : '#E74C3C' },
-                    ]}
-                >
-                    <Text style={styles.statusText}>
-                        {item.is_active ? 'Active' : 'Inactive'}
-                    </Text>
-                </View>
             </View>
             <View style={styles.userActions}>
-                <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: item.is_active ? '#E74C3C' : '#2ECC71' }]}
-                    onPress={() => toggleUserStatus(item.id, item.is_active)}
-                >
-                    <Text style={styles.actionButtonText}>
-                        {item.is_active ? 'Deactivate' : 'Activate'}
-                    </Text>
-                </TouchableOpacity>
+                <View style={styles.switchContainer}>
+                    <Text style={styles.switchLabel}>Trạng thái:</Text>
+                    <View style={styles.switchWrapper}>
+                        <Text style={styles.switchStateText}>{item.is_active ? 'Hoạt động' : 'Không hoạt động'}</Text>
+                        <Switch
+                            trackColor={{ false: '#E74C3C', true: '#2ECC71' }}
+                            thumbColor={item.is_active ? '#fff' : '#fff'}
+                            ios_backgroundColor="#E74C3C"
+                            onValueChange={() => toggleUserStatus(item.id, item.is_active)}
+                            value={item.is_active}
+                        />
+                    </View>
+                </View>
                 <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: '#3498DB' }]}
                     onPress={() =>
@@ -149,7 +145,7 @@ const AdminScreen = () => {
                     }
                 >
                     <Text style={styles.actionButtonText}>
-                        Make {item.role === 'admin' ? 'User' : 'Admin'}
+                        Đổi thành {item.role === 'admin' ? 'Người dùng' : 'Quản trị viên'}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -162,22 +158,22 @@ const AdminScreen = () => {
                 <ActivityIndicator size="large" color="#2E86C1" style={styles.loader} />
             ) : (
                 <>
-                    <Text style={styles.sectionTitle}>System Statistics</Text>
+                    <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
                     <View style={styles.statsContainer}>
                         <View style={styles.statCard}>
                             <Ionicons name="people" size={40} color="#2E86C1" />
                             <Text style={styles.statValue}>{stats?.users || 0}</Text>
-                            <Text style={styles.statLabel}>Users</Text>
+                            <Text style={styles.statLabel}>Người dùng</Text>
                         </View>
                         <View style={styles.statCard}>
                             <Ionicons name="images" size={40} color="#2E86C1" />
                             <Text style={styles.statValue}>{stats?.images || 0}</Text>
-                            <Text style={styles.statLabel}>Images</Text>
+                            <Text style={styles.statLabel}>Hình ảnh</Text>
                         </View>
                         <View style={styles.statCard}>
                             <Ionicons name="alert-circle" size={40} color="#E74C3C" />
                             <Text style={styles.statValue}>{stats?.pending_reports || 0}</Text>
-                            <Text style={styles.statLabel}>Pending Reports</Text>
+                            <Text style={styles.statLabel}>Báo cáo chờ xử lý</Text>
                         </View>
                     </View>
 
@@ -187,25 +183,25 @@ const AdminScreen = () => {
                             onPress={() => handleTabChange('users')}
                         >
                             <Ionicons name="people" size={24} color="#fff" />
-                            <Text style={styles.adminActionText}>Manage Users</Text>
+                            <Text style={styles.adminActionText}>Quản lý người dùng</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.adminActionButton}
                             onPress={() => {
-                                Alert.alert('Coming Soon', 'This feature is under development.');
+                                Alert.alert('Sắp ra mắt', 'Tính năng này đang được phát triển.');
                             }}
                         >
                             <Ionicons name="images" size={24} color="#fff" />
-                            <Text style={styles.adminActionText}>Manage Images</Text>
+                            <Text style={styles.adminActionText}>Quản lý hình ảnh</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.adminActionButton}
                             onPress={() => {
-                                Alert.alert('Coming Soon', 'This feature is under development.');
+                                Alert.alert('Sắp ra mắt', 'Tính năng này đang được phát triển.');
                             }}
                         >
                             <Ionicons name="alert-circle" size={24} color="#fff" />
-                            <Text style={styles.adminActionText}>Handle Reports</Text>
+                            <Text style={styles.adminActionText}>Xử lý báo cáo</Text>
                         </TouchableOpacity>
                     </View>
                 </>
@@ -224,7 +220,7 @@ const AdminScreen = () => {
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.usersList}
                     ListEmptyComponent={
-                        <Text style={styles.emptyText}>No users found</Text>
+                        <Text style={styles.emptyText}>Không có người dùng</Text>
                     }
                 />
             )}
@@ -234,7 +230,7 @@ const AdminScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Admin Dashboard</Text>
+                <Text style={styles.headerTitle}>Bảng điều khiển</Text>
             </View>
 
             <View style={styles.tabContainer}>
@@ -251,7 +247,7 @@ const AdminScreen = () => {
                             activeTab === 'dashboard' && styles.activeTabText,
                         ]}
                     >
-                        Dashboard
+                        Tổng quan
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -264,7 +260,7 @@ const AdminScreen = () => {
                             activeTab === 'users' && styles.activeTabText,
                         ]}
                     >
-                        Users
+                        Người dùng
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -403,27 +399,38 @@ const styles = StyleSheet.create({
         color: '#888',
         marginBottom: 10,
     },
-    statusBadge: {
-        alignSelf: 'flex-start',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 15,
-    },
-    statusText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
     userActions: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         justifyContent: 'space-between',
+        gap: 10,
     },
     actionButton: {
-        flex: 1,
-        paddingVertical: 8,
+        paddingVertical: 10,
         borderRadius: 5,
         alignItems: 'center',
         marginHorizontal: 5,
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#f0f0f0',
+        padding: 10,
+        borderRadius: 5,
+    },
+    switchLabel: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    switchWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    switchStateText: {
+        fontSize: 14,
+        color: '#666',
     },
     actionButtonText: {
         color: '#fff',

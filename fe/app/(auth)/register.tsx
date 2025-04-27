@@ -104,17 +104,17 @@ const RegisterScreen = () => {
                         style={styles.logo}
                         resizeMode="contain"
                     />
-                    <Text style={styles.title}>Create Account</Text>
+                    <Text style={styles.title}>Tạo tài khoản</Text>
                 </View>
 
                 <View style={styles.formContainer}>
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Username<Text style={styles.required}>*</Text></Text>
+                        <Text style={styles.label}>Tên đăng nhập<Text style={styles.required}>*</Text></Text>
                         <TextInput
                             style={styles.input}
                             value={username}
                             onChangeText={setUsername}
-                            placeholder="Enter a username"
+                            placeholder="Nhập tên đăng nhập"
                             autoCapitalize="none"
                         />
                     </View>
@@ -125,40 +125,40 @@ const RegisterScreen = () => {
                             style={styles.input}
                             value={email}
                             onChangeText={setEmail}
-                            placeholder="Enter your email"
+                            placeholder="Nhập email của bạn"
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Full Name</Text>
+                        <Text style={styles.label}>Họ và tên</Text>
                         <TextInput
                             style={styles.input}
                             value={fullName}
                             onChangeText={setFullName}
-                            placeholder="Enter your full name"
+                            placeholder="Nhập họ và tên của bạn"
                         />
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Password<Text style={styles.required}>*</Text></Text>
+                        <Text style={styles.label}>Mật khẩu<Text style={styles.required}>*</Text></Text>
                         <TextInput
                             style={styles.input}
                             value={password}
                             onChangeText={setPassword}
-                            placeholder="Create a password"
+                            placeholder="Tạo mật khẩu"
                             secureTextEntry
                         />
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Confirm Password<Text style={styles.required}>*</Text></Text>
+                        <Text style={styles.label}>Xác nhận mật khẩu<Text style={styles.required}>*</Text></Text>
                         <TextInput
                             style={styles.input}
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
-                            placeholder="Confirm your password"
+                            placeholder="Xác nhận mật khẩu của bạn"
                             secureTextEntry
                         />
                     </View>
@@ -171,14 +171,14 @@ const RegisterScreen = () => {
                         {isLoading ? (
                             <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.buttonText}>Sign Up</Text>
+                            <Text style={styles.buttonText}>Đăng ký</Text>
                         )}
                     </TouchableOpacity>
 
                     <View style={styles.loginContainer}>
-                        <Text style={styles.loginText}>Already have an account? </Text>
+                        <Text style={styles.loginText}>Đã có tài khoản? </Text>
                         <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-                            <Text style={styles.loginLink}>Sign In</Text>
+                            <Text style={styles.loginLink}>Đăng nhập</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

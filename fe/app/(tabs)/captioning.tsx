@@ -36,7 +36,7 @@ const CaptioningScreen = () => {
             // Request permission
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Permission to access media library is required!');
+                Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào thư viện ảnh!');
                 return;
             }
 
@@ -55,7 +55,7 @@ const CaptioningScreen = () => {
             }
         } catch (error) {
             console.error('Error picking image:', error);
-            Alert.alert('Error', 'Failed to pick image. Please try again.');
+            Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.');
         }
     };
 
@@ -64,7 +64,7 @@ const CaptioningScreen = () => {
             // Request camera permission
             const { status } = await ImagePicker.requestCameraPermissionsAsync();
             if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Permission to access camera is required!');
+                Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào camera!');
                 return;
             }
 
@@ -81,7 +81,7 @@ const CaptioningScreen = () => {
             }
         } catch (error) {
             console.error('Error taking picture:', error);
-            Alert.alert('Error', 'Failed to take picture. Please try again.');
+            Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.');
         }
     };
 
@@ -134,7 +134,7 @@ const CaptioningScreen = () => {
             setCaption(response.image.description);
         } catch (error) {
             console.error('Error regenerating caption:', error);
-            Alert.alert('Error', 'Failed to regenerate caption. Please try again.');
+            Alert.alert('Lỗi', 'Không thể tạo lại mô tả. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
@@ -162,7 +162,7 @@ const CaptioningScreen = () => {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating caption:', error);
-            Alert.alert('Error', 'Failed to update caption. Please try again.');
+            Alert.alert('Lỗi', 'Không thể cập nhật mô tả. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
@@ -208,7 +208,7 @@ const CaptioningScreen = () => {
                             >
                                 <MaterialCommunityIcons name="image-text" size={90} color="#1A5276" />
                             </Animatable.View>
-                            <Text style={styles.uploadText}>Select an image to generate a caption</Text>
+                            <Text style={styles.uploadText}>Chọn một hình ảnh để tạo mô tả</Text>
 
                             <View style={styles.buttonRow}>
                                 <TouchableOpacity 
@@ -223,7 +223,7 @@ const CaptioningScreen = () => {
                                         end={{ x: 1, y: 1 }}
                                     >
                                         <Ionicons name="images" size={24} color="#fff" />
-                                        <Text style={styles.buttonText}>Gallery</Text>
+                                        <Text style={styles.buttonText}>Thư viện</Text>
                                     </LinearGradient>
                                 </TouchableOpacity>
 
@@ -239,7 +239,7 @@ const CaptioningScreen = () => {
                                         end={{ x: 1, y: 1 }}
                                     >
                                         <Ionicons name="camera" size={24} color="#fff" />
-                                        <Text style={styles.buttonText}>Camera</Text>
+                                        <Text style={styles.buttonText}>Máy ảnh</Text>
                                     </LinearGradient>
                                 </TouchableOpacity>
                             </View>
@@ -249,7 +249,7 @@ const CaptioningScreen = () => {
                                 onPress={viewMyImages}
                                 activeOpacity={0.7}
                             >
-                                <Text style={styles.myImagesText}>View My Gallery</Text>
+                                <Text style={styles.myImagesText}>Xem bộ sưu tập của tôi</Text>
                             </TouchableOpacity>
                         </Animatable.View>
                     ) : (
@@ -269,7 +269,7 @@ const CaptioningScreen = () => {
                                     style={styles.loadingContainer}
                                 >
                                     <ActivityIndicator size="large" color="#1A5276" />
-                                    <Text style={styles.loadingText}>Generating caption...</Text>
+                                    <Text style={styles.loadingText}>Đang tạo mô tả...</Text>
                                 </Animatable.View>
                             ) : caption ? (
                                 <Animatable.View 
@@ -279,7 +279,7 @@ const CaptioningScreen = () => {
                                 >
                                     <View style={styles.captionHeader}>
                                         <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
-                                        <Text style={styles.captionTitle}>Generated Caption</Text>
+                                        <Text style={styles.captionTitle}>Mô tả đã tạo</Text>
                                     </View>
                                     
                                     {isEditing ? (
@@ -289,7 +289,7 @@ const CaptioningScreen = () => {
                                                 value={editedCaption}
                                                 onChangeText={setEditedCaption}
                                                 multiline
-                                                placeholder="Enter your caption here..."
+                                                placeholder="Nhập mô tả của bạn ở đây..."
                                                 placeholderTextColor="#888"
                                             />
                                             <View style={styles.editButtons}>
@@ -297,7 +297,7 @@ const CaptioningScreen = () => {
                                                     style={[styles.editButton, styles.saveButton]} 
                                                     onPress={saveEditedCaption}
                                                 >
-                                                    <Text style={styles.editButtonText}>Save</Text>
+                                                    <Text style={styles.editButtonText}>Lưu</Text>
                                                 </TouchableOpacity>
                                                 <TouchableOpacity 
                                                     style={[styles.editButton, styles.cancelButton]} 

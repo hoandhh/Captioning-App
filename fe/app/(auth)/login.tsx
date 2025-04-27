@@ -101,7 +101,7 @@ const LoginScreen = () => {
                         style={styles.logo}
                         resizeMode="contain"
                     />
-                    <Text style={styles.title}>Image Captioning App</Text>
+                    <Text style={styles.title}>Ứng dụng Mô tả Hình ảnh</Text>
                     <Text style={styles.subtitle}>Biến đổi ảnh thành lời với AI</Text>
                 </View>
 

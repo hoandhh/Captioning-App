@@ -100,7 +100,7 @@ export default function TabLayout() {
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="home" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>Home</Text>
+              <Text style={styles.headerTitleText}>Trang chủ</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
@@ -115,11 +115,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="captioning"
         options={{
-          title: 'Caption',
+          title: 'Mô tả',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <MaterialCommunityIcons name="image-text" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>Image Captioning</Text>
+              <Text style={styles.headerTitleText}>Mô tả hình ảnh</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
@@ -134,11 +134,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'History',
+          title: 'Lịch sử',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="images" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>My History</Text>
+              <Text style={styles.headerTitleText}>Lịch sử của tôi</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
