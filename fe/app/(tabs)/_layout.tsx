@@ -1,11 +1,28 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { View, Text, StyleSheet, Platform, Animated } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Bảng màu mới cho toàn bộ ứng dụng
+const AppTheme = {
+  primary: '#4A00E0',
+  primaryGradient: ['#4A00E0', '#8E2DE2', '#6A82FB'],
+  secondary: '#00C9FF',
+  secondaryGradient: ['#00C9FF', '#92FE9D'],
+  accent: '#9B59B6',
+  success: '#2ECC71',
+  warning: '#F39C12',
+  info: '#4A90E2',
+  background: '#f8f9fa',
+  card: 'rgba(255, 255, 255, 0.95)',
+  text: '#333',
+  textLight: '#666',
+  textLighter: '#888',
+};
 
 const styles = StyleSheet.create({
   headerTitleContainer: {
@@ -24,20 +41,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 5,
   },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: -5,
-    width: 0, // Set to 0 to remove the dot indicator
-    height: 0, // Set to 0 to remove the dot indicator
-    borderRadius: 0,
-    backgroundColor: 'transparent',
-  },
   headerGradient: {
     position: 'absolute',
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
+  },
+  tabBarLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  tabBar: {
+    backgroundColor: '#fff',
+    borderTopWidth: 0,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    height: Platform.OS === 'ios' ? 85 : 60,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+    paddingTop: 10,
+  },
+  headerStyle: {
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    borderBottomWidth: 0,
+    height: Platform.OS === 'ios' ? 100 : 80,
   },
 });
 
@@ -49,30 +84,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#1A5276',
-        tabBarInactiveTintColor: '#95a5a6',
-        tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopWidth: 0,
-          elevation: 10,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 5,
-          height: Platform.OS === 'ios' ? 85 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-          paddingTop: 10,
-        },
+        tabBarActiveTintColor: AppTheme.primary,
+        tabBarInactiveTintColor: AppTheme.textLighter,
+        tabBarStyle: styles.tabBar,
         tabBarShowLabel: true,
-        headerStyle: {
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 6,
-          borderBottomWidth: 0,
-          height: Platform.OS === 'ios' ? 100 : 80,
-        },
+        headerStyle: styles.headerStyle,
         headerTitleStyle: {
           fontWeight: 'bold',
           fontSize: 18,
@@ -81,16 +97,21 @@ export default function TabLayout() {
         },
         headerBackground: () => (
           <LinearGradient
-            colors={['#1A5276', '#2980B9']}
+            colors={['#4A00E0', '#8E2DE2', '#6A82FB'] as any}
             style={[styles.headerGradient, { paddingTop: insets.top }]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            end={{ x: 1, y: 1 }}
           />
         ),
         headerTintColor: '#fff',
         tabBarItemStyle: {
           paddingVertical: 5,
         },
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarActiveBackgroundColor: 'transparent',
+        tabBarInactiveBackgroundColor: 'transparent',
+        tabBarAllowFontScaling: false,
+        headerShadowVisible: false,
       }}
     >
       <Tabs.Screen
@@ -106,7 +127,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={styles.tabIconContainer}>
               <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
-              {focused && <View style={styles.activeIndicator} />}
             </View>
           ),
         }}
@@ -125,7 +145,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={styles.tabIconContainer}>
               <MaterialCommunityIcons name={focused ? "image-text" : "image-outline"} size={size} color={color} />
-              {focused && <View style={styles.activeIndicator} />}
             </View>
           ),
         }}
@@ -144,7 +163,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={styles.tabIconContainer}>
               <Ionicons name={focused ? "images" : "images-outline"} size={size} color={color} />
-              {focused && <View style={styles.activeIndicator} />}
             </View>
           ),
         }}
@@ -164,7 +182,6 @@ export default function TabLayout() {
             tabBarIcon: ({ color, size, focused }) => (
               <View style={styles.tabIconContainer}>
                 <Ionicons name={focused ? "shield" : "shield-outline"} size={size} color={color} />
-                {focused && <View style={styles.activeIndicator} />}
               </View>
             ),
           }}
@@ -184,7 +201,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={styles.tabIconContainer}>
               <Ionicons name={focused ? "person" : "person-outline"} size={size} color={color} />
-              {focused && <View style={styles.activeIndicator} />}
             </View>
           ),
         }}

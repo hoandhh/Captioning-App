@@ -10,11 +10,30 @@ import {
     Alert,
     ScrollView,
     Switch,
+    Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { adminService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
+
+// Theme colors for consistency with other screens
+const AppTheme = {
+    primary: '#4A00E0',
+    secondary: '#8E2DE2',
+    background: '#F8F9FA',
+    card: '#FFFFFF',
+    text: '#212529',
+    textLight: '#6C757D',
+    success: '#28A745',
+    danger: '#DC3545',
+    warning: '#FFC107',
+    info: '#17A2B8',
+    gradientStart: '#4A00E0',
+    gradientEnd: '#8E2DE2',
+};
 
 interface User {
     id: string;
@@ -116,94 +135,201 @@ const AdminScreen = () => {
     };
 
     const renderUserItem = ({ item }: { item: User }) => (
-        <View style={styles.userCard}>
+        <Animatable.View 
+            animation="fadeInUp" 
+            duration={500}
+            style={styles.userCard}
+        >
             <View style={styles.userInfo}>
-                <Text style={styles.username}>{item.username}</Text>
-                <Text style={styles.email}>{item.email}</Text>
-                <Text style={styles.details}>
-                    Tên: {item.full_name || 'Chưa cung cấp'} • Vai trò: {item.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
-                </Text>
+                <View style={styles.userAvatarContainer}>
+                    <LinearGradient
+                        colors={[AppTheme.gradientStart, AppTheme.gradientEnd]}
+                        style={styles.userAvatar}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
+                        <Text style={styles.userAvatarText}>
+                            {item.username.charAt(0).toUpperCase()}
+                        </Text>
+                    </LinearGradient>
+                </View>
+                <View style={styles.userDetails}>
+                    <Text style={styles.username}>{item.username}</Text>
+                    <Text style={styles.email}>{item.email}</Text>
+                    <View style={styles.userMetaContainer}>
+                        <View style={styles.userMetaItem}>
+                            <Ionicons name="person-outline" size={14} color={AppTheme.textLight} />
+                            <Text style={styles.userMetaText}>
+                                {item.full_name || 'Chưa cung cấp'}
+                            </Text>
+                        </View>
+                        <View style={styles.userMetaItem}>
+                            <Ionicons name="shield-outline" size={14} color={AppTheme.textLight} />
+                            <Text style={[styles.userMetaText, item.role === 'admin' ? styles.adminRoleText : {}]}>
+                                {item.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
             </View>
             <View style={styles.userActions}>
                 <View style={styles.switchContainer}>
                     <Text style={styles.switchLabel}>Trạng thái:</Text>
                     <View style={styles.switchWrapper}>
-                        <Text style={styles.switchStateText}>{item.is_active ? 'Hoạt động' : 'Không hoạt động'}</Text>
+                        <Text style={[styles.switchStateText, item.is_active ? styles.activeStateText : styles.inactiveStateText]}>
+                            {item.is_active ? 'Hoạt động' : 'Không hoạt động'}
+                        </Text>
                         <Switch
-                            trackColor={{ false: '#E74C3C', true: '#2ECC71' }}
-                            thumbColor={item.is_active ? '#fff' : '#fff'}
-                            ios_backgroundColor="#E74C3C"
+                            trackColor={{ false: AppTheme.danger, true: AppTheme.success }}
+                            thumbColor={'#fff'}
+                            ios_backgroundColor={AppTheme.danger}
                             onValueChange={() => toggleUserStatus(item.id, item.is_active)}
                             value={item.is_active}
                         />
                     </View>
                 </View>
                 <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: '#3498DB' }]}
+                    style={styles.actionButtonContainer}
                     onPress={() =>
                         changeUserRole(item.id, item.role === 'admin' ? 'user' : 'admin')
                     }
                 >
-                    <Text style={styles.actionButtonText}>
-                        Đổi thành {item.role === 'admin' ? 'Người dùng' : 'Quản trị viên'}
-                    </Text>
+                    <LinearGradient
+                        colors={item.role === 'admin' ? ['#FF9500', '#FF5E3A'] : [AppTheme.gradientStart, AppTheme.gradientEnd]}
+                        style={styles.actionButton}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                    >
+                        <Ionicons 
+                            name={item.role === 'admin' ? 'person' : 'shield'} 
+                            size={18} 
+                            color="#fff" 
+                            style={{marginRight: 8}}
+                        />
+                        <Text style={styles.actionButtonText}>
+                            Đổi thành {item.role === 'admin' ? 'Người dùng' : 'Quản trị viên'}
+                        </Text>
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
-        </View>
+        </Animatable.View>
     );
 
     const renderDashboard = () => (
         <ScrollView style={styles.dashboardContainer}>
             {loading ? (
-                <ActivityIndicator size="large" color="#2E86C1" style={styles.loader} />
+                <ActivityIndicator size="large" color={AppTheme.primary} style={styles.loader} />
             ) : (
                 <>
-                    <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
-                    <View style={styles.statsContainer}>
-                        <View style={styles.statCard}>
-                            <Ionicons name="people" size={40} color="#2E86C1" />
+                    <Animatable.Text 
+                        animation="fadeIn" 
+                        duration={800} 
+                        style={styles.sectionTitle}
+                    >
+                        Thống kê hệ thống
+                    </Animatable.Text>
+                    
+                    <Animatable.View 
+                        animation="fadeInUp" 
+                        duration={800} 
+                        delay={200}
+                        style={styles.statsContainer}
+                    >
+                        <LinearGradient
+                            colors={['#4158D0', '#C850C0']}
+                            style={styles.statCard}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <View style={styles.statIconContainer}>
+                                <FontAwesome5 name="users" size={30} color="#fff" />
+                            </View>
                             <Text style={styles.statValue}>{stats?.users || 0}</Text>
                             <Text style={styles.statLabel}>Người dùng</Text>
-                        </View>
-                        <View style={styles.statCard}>
-                            <Ionicons name="images" size={40} color="#2E86C1" />
+                        </LinearGradient>
+                        
+                        <LinearGradient
+                            colors={['#0093E9', '#80D0C7']}
+                            style={styles.statCard}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <View style={styles.statIconContainer}>
+                                <MaterialCommunityIcons name="image-multiple" size={30} color="#fff" />
+                            </View>
                             <Text style={styles.statValue}>{stats?.images || 0}</Text>
                             <Text style={styles.statLabel}>Hình ảnh</Text>
-                        </View>
-                        <View style={styles.statCard}>
-                            <Ionicons name="alert-circle" size={40} color="#E74C3C" />
+                        </LinearGradient>
+                        
+                        <LinearGradient
+                            colors={['#FF416C', '#FF4B2B']}
+                            style={styles.statCard}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <View style={styles.statIconContainer}>
+                                <Ionicons name="warning" size={30} color="#fff" />
+                            </View>
                             <Text style={styles.statValue}>{stats?.pending_reports || 0}</Text>
                             <Text style={styles.statLabel}>Báo cáo chờ xử lý</Text>
-                        </View>
-                    </View>
+                        </LinearGradient>
+                    </Animatable.View>
 
-                    <View style={styles.adminActions}>
+                    <Animatable.View 
+                        animation="fadeInUp" 
+                        duration={800} 
+                        delay={400}
+                        style={styles.adminActions}
+                    >
                         <TouchableOpacity
-                            style={styles.adminActionButton}
+                            style={styles.adminActionButtonContainer}
                             onPress={() => handleTabChange('users')}
                         >
-                            <Ionicons name="people" size={24} color="#fff" />
-                            <Text style={styles.adminActionText}>Quản lý người dùng</Text>
+                            <LinearGradient
+                                colors={[AppTheme.gradientStart, AppTheme.gradientEnd]}
+                                style={styles.adminActionButton}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                            >
+                                <Ionicons name="people" size={24} color="#fff" />
+                                <Text style={styles.adminActionText}>Quản lý người dùng</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
+                        
                         <TouchableOpacity
-                            style={styles.adminActionButton}
+                            style={styles.adminActionButtonContainer}
                             onPress={() => {
                                 Alert.alert('Sắp ra mắt', 'Tính năng này đang được phát triển.');
                             }}
                         >
-                            <Ionicons name="images" size={24} color="#fff" />
-                            <Text style={styles.adminActionText}>Quản lý hình ảnh</Text>
+                            <LinearGradient
+                                colors={['#0093E9', '#80D0C7']}
+                                style={styles.adminActionButton}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                            >
+                                <Ionicons name="images" size={24} color="#fff" />
+                                <Text style={styles.adminActionText}>Quản lý hình ảnh</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
+                        
                         <TouchableOpacity
-                            style={styles.adminActionButton}
+                            style={styles.adminActionButtonContainer}
                             onPress={() => {
                                 Alert.alert('Sắp ra mắt', 'Tính năng này đang được phát triển.');
                             }}
                         >
-                            <Ionicons name="alert-circle" size={24} color="#fff" />
-                            <Text style={styles.adminActionText}>Xử lý báo cáo</Text>
+                            <LinearGradient
+                                colors={['#FF416C', '#FF4B2B']}
+                                style={styles.adminActionButton}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                            >
+                                <Ionicons name="alert-circle" size={24} color="#fff" />
+                                <Text style={styles.adminActionText}>Xử lý báo cáo</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
-                    </View>
+                    </Animatable.View>
                 </>
             )}
         </ScrollView>
@@ -212,28 +338,34 @@ const AdminScreen = () => {
     const renderUsersList = () => (
         <View style={styles.listContainer}>
             {loading ? (
-                <ActivityIndicator size="large" color="#2E86C1" style={styles.loader} />
+                <ActivityIndicator size="large" color={AppTheme.primary} style={styles.loader} />
             ) : (
-                <FlatList
-                    data={users}
-                    renderItem={renderUserItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.usersList}
-                    ListEmptyComponent={
-                        <Text style={styles.emptyText}>Không có người dùng</Text>
-                    }
-                />
+                <Animatable.View animation="fadeIn" duration={500}>
+                    <FlatList
+                        data={users}
+                        renderItem={renderUserItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.usersList}
+                        ListEmptyComponent={
+                            <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
+                                <Ionicons name="people" size={60} color={AppTheme.textLight} style={{opacity: 0.5}} />
+                                <Text style={styles.emptyText}>Không có người dùng</Text>
+                            </Animatable.View>
+                        }
+                    />
+                </Animatable.View>
             )}
         </View>
     );
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Bảng điều khiển</Text>
-            </View>
-
-            <View style={styles.tabContainer}>
+            <Animatable.View 
+                animation="fadeIn" 
+                duration={800} 
+                delay={200}
+                style={styles.tabContainer}
+            >
                 <TouchableOpacity
                     style={[
                         styles.tabButton,
@@ -241,6 +373,12 @@ const AdminScreen = () => {
                     ]}
                     onPress={() => handleTabChange('dashboard')}
                 >
+                    <Ionicons 
+                        name="grid-outline" 
+                        size={20} 
+                        color={activeTab === 'dashboard' ? AppTheme.primary : AppTheme.textLight} 
+                        style={styles.tabIcon}
+                    />
                     <Text
                         style={[
                             styles.tabText,
@@ -254,6 +392,12 @@ const AdminScreen = () => {
                     style={[styles.tabButton, activeTab === 'users' && styles.activeTab]}
                     onPress={() => handleTabChange('users')}
                 >
+                    <Ionicons 
+                        name="people-outline" 
+                        size={20} 
+                        color={activeTab === 'users' ? AppTheme.primary : AppTheme.textLight} 
+                        style={styles.tabIcon}
+                    />
                     <Text
                         style={[
                             styles.tabText,
@@ -263,7 +407,7 @@ const AdminScreen = () => {
                         Người dùng
                     </Text>
                 </TouchableOpacity>
-            </View>
+            </Animatable.View>
 
             {activeTab === 'dashboard' ? renderDashboard() : renderUsersList()}
         </SafeAreaView>
@@ -273,87 +417,105 @@ const AdminScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-    },
-    header: {
-        backgroundColor: '#2E86C1',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-    },
-    headerTitle: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold',
+        backgroundColor: AppTheme.background,
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
     },
     tabContainer: {
         flexDirection: 'row',
         borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+        borderBottomColor: 'rgba(0,0,0,0.05)',
+        backgroundColor: '#fff',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     tabButton: {
         flex: 1,
         paddingVertical: 15,
         alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    tabIcon: {
+        marginRight: 8,
     },
     tabText: {
         fontSize: 16,
-        color: '#666',
+        color: AppTheme.textLight,
     },
     activeTab: {
         borderBottomWidth: 3,
-        borderBottomColor: '#2E86C1',
+        borderBottomColor: AppTheme.primary,
     },
     activeTabText: {
-        color: '#2E86C1',
+        color: AppTheme.primary,
         fontWeight: 'bold',
     },
     dashboardContainer: {
         flex: 1,
-        padding: 15,
+        padding: 20,
     },
     statsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 25,
     },
     statCard: {
         flex: 1,
-        backgroundColor: '#f9f9f9',
-        padding: 15,
-        borderRadius: 10,
+        padding: 20,
+        borderRadius: 15,
         alignItems: 'center',
         marginHorizontal: 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    statIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
     },
     statValue: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#333',
-        marginTop: 10,
+        color: '#fff',
+        marginTop: 5,
     },
     statLabel: {
         fontSize: 14,
-        color: '#666',
+        color: '#fff',
         marginTop: 5,
+        opacity: 0.8,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 15,
-        color: '#333',
+        marginBottom: 20,
+        color: AppTheme.text,
     },
     adminActions: {
         marginTop: 20,
     },
-    adminActionButton: {
-        backgroundColor: '#2E86C1',
-        padding: 15,
-        borderRadius: 8,
+    adminActionButtonContainer: {
+        borderRadius: 12,
         marginBottom: 15,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+    },
+    adminActionButton: {
+        padding: 16,
         flexDirection: 'row',
         alignItems: 'center',
     },
@@ -361,67 +523,112 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-        marginLeft: 10,
+        marginLeft: 12,
     },
     listContainer: {
         flex: 1,
-        padding: 15,
+        padding: 20,
     },
     usersList: {
         paddingBottom: 20,
     },
     userCard: {
-        backgroundColor: '#f9f9f9',
-        borderRadius: 10,
-        padding: 15,
+        backgroundColor: AppTheme.card,
+        borderRadius: 15,
+        padding: 20,
         marginBottom: 15,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     userInfo: {
-        marginBottom: 15,
+        flexDirection: 'row',
+        marginBottom: 20,
+    },
+    userAvatarContainer: {
+        marginRight: 15,
+    },
+    userAvatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    userAvatarText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    userDetails: {
+        flex: 1,
+        justifyContent: 'center',
     },
     username: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
+        color: AppTheme.text,
+        marginBottom: 4,
     },
     email: {
         fontSize: 16,
-        color: '#666',
-        marginBottom: 5,
+        color: AppTheme.textLight,
+        marginBottom: 8,
     },
-    details: {
+    userMetaContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    userMetaItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 12,
+        marginBottom: 4,
+    },
+    userMetaText: {
         fontSize: 14,
-        color: '#888',
-        marginBottom: 10,
+        color: AppTheme.textLight,
+        marginLeft: 4,
+    },
+    adminRoleText: {
+        color: AppTheme.primary,
+        fontWeight: '500',
     },
     userActions: {
         flexDirection: 'column',
         justifyContent: 'space-between',
-        gap: 10,
+        gap: 12,
+    },
+    actionButtonContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
     },
     actionButton: {
-        paddingVertical: 10,
-        borderRadius: 5,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
         alignItems: 'center',
-        marginHorizontal: 5,
+        justifyContent: 'center',
     },
     switchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f0f0f0',
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: 'rgba(0,0,0,0.03)',
+        padding: 12,
+        borderRadius: 8,
     },
     switchLabel: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#333',
+        color: AppTheme.text,
     },
     switchWrapper: {
         flexDirection: 'row',
@@ -430,7 +637,13 @@ const styles = StyleSheet.create({
     },
     switchStateText: {
         fontSize: 14,
-        color: '#666',
+        fontWeight: '500',
+    },
+    activeStateText: {
+        color: AppTheme.success,
+    },
+    inactiveStateText: {
+        color: AppTheme.danger,
     },
     actionButtonText: {
         color: '#fff',
@@ -440,11 +653,17 @@ const styles = StyleSheet.create({
     loader: {
         marginTop: 50,
     },
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 30,
+    },
     emptyText: {
         textAlign: 'center',
-        marginTop: 50,
+        marginTop: 15,
         fontSize: 16,
-        color: '#666',
+        color: AppTheme.textLight,
     },
 });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,12 +9,15 @@ import {
     ScrollView,
     Dimensions,
     StatusBar,
-    ImageBackground
+    ImageBackground,
+    Platform,
+    Animated
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,47 +39,81 @@ const WelcomeScreen = () => {
     // Use app icon as logo
     const logoImage = require('../../assets/images/icon.png');
 
-    // Features list
-    const features: { icon: any; title: string; description: string }[] = [
+    // Animation references
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+    
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 800,
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, []);
+
+    // Features list with enhanced icons and descriptions
+    const features = [
         {
-            icon: 'camera-outline',
+            icon: 'camera',
+            iconType: 'font-awesome5',
             title: 'Mô tả hình ảnh thông minh',
-            description: 'Chuyển đổi ảnh thành văn bản mô tả chi tiết bằng AI'
+            description: 'Chuyển đổi ảnh thành văn bản mô tả chi tiết bằng AI tiên tiến',
+            color: '#4A90E2'
         },
         {
-            icon: 'mic-outline',
+            icon: 'headphones',
+            iconType: 'feather',
             title: 'Hỗ trợ text-to-speech',
-            description: 'Nghe mô tả ảnh của bạn bằng giọng nói tự nhiên'
+            description: 'Nghe mô tả ảnh của bạn bằng giọng nói tự nhiên với nhiều tùy chọn',
+            color: '#9B59B6'
         },
         {
-            icon: 'bookmark-outline',
+            icon: 'folder-open',
+            iconType: 'font-awesome5',
             title: 'Lưu trữ và quản lý',
-            description: 'Dễ dàng lưu trữ và tìm kiếm ảnh đã mô tả'
+            description: 'Dễ dàng lưu trữ, phân loại và tìm kiếm ảnh đã mô tả với giao diện trực quan',
+            color: '#F39C12'
         },
         {
-            icon: 'share-social-outline',
+            icon: 'share-2',
+            iconType: 'feather',
             title: 'Chia sẻ nhanh chóng',
-            description: 'Chia sẻ ảnh và mô tả đến mạng xã hội và bạn bè'
+            description: 'Chia sẻ ảnh và mô tả đến mạng xã hội và bạn bè chỉ với một chạm',
+            color: '#2ECC71'
         }
     ];
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1A5276" translucent />
+            <StatusBar barStyle="light-content" backgroundColor="#4A00E0" translucent />
             
             <ImageBackground
                 source={require('../../assets/images/splash-icon.png')}
                 style={styles.backgroundImage}
-                imageStyle={{ opacity: 0.15 }}
+                imageStyle={{ opacity: 0.08 }}
             >
                 <LinearGradient
-                    colors={['#1A5276', '#2874A6', '#3498DB']}
+                    colors={['#4A00E0', '#8E2DE2', '#6A82FB']}
                     style={styles.header}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                 >
-                    <Animatable.View animation="fadeIn" duration={1000} style={styles.logoContainer}>
-                        <Image source={logoImage} style={styles.logo} />
+                    {/* Animated decorative elements */}
+                    <View style={[styles.decorCircle, { top: height * 0.05, left: width * 0.1 }]} />
+                    <View style={[styles.decorCircle, { top: height * 0.12, right: width * 0.15, width: 25, height: 25 }]} />
+                    <View style={[styles.decorCircle, { bottom: height * 0.02, left: width * 0.2, width: 15, height: 15 }]} />
+                    
+                    <Animatable.View animation="zoomIn" duration={1200} style={styles.logoContainer}>
+                        <View style={styles.logoBlur}>
+                            <Image source={logoImage} style={styles.logo} />
+                        </View>
                         <Animatable.Text animation="fadeInUp" delay={300} style={styles.appName}>
                             Ứng dụng Mô tả Hình ảnh AI
                         </Animatable.Text>
@@ -86,7 +123,47 @@ const WelcomeScreen = () => {
                     </Animatable.View>
                 </LinearGradient>
                 
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}>
+                    <Animated.View style={{
+                        opacity: fadeAnim,
+                        transform: [{ translateY: slideAnim }]
+                    }}>
+                        <View style={{
+                            backgroundColor: 'rgba(255,255,255,0.95)',
+                            borderRadius: 16,
+                            padding: 20,
+                            marginBottom: 25,
+                            marginTop: 10,
+                            elevation: 4,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 3 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 5,
+                        }}>
+                            <Text style={{
+                                fontSize: 16,
+                                color: '#666',
+                                textAlign: 'center',
+                            }}>Chào mừng bạn đến với</Text>
+                            <Text style={{
+                                fontSize: 24,
+                                fontWeight: 'bold',
+                                color: '#4A00E0',
+                                textAlign: 'center',
+                                marginVertical: 8,
+                            }}>AI Image Captioning</Text>
+                            <Text style={{
+                                fontSize: 15,
+                                color: '#555',
+                                textAlign: 'center',
+                                lineHeight: 22,
+                            }}>
+                                Ứng dụng hiện đại giúp bạn mô tả hình ảnh bằng công nghệ AI tiên tiến
+                            </Text>
+                        </View>
+                    </Animated.View>
 
                 <Animatable.View animation="fadeInUp" delay={700} style={styles.featuresContainer}>
                     <Text style={styles.sectionTitle}>Tính năng nổi bật</Text>
@@ -96,13 +173,21 @@ const WelcomeScreen = () => {
                             key={index} 
                             animation="fadeInLeft" 
                             delay={800 + (index * 200)} 
-                            style={styles.featureItem}
+                            style={[styles.featureItem, { borderLeftWidth: 3, borderLeftColor: feature.color }]}
                         >
-                            <View style={styles.featureIcon}>
-                                <Ionicons name={feature.icon} size={28} color="#fff" />
+                            <View style={[styles.featureIcon, { backgroundColor: feature.color }]}>
+                                {feature.iconType === 'font-awesome5' && (
+                                    <FontAwesome5 name={feature.icon as any} size={24} color="#fff" />
+                                )}
+                                {feature.iconType === 'feather' && (
+                                    <Feather name={feature.icon as any} size={24} color="#fff" />
+                                )}
+                                {feature.iconType === 'ionicons' && (
+                                    <Ionicons name={feature.icon as any} size={24} color="#fff" />
+                                )}
                             </View>
                             <View style={styles.featureContent}>
-                                <Text style={styles.featureTitle}>{feature.title}</Text>
+                                <Text style={[styles.featureTitle, { color: feature.color }]}>{feature.title}</Text>
                                 <Text style={styles.featureDescription}>{feature.description}</Text>
                             </View>
                         </Animatable.View>
@@ -113,10 +198,10 @@ const WelcomeScreen = () => {
                     <TouchableOpacity 
                         style={styles.loginButton} 
                         onPress={handleLogin}
-                        activeOpacity={0.8}
+                        activeOpacity={0.7}
                     >
                         <LinearGradient
-                            colors={['#3498DB', '#2874A6']}
+                            colors={['#4A00E0', '#8E2DE2']}
                             style={styles.buttonGradient}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
@@ -129,10 +214,10 @@ const WelcomeScreen = () => {
                     <TouchableOpacity 
                         style={styles.registerButton} 
                         onPress={handleRegister}
-                        activeOpacity={0.8}
+                        activeOpacity={0.7}
                     >
                         <LinearGradient
-                            colors={['#16A085', '#27AE60']}
+                            colors={['#00C9FF', '#92FE9D']}
                             style={styles.buttonGradient}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
@@ -143,18 +228,120 @@ const WelcomeScreen = () => {
                     </TouchableOpacity>
 
                     <TouchableOpacity 
-                        style={styles.exploreButton} 
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingVertical: 8,
+                            paddingHorizontal: 5,
+                            marginTop: 10,
+                            borderRadius: 20,
+                            overflow: 'hidden',
+                        }} 
                         onPress={handleExplore}
-                        activeOpacity={0.7}
+                        activeOpacity={0.6}
                     >
-                        <Text style={styles.exploreButtonText}>Khám phá ứng dụng</Text>
-                        <Ionicons name="arrow-forward" size={16} color="#2E86C1" style={{marginLeft: 5}} />
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingVertical: 12,
+                            paddingHorizontal: 25,
+                            borderRadius: 20,
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                        }}>
+                            <Text style={{
+                                color: '#4A00E0',
+                                fontSize: 16,
+                                fontWeight: '600',
+                            }}>Khám phá ứng dụng</Text>
+                            <Feather name="arrow-right" size={18} color="#4A00E0" style={{marginLeft: 8}} />
+                        </View>
                     </TouchableOpacity>
                 </Animatable.View>
 
-                <Animatable.View animation="fadeIn" delay={1800} style={styles.footer}>
-                    <Text style={styles.copyright}> 2025 AI Image Captioning</Text>
-                    <Text style={styles.version}>Phiên bản 1.0.0</Text>
+                <Animatable.View animation="fadeIn" delay={1800} style={{
+                    marginTop: 20,
+                    width: '100%',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                }}>
+                    <LinearGradient
+                        colors={['rgba(255,255,255,0.7)', 'rgba(255,255,255,0.9)']}
+                        style={{
+                            paddingVertical: 20,
+                            paddingHorizontal: 15,
+                            alignItems: 'center',
+                            borderRadius: 16,
+                        }}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                    >
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            marginBottom: 15,
+                        }}>
+                            <TouchableOpacity style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                backgroundColor: 'rgba(255,255,255,0.9)',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginHorizontal: 10,
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2,
+                            }}>
+                                <FontAwesome5 name="facebook" size={18} color="#4267B2" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                backgroundColor: 'rgba(255,255,255,0.9)',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginHorizontal: 10,
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2,
+                            }}>
+                                <FontAwesome5 name="twitter" size={18} color="#1DA1F2" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                backgroundColor: 'rgba(255,255,255,0.9)',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginHorizontal: 10,
+                                elevation: 2,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2,
+                            }}>
+                                <FontAwesome5 name="instagram" size={18} color="#E1306C" />
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={{
+                            fontSize: 14,
+                            color: '#666',
+                            textAlign: 'center',
+                        }}>© 2025 AI Image Captioning</Text>
+                        <Text style={{
+                            fontSize: 12,
+                            color: '#888',
+                            marginTop: 5,
+                            textAlign: 'center',
+                        }}>Phiên bản 1.0.0</Text>
+                    </LinearGradient>
                 </Animatable.View>
             </ScrollView>
             </ImageBackground>
@@ -165,13 +352,13 @@ const WelcomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1A5276',
+        backgroundColor: '#4A00E0',
     },
     backgroundImage: {
         flex: 1,
         width: '100%',
         height: '100%',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f8f9fa',
     },
     scrollContent: {
         flexGrow: 1,
@@ -180,21 +367,39 @@ const styles = StyleSheet.create({
     },
     header: {
         width: '100%',
-        paddingTop: 60,
+        paddingTop: Platform.OS === 'ios' ? 60 : 50,
         paddingBottom: 30,
         alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    decorCircle: {
+        position: 'absolute',
+        width: 35,
+        height: 35,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        zIndex: 1,
     },
     logoContainer: {
         alignItems: 'center',
         paddingHorizontal: 20,
+        zIndex: 2,
+    },
+    logoBlur: {
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
     },
     logo: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        marginBottom: 20,
+        width: 90,
+        height: 90,
+        borderRadius: 45,
         backgroundColor: 'rgba(255,255,255,0.9)',
-        padding: 10,
     },
     appName: {
         fontSize: 28,
@@ -212,13 +417,43 @@ const styles = StyleSheet.create({
         marginTop: 10,
         paddingHorizontal: 30,
     },
+    welcomeCard: {
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 25,
+        marginTop: 10,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+    },
+    welcomeText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+    },
+    welcomeAppName: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#4A00E0',
+        textAlign: 'center',
+        marginVertical: 8,
+    },
+    welcomeDescription: {
+        fontSize: 15,
+        color: '#555',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
     featuresContainer: {
         marginVertical: 20,
     },
     sectionTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1A5276',
+        color: '#4A00E0',
         marginBottom: 20,
         textAlign: 'center',
     },
@@ -226,7 +461,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 15,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         padding: 15,
         borderRadius: 12,
         elevation: 3,
@@ -239,7 +474,7 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: '#2E86C1',
+        backgroundColor: '#4A90E2',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
@@ -255,7 +490,7 @@ const styles = StyleSheet.create({
     featureTitle: {
         fontSize: 17,
         fontWeight: '600',
-        color: '#1A5276',
+        color: '#4A00E0',
         marginBottom: 5,
     },
     featureDescription: {
@@ -307,28 +542,66 @@ const styles = StyleSheet.create({
     exploreButton: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 5,
+        marginTop: 10,
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
+    exploreButtonBlur: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         paddingVertical: 12,
-        paddingHorizontal: 20,
-        marginTop: 5,
+        paddingHorizontal: 25,
+        borderRadius: 20,
     },
     exploreButtonText: {
-        color: '#2E86C1',
+        color: '#4A00E0',
         fontSize: 16,
         fontWeight: '600',
     },
     footer: {
         marginTop: 20,
+        width: '100%',
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    footerGradient: {
+        paddingVertical: 20,
+        paddingHorizontal: 15,
         alignItems: 'center',
-        paddingBottom: 30,
+        borderRadius: 16,
+    },
+    socialIcons: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: 15,
+    },
+    socialIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 10,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     copyright: {
         fontSize: 14,
         color: '#666',
+        textAlign: 'center',
     },
     version: {
         fontSize: 12,
         color: '#888',
         marginTop: 5,
+        textAlign: 'center',
     },
 });
 

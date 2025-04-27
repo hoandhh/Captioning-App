@@ -9,10 +9,32 @@ import {
     SafeAreaView,
     Alert,
     ActivityIndicator,
+    StatusBar,
+    Modal,
+    Platform,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/api';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
+
+// Bảng màu đồng bộ với thiết kế mới
+const AppTheme = {
+  primary: '#4A00E0',
+  primaryGradient: ['#4A00E0', '#8E2DE2', '#6A82FB'],
+  secondary: '#00C9FF',
+  secondaryGradient: ['#00C9FF', '#92FE9D'],
+  accent: '#9B59B6',
+  success: '#2ECC71',
+  warning: '#F39C12',
+  info: '#4A90E2',
+  background: '#f8f9fa',
+  card: 'rgba(255, 255, 255, 0.95)',
+  text: '#333',
+  textLight: '#666',
+  textLighter: '#888',
+};
 
 const ProfileScreen = () => {
     const { user, logout, updateUser } = useAuth();
@@ -120,31 +142,36 @@ const ProfileScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor={AppTheme.primary} />
+            
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.header}>
-                    <View style={styles.avatarContainer}>
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>
-                                {user.full_name
-                                    ? user.full_name.charAt(0).toUpperCase()
-                                    : user.username.charAt(0).toUpperCase()}
-                            </Text>
-                        </View>
-                        <Text style={styles.username}>{user.username}</Text>
-                        <Text style={styles.role}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Text>
-                    </View>
-                </View>
+                <Animatable.View animation="fadeInUp" duration={800} delay={300} style={styles.avatarContainer}>
+                    <LinearGradient
+                        colors={AppTheme.primaryGradient as any}
+                        style={styles.avatarGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
+                        <Text style={styles.avatarText}>
+                            {user.full_name
+                                ? user.full_name.charAt(0).toUpperCase()
+                                : user.username.charAt(0).toUpperCase()}
+                        </Text>
+                    </LinearGradient>
+                    <Text style={styles.username}>{user.username}</Text>
+                    <Text style={styles.role}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Text>
+                </Animatable.View>
 
                 <View style={styles.profileSection}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
                         {!isEditing ? (
                             <TouchableOpacity onPress={() => setIsEditing(true)}>
-                                <Ionicons name="create-outline" size={24} color="#2E86C1" />
+                                <Feather name="edit-2" size={22} color={AppTheme.primary} />
                             </TouchableOpacity>
                         ) : (
                             <TouchableOpacity onPress={() => setIsEditing(false)}>
-                                <Ionicons name="close" size={24} color="#2E86C1" />
+                                <Feather name="x" size={22} color={AppTheme.primary} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -199,11 +226,11 @@ const ProfileScreen = () => {
                         <Text style={styles.sectionTitle}>Bảo mật</Text>
                         {!showPasswordFields ? (
                             <TouchableOpacity onPress={() => setShowPasswordFields(true)}>
-                                <Ionicons name="key-outline" size={24} color="#2E86C1" />
+                                <Feather name="key" size={22} color={AppTheme.primary} />
                             </TouchableOpacity>
                         ) : (
                             <TouchableOpacity onPress={() => setShowPasswordFields(false)}>
-                                <Ionicons name="close" size={24} color="#2E86C1" />
+                                <Feather name="x" size={22} color={AppTheme.primary} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -266,9 +293,16 @@ const ProfileScreen = () => {
                     )}
                 </View>
 
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Ionicons name="log-out-outline" size={20} color="#fff" />
-                    <Text style={styles.logoutText}>Đăng xuất</Text>
+                <TouchableOpacity style={styles.logoutButtonContainer} onPress={handleLogout} activeOpacity={0.8}>
+                    <LinearGradient
+                        colors={['#FF416C', '#FF4B2B']}
+                        style={styles.logoutButton}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
+                        <Feather name="log-out" size={20} color="#fff" />
+                        <Text style={styles.logoutText}>Đăng xuất</Text>
+                    </LinearGradient>
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
@@ -278,51 +312,58 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: AppTheme.background,
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
     },
     scrollContent: {
         flexGrow: 1,
         paddingBottom: 30,
     },
-    header: {
-        backgroundColor: '#2E86C1',
-        paddingVertical: 30,
-        alignItems: 'center',
-    },
     avatarContainer: {
         alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 20,
     },
-    avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: '#fff',
+    avatarGradient: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 15,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
     avatarText: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#2E86C1',
-    },
-    username: {
-        fontSize: 20,
+        fontSize: 36,
         fontWeight: 'bold',
         color: '#fff',
+    },
+    username: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: AppTheme.text,
         marginBottom: 5,
     },
     role: {
         fontSize: 16,
-        color: '#fff',
+        color: AppTheme.textLight,
         opacity: 0.8,
     },
     profileSection: {
         marginHorizontal: 20,
         marginTop: 20,
-        backgroundColor: '#f9f9f9',
-        borderRadius: 10,
-        padding: 15,
+        backgroundColor: AppTheme.card,
+        borderRadius: 15,
+        padding: 20,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -333,19 +374,19 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
+        color: AppTheme.text,
     },
     infoContainer: {
         marginBottom: 15,
     },
     label: {
         fontSize: 14,
-        color: '#666',
+        color: AppTheme.textLight,
         marginBottom: 5,
     },
     infoText: {
         fontSize: 16,
-        color: '#333',
+        color: AppTheme.text,
     },
     input: {
         backgroundColor: '#fff',
@@ -356,11 +397,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     saveButton: {
-        backgroundColor: '#2E86C1',
+        backgroundColor: AppTheme.primary,
         padding: 12,
-        borderRadius: 5,
+        borderRadius: 8,
         alignItems: 'center',
         marginTop: 10,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
     },
     saveButtonText: {
         color: '#fff',
@@ -373,20 +419,28 @@ const styles = StyleSheet.create({
     passwordButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
-        backgroundColor: '#eee',
-        borderRadius: 5,
+        padding: 12,
+        backgroundColor: 'rgba(74, 0, 224, 0.1)',
+        borderRadius: 8,
     },
     passwordButtonText: {
         fontSize: 16,
-        color: '#333',
+        color: AppTheme.primary,
         marginLeft: 10,
+        fontWeight: '500',
+    },
+    logoutButtonContainer: {
+        margin: 20,
+        borderRadius: 10,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
     },
     logoutButton: {
-        backgroundColor: '#E74C3C',
-        margin: 20,
         padding: 15,
-        borderRadius: 5,
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'center',
@@ -405,7 +459,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 10,
         fontSize: 16,
-        color: '#666',
+        color: AppTheme.textLight,
     },
 });
 

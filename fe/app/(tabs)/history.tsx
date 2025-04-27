@@ -1,15 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, FlatList, SafeAreaView, Alert, RefreshControl, Dimensions, TextInput, Modal, Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { useRouter } from 'expo-router';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Dimensions,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  StatusBar,
+  SafeAreaView,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Platform,
+} from 'react-native';
+import { Ionicons, FontAwesome5, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { getImageUrl } from '../../constants/Environment';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Animatable from 'react-native-animatable';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 const { width } = Dimensions.get('window');
+
+// Bảng màu đồng bộ với thiết kế mới
+const AppTheme = {
+  primary: '#4A00E0',
+  primaryGradient: ['#4A00E0', '#8E2DE2', '#6A82FB'],
+  secondary: '#00C9FF',
+  secondaryGradient: ['#00C9FF', '#92FE9D'],
+  accent: '#9B59B6',
+  success: '#2ECC71',
+  warning: '#F39C12',
+  info: '#4A90E2',
+  background: '#f8f9fa',
+  card: 'rgba(255, 255, 255, 0.95)',
+  text: '#333',
+  textLight: '#666',
+  textLighter: '#888',
+};
 
 interface ImageItem {
   id: string;
@@ -28,12 +62,18 @@ const HistoryScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedCaption, setEditedCaption] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
-  const router = useRouter();
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     fetchImages();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchImages();
+    }, [])
+  );
 
   const fetchImages = async () => {
     try {
@@ -72,7 +112,7 @@ const HistoryScreen = () => {
 
   const renderImage = ({ item }: { item: ImageItem }) => {
     return (
-      <Animatable.View animation="fadeIn" duration={800}>
+      <Animatable.View animation="fadeIn" duration={800} style={styles.imageCardContainer}>
         <TouchableOpacity
           style={styles.imageCard}
           onPress={() => {
@@ -88,9 +128,14 @@ const HistoryScreen = () => {
               resizeMode="cover"
               onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
             />
-            {/* Overlay for loading/error state */}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.5)']}
+              style={styles.imageGradient}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+            />
             <View style={styles.imageOverlay}>
-              <Ionicons name="image-outline" size={24} color="#ccc" />
+              <Ionicons name="image-outline" size={24} color="#fff" />
             </View>
           </View>
           <View style={styles.captionContainer}>
@@ -114,6 +159,8 @@ const HistoryScreen = () => {
   };
 
   const cancelEditing = () => {
+    // Đóng bàn phím trước khi hủy chỉnh sửa
+    Keyboard.dismiss();
     setIsEditing(false);
     setEditedCaption('');
   };
@@ -121,27 +168,45 @@ const HistoryScreen = () => {
   const saveEditedCaption = async () => {
     if (!selectedImage || !editedCaption.trim()) return;
     
+    // Đóng bàn phím trước khi lưu
+    Keyboard.dismiss();
+    
     try {
       setUpdateLoading(true);
-      const response = await imageService.updateCaption(selectedImage.id, editedCaption.trim());
-      
-      // Update the selected image with the new caption
-      setSelectedImage({
-        ...selectedImage,
-        description: response.image.description
+      console.log('Calling updateCaption API with:', {
+        imageId: selectedImage.id,
+        caption: editedCaption.trim()
       });
       
-      // Also update the image in the images array
+      // Gọi API cập nhật caption
+      const response = await imageService.updateCaption(selectedImage.id, editedCaption.trim());
+      console.log('API response:', response);
+      
+      // Cập nhật UI với caption mới
+      const newDescription = editedCaption.trim();
+      
+      // Cập nhật selectedImage
+      setSelectedImage({
+        ...selectedImage,
+        description: newDescription
+      });
+      
+      // Cập nhật danh sách images
       setImages(images.map(img => 
         img.id === selectedImage.id ? 
-        {...img, description: response.image.description} : 
+        {...img, description: newDescription} : 
         img
       ));
       
+      // Đóng chế độ chỉnh sửa
       setIsEditing(false);
+      
+      // Thông báo thành công
+      Alert.alert('Thành công', 'Cập nhật mô tả thành công');
+      
     } catch (error) {
       console.error('Error updating caption:', error);
-      Alert.alert('Error', 'Failed to update caption. Please try again.');
+      Alert.alert('Lỗi', 'Không thể cập nhật mô tả. Vui lòng thử lại sau.');
     } finally {
       setUpdateLoading(false);
     }
@@ -160,28 +225,28 @@ const HistoryScreen = () => {
         <TouchableOpacity 
           style={styles.modalBackdrop}
           activeOpacity={1}
-          onPress={() => setModalVisible(false)}
+          onPress={() => {
+            Keyboard.dismiss();
+            setModalVisible(false);
+          }}
         >
-          <BlurView intensity={90} style={styles.modalContainer}>
-            <TouchableOpacity 
-              style={styles.modalCloseButton}
-              onPress={() => setModalVisible(false)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="close-circle" size={34} color="#fff" />
-            </TouchableOpacity>
-            
-            <TouchableWithoutFeedback onPress={isEditing ? Keyboard.dismiss : undefined}>
-              <TouchableOpacity 
-                activeOpacity={1} 
-                onPress={(e) => {
-                  e.stopPropagation();
-                  if (isEditing) {
-                    Keyboard.dismiss();
-                  }
-                }}
+          <BlurView intensity={90} style={styles.blurContainer}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <Animatable.View 
+                animation="zoomIn" 
+                duration={300} 
+                style={styles.modalContainer}
               >
-              <Animatable.View animation="zoomIn" duration={400} style={styles.modalContent}>
+                <TouchableOpacity 
+                  style={styles.modalCloseButton}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setModalVisible(false);
+                  }}
+                >
+                  <Ionicons name="close-circle" size={32} color={AppTheme.primary} />
+                </TouchableOpacity>
+                
                 <View style={styles.modalImageContainer}>
                   <Image
                     source={{ uri: selectedImage.url }}
@@ -190,118 +255,102 @@ const HistoryScreen = () => {
                   />
                 </View>
                 
-                <View style={styles.modalCaptionContainer}>
-                  <View style={styles.modalCaptionHeader}>
-                    <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
-                    <Text style={styles.modalCaptionTitle}>Mô tả</Text>
-                  </View>
-                  
-                  {isEditing ? (
+                {isEditing ? (
+                  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={styles.editContainer}>
-                      <View>
-                        <TextInput
-                          style={styles.editInput}
-                          value={editedCaption}
-                          onChangeText={setEditedCaption}
-                          multiline
-                          placeholder="Nhập mô tả của bạn ở đây..."
-                          placeholderTextColor="#888"
-                          autoFocus={true}
-                          blurOnSubmit={false}
-                        />
-                      </View>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedCaption}
+                        onChangeText={setEditedCaption}
+                        placeholder="Enter a new caption..."
+                        multiline
+                        autoFocus
+                      />
                       <View style={styles.editButtons}>
-                        {updateLoading ? (
-                          <ActivityIndicator size="small" color="#3498DB" />
-                        ) : (
-                          <TouchableOpacity 
-                            style={styles.saveButton} 
-                            onPress={saveEditedCaption}
-                          >
-                            <Text style={styles.editButtonText}>Lưu</Text>
-                          </TouchableOpacity>
-                        )}
-                        <TouchableOpacity 
-                          style={styles.cancelEditButton} 
+                        <TouchableOpacity
+                          style={[styles.editButton, styles.cancelEditButton]}
                           onPress={cancelEditing}
                         >
-                          <Text style={styles.cancelButtonText}>Hủy</Text>
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.editButton, 
+                            styles.saveButton,
+                            (!editedCaption.trim() || updateLoading) && styles.disabledButton
+                          ]}
+                          onPress={saveEditedCaption}
+                          disabled={!editedCaption.trim() || updateLoading}
+                        >
+                          {updateLoading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Text style={styles.editButtonText}>Save</Text>
+                          )}
                         </TouchableOpacity>
                       </View>
                     </View>
-                  ) : (
-                    <Text style={styles.modalCaption}>
-                      "{selectedImage.description || 'Chưa có mô tả'}"
-                    </Text>
-                  )}
-                  
-                  {selectedImage.file_name && (
-                    <View style={styles.modalInfoRow}>
-                      <Ionicons name="document-outline" size={18} color="#666" />
-                      <Text style={styles.modalFileName}>
-                        {selectedImage.file_name}
-                      </Text>
-                    </View>
-                  )}
-                  
-                  <View style={styles.modalInfoRow}>
-                    <Ionicons name="calendar-outline" size={18} color="#666" />
-                    <Text style={styles.modalDate}>
-                      {new Date(selectedImage.created_at).toLocaleString()}
-                    </Text>
-                  </View>
-                  
-                  {!isEditing && (
-                    <View style={styles.modalActions}>
+                  </TouchableWithoutFeedback>
+                ) : (
+                  <View style={styles.modalCaptionContainer}>
+                    <View style={styles.captionHeader}>
+                      <Text style={styles.captionTitle}>Caption</Text>
                       <TouchableOpacity 
-                        style={styles.modalActionButton}
+                        style={styles.editIconButton}
                         onPress={startEditing}
-                        activeOpacity={0.8}
                       >
-                        <View style={[styles.modalButtonGradient, styles.editButtonMain]}>
-                          <Ionicons name="create-outline" size={20} color="#fff" />
-                          <Text style={styles.actionButtonText}>Sửa mô tả</Text>
+                        <Feather name="edit-2" size={18} color={AppTheme.primary} />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.modalCaption}>
+                      {selectedImage.description || 'No caption available'}
+                    </Text>
+                    
+                    <View style={styles.modalInfoContainer}>
+                      <View style={styles.infoRow}>
+                        <Feather name="calendar" size={16} color={AppTheme.textLight} />
+                        <Text style={styles.infoText}>
+                          {new Date(selectedImage.created_at).toLocaleDateString()}
+                        </Text>
+                      </View>
+                      {selectedImage.file_name && (
+                        <View style={styles.infoRow}>
+                          <Feather name="file" size={16} color={AppTheme.textLight} />
+                          <Text style={styles.infoText}>
+                            {selectedImage.file_name}
+                          </Text>
                         </View>
+                      )}
+                    </View>
+                    
+                    <View style={styles.modalActions}>
+                      <TouchableOpacity style={styles.actionButton}>
+                        <LinearGradient
+                          colors={AppTheme.primaryGradient as any}
+                          style={styles.actionButtonGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Feather name="download" size={18} color="#fff" />
+                          <Text style={styles.actionButtonText}>Download</Text>
+                        </LinearGradient>
                       </TouchableOpacity>
                       
-                      <TouchableOpacity 
-                        style={styles.modalActionButton}
-                        onPress={() => {
-                          Alert.alert(
-                            'Xóa ảnh',
-                            'Bạn có chắc chắn muốn xóa ảnh này?',
-                            [
-                              { text: 'Hủy', style: 'cancel' },
-                              { 
-                                text: 'Xóa', 
-                                style: 'destructive',
-                                onPress: async () => {
-                                  try {
-                                    await imageService.deleteImage(selectedImage.id);
-                                    setModalVisible(false);
-                                    fetchImages();
-                                    Alert.alert('Thành công', 'Ảnh đã được xóa thành công');
-                                  } catch (error) {
-                                    console.error('Failed to delete image:', error);
-                                    Alert.alert('Lỗi', 'Không thể xóa ảnh');
-                                  }
-                                }
-                              }
-                            ]
-                          );
-                        }}
-                        activeOpacity={0.8}
-                      >
-                        <View style={[styles.modalButtonGradient, styles.deleteButtonMain]}>
-                          <Ionicons name="trash-outline" size={20} color="#fff" />
-                          <Text style={styles.actionButtonText}>Xóa</Text>
-                        </View>
+                      <TouchableOpacity style={styles.actionButton}>
+                        <LinearGradient
+                          colors={['#FF416C', '#FF4B2B']}
+                          style={styles.actionButtonGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Feather name="trash-2" size={18} color="#fff" />
+                          <Text style={styles.actionButtonText}>Delete</Text>
+                        </LinearGradient>
                       </TouchableOpacity>
                     </View>
-                  )}
-                </View>
+                  </View>
+                )}
               </Animatable.View>
-              </TouchableOpacity>
             </TouchableWithoutFeedback>
           </BlurView>
         </TouchableOpacity>
@@ -312,9 +361,9 @@ const HistoryScreen = () => {
   const renderEmptyList = () => {
     if (loading) {
       return (
-        <Animatable.View animation="fadeIn" duration={800} style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color="#1A5276" />
-          <Text style={styles.emptyText}>Đang tải ảnh...</Text>
+        <Animatable.View animation="fadeIn" duration={800} style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={AppTheme.primary} />
+          <Text style={styles.loadingText}>Đang tải hình ảnh...</Text>
         </Animatable.View>
       );
     }
@@ -322,7 +371,7 @@ const HistoryScreen = () => {
     return (
       <Animatable.View animation="fadeIn" duration={800} style={styles.emptyContainer}>
         <View style={styles.emptyIconContainer}>
-          <MaterialCommunityIcons name="image-multiple-outline" size={90} color="#1A5276" />
+          <MaterialCommunityIcons name="image-multiple-outline" size={90} color={AppTheme.primary} />
         </View>
         <Text style={styles.emptyText}>Chưa có ảnh nào</Text>
         <Text style={styles.emptySubtext}>Bắt đầu bằng cách tải lên ảnh đầu tiên</Text>
@@ -332,7 +381,7 @@ const HistoryScreen = () => {
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={['#2E86C1', '#1A5276']}
+            colors={AppTheme.primaryGradient as any}
             style={styles.uploadGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -347,14 +396,8 @@ const HistoryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#1A5276', '#2874A6', '#3498DB']}
-        style={styles.header}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-      </LinearGradient>
-
+      <StatusBar barStyle="light-content" backgroundColor={AppTheme.primary} />
+      
       <View style={styles.content}>
         <Animatable.View 
           animation="fadeInUp" 
@@ -362,7 +405,7 @@ const HistoryScreen = () => {
           style={styles.sectionHeader}
         >
           <View style={styles.titleContainer}>
-            <MaterialCommunityIcons name="image-multiple" size={24} color="#1A5276" />
+            <Feather name="image" size={24} color={AppTheme.primary} />
             <Text style={styles.sectionTitle}>Ảnh của tôi</Text>
           </View>
           <TouchableOpacity 
@@ -371,35 +414,42 @@ const HistoryScreen = () => {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#2E86C1', '#1A5276']}
+              colors={AppTheme.primaryGradient as any}
               style={styles.uploadButtonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Ionicons name="cloud-upload-outline" size={16} color="#fff" />
-              <Text style={styles.uploadNewText}>Upload New</Text>
+              <Feather name="plus" size={16} color="#fff" />
+              <Text style={styles.uploadNewText}>Thêm ảnh</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animatable.View>
 
-        <FlatList
-          data={images}
-          renderItem={renderImage}
-          keyExtractor={(item) => item.id}
-          horizontal={false}
-          numColumns={2}
-          columnWrapperStyle={styles.imageRow}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={renderEmptyList}
-          contentContainerStyle={images.length === 0 ? { flex: 1 } : styles.imageList}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#1A5276']}
-            />
-          }
-        />
+        {loading && !refreshing ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={AppTheme.primary} />
+            <Text style={styles.loadingText}>Đang tải hình ảnh...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={images}
+            renderItem={renderImage}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={images.length === 0 ? styles.emptyListContainer : styles.imageList}
+            numColumns={2}
+            columnWrapperStyle={styles.imageRow}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={renderEmptyList}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[AppTheme.primary]}
+                tintColor={AppTheme.primary}
+              />
+            }
+          />
+        )}
       </View>
       
       {renderImageDetailModal()}
@@ -408,9 +458,273 @@ const HistoryScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppTheme.background,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+  },
+  content: {
+    flex: 1,
+    padding: 15,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 5,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: AppTheme.text,
+    marginLeft: 8,
+  },
+  uploadNewButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  uploadButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+  uploadNewText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: AppTheme.textLight,
+  },
+  imageList: {
+    paddingBottom: 20,
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageRow: {
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  imageCardContainer: {
+    width: (width - 40) / 2,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  imageCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  },
+  imageWrapper: {
+    width: '100%',
+    height: 120,
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  imageGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    opacity: 0,
+  },
+  captionContainer: {
+    padding: 12,
+  },
+  caption: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: AppTheme.text,
+    marginBottom: 5,
+  },
+  dateText: {
+    fontSize: 12,
+    color: AppTheme.textLighter,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyIconContainer: {
+    marginBottom: 20,
+    opacity: 0.7,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: AppTheme.text,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: AppTheme.textLight,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  uploadButton: {
+    borderRadius: 25,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  uploadGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  uploadButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blurContainer: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 16,
+  },
+  modalImageContainer: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#f0f0f0',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalCaptionContainer: {
+    padding: 20,
+  },
+  captionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  captionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: AppTheme.text,
+  },
+  editIconButton: {
+    padding: 5,
+  },
+  modalCaption: {
+    fontSize: 16,
+    color: AppTheme.text,
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  modalInfoContainer: {
+    marginBottom: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: AppTheme.textLight,
+    marginLeft: 8,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginHorizontal: 5,
+  },
+  actionButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 5,
+  },
   editContainer: {
     marginVertical: 10,
     width: '100%',
+    padding: 20,
   },
   editInput: {
     borderWidth: 1,
@@ -439,7 +753,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   saveButton: {
-    backgroundColor: '#3498DB',
+    backgroundColor: AppTheme.primary,
   },
   cancelEditButton: {
     backgroundColor: '#f8f8f8',
@@ -452,361 +766,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   cancelButtonText: {
-    color: '#666',
+    color: AppTheme.textLight,
     fontWeight: '600',
     fontSize: 14,
   },
   disabledButton: {
     opacity: 0.5,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  greeting: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.9,
-    marginTop: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 15,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 5,
-    paddingVertical: 10,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A5276',
-    marginLeft: 8,
-  },
-  uploadNewButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  uploadButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-  },
-  uploadNewText: {
-    fontSize: 14,
-    color: '#fff',
-    fontWeight: '600',
-    marginLeft: 5,
-  },
-  imageList: {
-    paddingBottom: 20,
-  },
-  imageRow: {
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  imageCard: {
-    width: (width - 40) / 2,
-    borderRadius: 15,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-    marginBottom: 5,
-  },
-  imageWrapper: {
-    width: '100%',
-    height: 150,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: 150,
-  },
-  imageOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(240,240,240,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: -1,
-  },
-  captionContainer: {
-    padding: 12,
-  },
-  caption: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 5,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyIconContainer: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(26, 82, 118, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  emptyText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1A5276',
-    marginTop: 20,
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 10,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  uploadButton: {
-    width: width * 0.7,
-    height: 50,
-    borderRadius: 25,
-    overflow: 'hidden',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    marginTop: 20,
-  },
-  uploadGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  // Modal styles
-  modalBackdrop: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: width * 0.9,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  modalImageContainer: {
-    width: '100%',
-    height: 250,
-    backgroundColor: '#f0f0f0',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-  },
-  modalImage: {
-    width: '100%',
-    height: 250,
-  },
-  modalCaptionContainer: {
-    padding: 20,
-    paddingBottom: 20,
-  },
-  modalCaptionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  modalCaptionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A5276',
-    marginLeft: 10,
-  },
-  modalCaption: {
-    fontSize: 18,
-    color: '#333',
-    lineHeight: 26,
-    fontStyle: 'italic',
-    marginBottom: 20,
-  },
-  modalInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  modalFileName: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-  },
-  modalDate: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-  },
-  modalCloseButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
-    marginBottom: 5,
-    paddingHorizontal: 0,
-    width: '100%',
-  },
-  modalActionButton: {
-    flex: 1,
-    height: 45,
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginHorizontal: 5,
-    maxWidth: '48%',
-  },
-  modalButtonGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 6,
-  },
-  actionButton: {
-    backgroundColor: '#2E86C1',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 10,
-  },
-  editButtonMain: {
-    backgroundColor: '#3498DB',
-  },
-  deleteButtonMain: {
-    backgroundColor: '#E74C3C',
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  editContainer: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  editInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
-    minHeight: 100,
-    textAlignVertical: 'top',
-    marginBottom: 15,
-  },
-  editButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  saveButton: {
-    backgroundColor: '#27ae60',
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginRight: 10,
-    flex: 1,
-    alignItems: 'center',
-  },
-  cancelEditButton: {
-    backgroundColor: '#95a5a6',
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    flex: 1,
-    alignItems: 'center',
-  },
-  editButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
   },
 });
 

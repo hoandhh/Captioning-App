@@ -28,7 +28,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1A5276" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="#4A00E0" translucent />
       <Stack.Screen 
         options={{ 
           headerShown: false,
@@ -41,7 +41,7 @@ const HomeScreen = () => {
         imageStyle={{ opacity: 0.15 }}
       >
         <LinearGradient
-          colors={['#1A5276', '#2874A6', '#3498DB']}
+          colors={['#4A00E0', '#8E2DE2', '#6A82FB']}
           style={styles.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -64,7 +64,7 @@ const HomeScreen = () => {
               duration={2500}
               style={styles.iconWrapper}
             >
-              <MaterialCommunityIcons name="image-text" size={90} color="#2E86C1" />
+              <MaterialCommunityIcons name="image-text" size={90} color="#4A00E0" />
             </Animatable.View>
             <Text style={styles.heroTitle}>Mô tả hình ảnh bằng trí tuệ nhân tạo</Text>
             <Text style={styles.heroText}>
@@ -78,7 +78,7 @@ const HomeScreen = () => {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#2E86C1', '#1A5276']}
+                colors={['#4A00E0', '#8E2DE2']}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -103,7 +103,7 @@ const HomeScreen = () => {
               delay={900}
               style={styles.featureItem}
             >
-              <View style={[styles.iconContainer, { backgroundColor: '#3498DB' }]}>
+              <View style={[styles.iconContainer, { backgroundColor: '#4A00E0' }]}>
                 <FontAwesome5 name="brain" size={22} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
@@ -118,7 +118,7 @@ const HomeScreen = () => {
               delay={1100}
               style={styles.featureItem}
             >
-              <View style={[styles.iconContainer, { backgroundColor: '#16A085' }]}>
+              <View style={[styles.iconContainer, { backgroundColor: '#8E2DE2' }]}>
                 <Ionicons name="refresh" size={24} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
@@ -133,7 +133,7 @@ const HomeScreen = () => {
               delay={1300}
               style={styles.featureItem}
             >
-              <View style={[styles.iconContainer, { backgroundColor: '#8E44AD' }]}>
+              <View style={[styles.iconContainer, { backgroundColor: '#6A82FB' }]}>
                 <Ionicons name="cloud-done" size={24} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
@@ -148,7 +148,7 @@ const HomeScreen = () => {
               delay={1500}
               style={styles.featureItem}
             >
-              <View style={[styles.iconContainer, { backgroundColor: '#E74C3C' }]}>
+              <View style={[styles.iconContainer, { backgroundColor: '#00C9FF' }]}>
                 <Ionicons name="share-social" size={24} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
@@ -170,7 +170,7 @@ const HomeScreen = () => {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#2E86C1', '#1A5276']}
+                colors={['#4A00E0', '#8E2DE2']}
                 style={styles.gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -189,13 +189,13 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A5276',
+    backgroundColor: '#4A00E0',
   },
   backgroundImage: {
     flex: 1,
     width: '100%',
     height: '100%',
-    backgroundColor: '#1A5276',
+    backgroundColor: '#4A00E0',
   },
   header: {
     paddingHorizontal: 20,

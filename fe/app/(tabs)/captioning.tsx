@@ -12,13 +12,32 @@ import {
     Platform,
     Dimensions,
     TextInput,
+    StatusBar,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { imageService } from '../../services/api';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import { BlurView } from 'expo-blur';
+
+// Bảng màu đồng bộ với thiết kế mới
+const AppTheme = {
+  primary: '#4A00E0',
+  primaryGradient: ['#4A00E0', '#8E2DE2', '#6A82FB'],
+  secondary: '#00C9FF',
+  secondaryGradient: ['#00C9FF', '#92FE9D'],
+  accent: '#9B59B6',
+  success: '#2ECC71',
+  warning: '#F39C12',
+  info: '#4A90E2',
+  background: '#f8f9fa',
+  card: 'rgba(255, 255, 255, 0.95)',
+  text: '#333',
+  textLight: '#666',
+  textLighter: '#888',
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -182,7 +201,7 @@ const CaptioningScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <LinearGradient
-                colors={['rgba(26, 82, 118, 0.05)', 'rgba(255, 255, 255, 0.8)']}
+                colors={['rgba(74, 0, 224, 0.05)', 'rgba(255, 255, 255, 0.8)']}
                 style={styles.background}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -206,7 +225,7 @@ const CaptioningScreen = () => {
                                 duration={2500}
                                 style={styles.iconWrapper}
                             >
-                                <MaterialCommunityIcons name="image-text" size={90} color="#1A5276" />
+                                <MaterialCommunityIcons name="image-text" size={90} color={AppTheme.primary} />
                             </Animatable.View>
                             <Text style={styles.uploadText}>Chọn một hình ảnh để tạo mô tả</Text>
 
@@ -214,10 +233,10 @@ const CaptioningScreen = () => {
                                 <TouchableOpacity 
                                     style={styles.pickButton} 
                                     onPress={pickImage}
-                                    activeOpacity={0.8}
+                                    activeOpacity={0.7}
                                 >
                                     <LinearGradient
-                                        colors={['#3498DB', '#2874A6']}
+                                        colors={AppTheme.primaryGradient as any}
                                         style={styles.buttonGradient}
                                         start={{ x: 0, y: 0 }}
                                         end={{ x: 1, y: 1 }}
@@ -230,10 +249,10 @@ const CaptioningScreen = () => {
                                 <TouchableOpacity 
                                     style={styles.pickButton} 
                                     onPress={takePicture}
-                                    activeOpacity={0.8}
+                                    activeOpacity={0.7}
                                 >
                                     <LinearGradient
-                                        colors={['#16A085', '#27AE60']}
+                                        colors={AppTheme.secondaryGradient as any}
                                         style={styles.buttonGradient}
                                         start={{ x: 0, y: 0 }}
                                         end={{ x: 1, y: 1 }}
@@ -268,7 +287,7 @@ const CaptioningScreen = () => {
                                     duration={500}
                                     style={styles.loadingContainer}
                                 >
-                                    <ActivityIndicator size="large" color="#1A5276" />
+                                    <ActivityIndicator size="large" color={AppTheme.primary} />
                                     <Text style={styles.loadingText}>Đang tạo mô tả...</Text>
                                 </Animatable.View>
                             ) : caption ? (
@@ -278,7 +297,7 @@ const CaptioningScreen = () => {
                                     style={styles.captionContainer}
                                 >
                                     <View style={styles.captionHeader}>
-                                        <MaterialCommunityIcons name="text-box" size={24} color="#1A5276" />
+                                        <MaterialCommunityIcons name="text-box" size={24} color={AppTheme.primary} />
                                         <Text style={styles.captionTitle}>Mô tả đã tạo</Text>
                                     </View>
                                     
@@ -314,12 +333,12 @@ const CaptioningScreen = () => {
                                     {!isEditing && (
                                         <View style={styles.actionButtons}>
                                             <TouchableOpacity 
-                                                style={styles.actionButton} 
+                                                style={styles.actionButtonContainer} 
                                                 onPress={regenerateCaption}
                                                 activeOpacity={0.8}
                                             >
                                                 <LinearGradient
-                                                    colors={['#3498DB', '#2874A6']}
+                                                    colors={AppTheme.primaryGradient as any}
                                                     style={styles.actionButtonGradient}
                                                     start={{ x: 0, y: 0 }}
                                                     end={{ x: 1, y: 1 }}
@@ -330,12 +349,12 @@ const CaptioningScreen = () => {
                                             </TouchableOpacity>
 
                                             <TouchableOpacity 
-                                                style={styles.actionButton} 
+                                                style={styles.actionButtonContainer} 
                                                 onPress={startEditingCaption}
                                                 activeOpacity={0.8}
                                             >
                                                 <LinearGradient
-                                                    colors={['#9B59B6', '#8E44AD']}
+                                                    colors={[AppTheme.accent, '#8E44AD']}
                                                     style={styles.actionButtonGradient}
                                                     start={{ x: 0, y: 0 }}
                                                     end={{ x: 1, y: 1 }}
@@ -346,12 +365,12 @@ const CaptioningScreen = () => {
                                             </TouchableOpacity>
 
                                             <TouchableOpacity 
-                                                style={styles.actionButton} 
+                                                style={styles.actionButtonContainer} 
                                                 onPress={resetImage}
                                                 activeOpacity={0.8}
                                             >
                                                 <LinearGradient
-                                                    colors={['#16A085', '#27AE60']}
+                                                    colors={[AppTheme.success, '#27AE60']}
                                                     style={styles.actionButtonGradient}
                                                     start={{ x: 0, y: 0 }}
                                                     end={{ x: 1, y: 1 }}
@@ -375,13 +394,13 @@ const CaptioningScreen = () => {
                                         activeOpacity={0.8}
                                     >
                                         <LinearGradient
-                                            colors={['#1A5276', '#2874A6']}
+                                            colors={AppTheme.primaryGradient as any}
                                             style={styles.generateGradient}
                                             start={{ x: 0, y: 0 }}
                                             end={{ x: 1, y: 1 }}
                                         >
-                                            <FontAwesome5 name="brain" size={18} color="#fff" />
-                                            <Text style={styles.generateButtonText}>Generate Caption</Text>
+                                            <Feather name="cpu" size={18} color="#fff" />
+                                            <Text style={styles.generateButtonText}>Tạo mô tả</Text>
                                         </LinearGradient>
                                     </TouchableOpacity>
 
@@ -405,7 +424,7 @@ const CaptioningScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: AppTheme.background,
     },
     editContainer: {
         marginVertical: 10,
@@ -437,19 +456,34 @@ const styles = StyleSheet.create({
         flex: 1,
         marginHorizontal: 5,
     },
+    cancelButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
     saveButton: {
-        backgroundColor: '#3498DB',
+        backgroundColor: AppTheme.primary,
     },
     editButtonText: {
         color: '#fff',
         fontWeight: '600',
         fontSize: 14,
+        textDecorationLine: 'underline',
     },
     buttonTextCompact: {
         color: '#fff',
         fontWeight: '500',
         fontSize: 12,
-        marginTop: 2,
     },
     background: {
         flex: 1,
@@ -461,18 +495,16 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     title: {
-        fontSize: 30,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#1A5276',
+        color: AppTheme.primary,
         textAlign: 'center',
-        marginTop: 10,
-        letterSpacing: 0.5,
+        marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: AppTheme.textLight,
         textAlign: 'center',
-        marginTop: 5,
         marginBottom: 30,
     },
     uploadContainer: {
@@ -492,14 +524,14 @@ const styles = StyleSheet.create({
         width: 150,
         height: 150,
         borderRadius: 75,
-        backgroundColor: 'rgba(26, 82, 118, 0.1)',
+        backgroundColor: 'rgba(74, 0, 224, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 20,
     },
     uploadText: {
         fontSize: 18,
-        color: '#333',
+        color: AppTheme.text,
         marginTop: 15,
         marginBottom: 30,
         textAlign: 'center',
@@ -542,9 +574,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     myImagesText: {
-        color: '#1A5276',
+        color: AppTheme.primary,
         fontSize: 16,
         fontWeight: '600',
+        textDecorationLine: 'underline',
     },
     previewContainer: {
         marginTop: 20,
@@ -576,9 +609,9 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
     },
     loadingText: {
-        marginTop: 15,
+        marginTop: 10,
         fontSize: 16,
-        color: '#666',
+        color: AppTheme.textLight,
         fontWeight: '500',
     },
     captionContainer: {
@@ -596,6 +629,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 15,
+        justifyContent: 'space-between',
     },
     captionTitle: {
         fontSize: 20,
@@ -604,58 +638,77 @@ const styles = StyleSheet.create({
         color: '#1A5276',
     },
     caption: {
-        fontSize: 18,
-        color: '#333',
-        lineHeight: 28,
+        fontSize: 16,
+        color: AppTheme.text,
+        lineHeight: 24,
         fontStyle: 'italic',
-        marginBottom: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: 15,
+        borderRadius: 8,
+        borderLeftWidth: 4,
+        borderLeftColor: AppTheme.primary,
+        marginVertical: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     actionContainer: {
         marginTop: 20,
     },
-    generateButton: {
-        height: 54,
-        borderRadius: 27,
+    actionButtonContainer: {
+        borderRadius: 8,
         overflow: 'hidden',
-        elevation: 4,
+        flex: 1,
+        marginHorizontal: 5,
+        elevation: 3,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 3,
+    },
+    generateButton: {
+        borderRadius: 10,
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
         marginBottom: 15,
     },
     generateGradient: {
-        flex: 1,
-        flexDirection: 'row',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 20,
     },
     generateButtonText: {
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
-        marginLeft: 10,
     },
-    cancelButton: {
-        paddingVertical: 15,
-        borderRadius: 25,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    },
+    // cancelButton: {
+    //     paddingVertical: 15,
+    //     borderRadius: 25,
+    //     alignItems: 'center',
+    //     borderWidth: 1,
+    //     borderColor: '#ddd',
+    //     backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    // },
     cancelButtonText: {
-        color: '#666',
+        color: AppTheme.textLight,
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     actionButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 20,
+        marginBottom: 10,
     },
-    actionButton: {
+    actionButtonCircle: {
         height: 70,
         width: 70,
         marginHorizontal: 5,
