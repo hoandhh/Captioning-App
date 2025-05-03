@@ -8,14 +8,7 @@ export default function PublicLayout() {
             <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
             <Stack
                 screenOptions={{
-                    headerStyle: {
-                        backgroundColor: '#4A00E0',
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
-                    headerShadowVisible: false,
+                    headerShown: false, // Ẩn hoàn toàn header
                     animation: 'slide_from_right',
                 }}
             >

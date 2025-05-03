@@ -5,7 +5,6 @@ import {
     StyleSheet,
     Image,
     TouchableOpacity,
-    SafeAreaView,
     ScrollView,
     Dimensions,
     StatusBar,
@@ -14,10 +13,9 @@ import {
     Animated
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
+import { Ionicons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,7 +35,7 @@ const WelcomeScreen = () => {
     };
 
     // Use app icon as logo
-    const logoImage = require('../../assets/images/icon.png');
+    const logoImage = require('../assets/images/icon.png');
 
     // Animation references
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -95,7 +93,7 @@ const WelcomeScreen = () => {
             <StatusBar barStyle="light-content" backgroundColor="#4A00E0" translucent />
             
             <ImageBackground
-                source={require('../../assets/images/splash-icon.png')}
+                source={require('../assets/images/splash-icon.png')}
                 style={styles.backgroundImage}
                 imageStyle={{ opacity: 0.08 }}
             >
@@ -334,7 +332,7 @@ const WelcomeScreen = () => {
                             fontSize: 14,
                             color: '#666',
                             textAlign: 'center',
-                        }}> 2025 AI Image Captioning</Text>
+                        }}>© 2025 AI Image Captioning</Text>
                         <Text style={{
                             fontSize: 12,
                             color: '#888',
@@ -419,36 +417,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 10,
         paddingHorizontal: 30,
-    },
-    welcomeCard: {
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 25,
-        marginTop: 10,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-    },
-    welcomeText: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-    },
-    welcomeAppName: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#4A00E0',
-        textAlign: 'center',
-        marginVertical: 8,
-    },
-    welcomeDescription: {
-        fontSize: 15,
-        color: '#555',
-        textAlign: 'center',
-        lineHeight: 22,
     },
     featuresContainer: {
         marginVertical: 20,
@@ -541,70 +509,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginLeft: 10,
-    },
-    exploreButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 5,
-        marginTop: 10,
-        borderRadius: 20,
-        overflow: 'hidden',
-    },
-    exploreButtonBlur: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 25,
-        borderRadius: 20,
-    },
-    exploreButtonText: {
-        color: '#4A00E0',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    footer: {
-        marginTop: 20,
-        width: '100%',
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    footerGradient: {
-        paddingVertical: 20,
-        paddingHorizontal: 15,
-        alignItems: 'center',
-        borderRadius: 16,
-    },
-    socialIcons: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginBottom: 15,
-    },
-    socialIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginHorizontal: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-    },
-    copyright: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
-    },
-    version: {
-        fontSize: 12,
-        color: '#888',
-        marginTop: 5,
-        textAlign: 'center',
     },
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -17,31 +17,51 @@ function useProtectedRoutes() {
   const { isLoading, isAuthenticated, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  
+  // Lưu trạng thái điều hướng trước đó để xử lý vuốt back
+  const previousSegmentsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (isLoading) return;
 
+    // Kiểm tra các nhóm trang
     const inAuthGroup = segments[0] === '(auth)';
+    const inPublicGroup = segments[0] === '(public)';
     const inIntroScreen = segments[0] === 'intro';
+    const inWelcomeScreen = segments[0] === 'welcome';
+    
+    // Kiểm tra trang chính an toàn hơn, tránh lỗi TypeScript
+    const inRootScreen = segments.length <= 0 || !segments[0];
+    
+    // Kiểm tra xem đang vuốt back từ trang đăng nhập về trang public hay không
+    const isNavigatingBackFromAuth = 
+      previousSegmentsRef.current[0] === '(auth)' && 
+      (inPublicGroup || inRootScreen || inWelcomeScreen);
+    
+    // Cập nhật tham chiếu cho lần render tiếp theo
+    previousSegmentsRef.current = [...segments];
+
+    // Bỏ qua việc chuyển hướng nếu đang ở trang public, trang welcome hoặc đang vuốt back từ trang đăng nhập
+    if (inPublicGroup || inWelcomeScreen || isNavigatingBackFromAuth) return;
 
     const checkIntroStatus = async () => {
       const isIntroCompleted = await AsyncStorage.getItem('introCompleted');
 
       // Logic chuyển hướng chính
       if (!isAuthenticated) {
-        // Nếu chưa đăng nhập
-        if (!inAuthGroup) {
-          // Không ở trong auth group
-          router.replace('/(auth)/login');
+        // Nếu chưa đăng nhập và không ở trang auth, trang chính, trang welcome hoặc trang public
+        if (!inAuthGroup && !inRootScreen && !inWelcomeScreen && !inPublicGroup) {
+          // Sử dụng router.push thay vì router.replace để giữ lại lịch sử điều hướng
+          router.push('/(auth)/login');
         }
       } else {
         // Đã đăng nhập
         if (inAuthGroup) {
-          // Chuyển về trang chính
-          router.replace('/(tabs)');
+          // Sử dụng router.push thay vì router.replace để giữ lại lịch sử điều hướng
+          router.push('/(tabs)');
         } else if (!isIntroCompleted && !inIntroScreen) {
           // Chưa xem intro
-          router.replace('/intro');
+          router.push('/intro');
         }
       }
     };
@@ -58,9 +78,11 @@ function RootLayoutNav() {
 
   return (
     <>
-      <Stack>
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(public)" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false, title: "AI Image Captioning" }} />
         <Stack.Screen name="intro" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
