@@ -61,8 +61,11 @@ interface ImageItem {
     url: string;
     created_at: string;
     file_name?: string;
-    user_id: string;
-    user_name?: string;
+    uploaded_by?: {
+        id: string;
+        username: string;
+        full_name?: string;
+    };
 }
 
 const AdminScreen = () => {
@@ -247,7 +250,8 @@ const AdminScreen = () => {
                     if (imageSearchQuery.trim()) {
                         const newFilteredImages = processedImages.filter((img: ImageItem) => 
                             img.description?.toLowerCase().includes(imageSearchQuery.toLowerCase()) ||
-                            (img.user_name && img.user_name.toLowerCase().includes(imageSearchQuery.toLowerCase()))
+                            (img.uploaded_by?.username && img.uploaded_by.username.toLowerCase().includes(imageSearchQuery.toLowerCase())) ||
+                            (img.uploaded_by?.full_name && img.uploaded_by.full_name.toLowerCase().includes(imageSearchQuery.toLowerCase()))
                         );
                         return [...prevFilteredImages, ...newFilteredImages];
                     }
@@ -290,7 +294,8 @@ const AdminScreen = () => {
         
         const filtered = images.filter(img => 
             img.description?.toLowerCase().includes(text.toLowerCase()) ||
-            (img.user_name && img.user_name.toLowerCase().includes(text.toLowerCase()))
+            (img.uploaded_by?.username && img.uploaded_by.username.toLowerCase().includes(text.toLowerCase())) ||
+            (img.uploaded_by?.full_name && img.uploaded_by.full_name.toLowerCase().includes(text.toLowerCase()))
         );
         
         setFilteredImages(filtered);
@@ -595,7 +600,7 @@ const AdminScreen = () => {
                         >
                             <Ionicons name="person" size={12} color="#fff" style={{marginRight: 4}} />
                             <Text style={styles.userBadgeText} numberOfLines={1}>
-                                {item.user_name || 'Người dùng'}
+                                {item.uploaded_by?.username || 'Người dùng'}
                             </Text>
                         </LinearGradient>
                     </View>
@@ -655,7 +660,14 @@ const AdminScreen = () => {
                                 <View style={styles.infoRow}>
                                     <Ionicons name="person-outline" size={16} color={AppTheme.textLight} />
                                     <Text style={styles.infoText}>
-                                        {selectedImage.user_name || 'Người dùng'}
+                                        {selectedImage.uploaded_by?.full_name || 'Không có tên'}
+                                    </Text>
+                                </View>
+                                
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="at-outline" size={16} color={AppTheme.textLight} />
+                                    <Text style={styles.infoText}>
+                                        {selectedImage.uploaded_by?.username || 'Không có username'}
                                     </Text>
                                 </View>
                                 
