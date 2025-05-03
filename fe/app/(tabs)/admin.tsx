@@ -68,16 +68,30 @@ interface ImageItem {
 const AdminScreen = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [users, setUsers] = useState<User[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [images, setImages] = useState<ImageItem[]>([]);
+    const [filteredImages, setFilteredImages] = useState<ImageItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState<Stats | null>(null);
     
+    // Search states
+    const [userSearchQuery, setUserSearchQuery] = useState('');
+    const [imageSearchQuery, setImageSearchQuery] = useState('');
+    const [isUserSearchFocused, setIsUserSearchFocused] = useState(false);
+    const [isImageSearchFocused, setIsImageSearchFocused] = useState(false);
+    
     // Pagination states for images
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [loadingMore, setLoadingMore] = useState(false);
-    const perPage = 8; // Số lượng ảnh mỗi trang
+    const [imageCurrentPage, setImageCurrentPage] = useState(1);
+    const [imageTotalPages, setImageTotalPages] = useState(1);
+    const [imageLoadingMore, setImageLoadingMore] = useState(false);
+    const imagePerPage = 8; // Số lượng ảnh mỗi trang
+    
+    // Pagination states for users
+    const [userCurrentPage, setUserCurrentPage] = useState(1);
+    const [userTotalPages, setUserTotalPages] = useState(1);
+    const [userLoadingMore, setUserLoadingMore] = useState(false);
+    const userPerPage = 8; // Số lượng người dùng mỗi trang
     
     // Modal states
     const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -107,17 +121,84 @@ const AdminScreen = () => {
         }
     };
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (isInitialLoad: boolean, page = 1) => {
         try {
-            setLoading(true);
-            const userData = await adminService.getAllUsers();
-            setUsers(userData.users || []);
+            if (isInitialLoad) {
+                setLoading(true);
+            } else if (page > 1) {
+                setUserLoadingMore(true);
+            }
+            
+            // Fetch users with pagination
+            const userData = await adminService.getAllUsers({ page, per_page: userPerPage });
+            const fetchedUsers = userData.users || [];
+            
+            // If loading more (pagination), append to existing users
+            if (page > 1) {
+                setUsers(prevUsers => [...prevUsers, ...fetchedUsers]);
+                setFilteredUsers(prevFilteredUsers => {
+                    // If search is active, filter the new users too
+                    if (userSearchQuery.trim()) {
+                        const newFilteredUsers = fetchedUsers.filter((user: User) => 
+                            user.username.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                            user.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                            (user.full_name && user.full_name.toLowerCase().includes(userSearchQuery.toLowerCase()))
+                        );
+                        return [...prevFilteredUsers, ...newFilteredUsers];
+                    }
+                    return [...prevFilteredUsers, ...fetchedUsers];
+                });
+            } else {
+                // First page, replace all users
+                setUsers(fetchedUsers);
+                setFilteredUsers(fetchedUsers);
+            }
+            
+            // Update pagination info
+            setUserCurrentPage(page);
+            setUserTotalPages(Math.ceil(userData.total / userPerPage) || 1);
+            
         } catch (error) {
             console.error('Failed to fetch users:', error);
             Alert.alert('Lỗi', 'Không thể tải danh sách người dùng. Vui lòng thử lại.');
         } finally {
             setLoading(false);
+            setUserLoadingMore(false);
+            setRefreshing(false);
         }
+    };
+    
+    // Load more users when reaching the end of the list
+    const loadMoreUsers = () => {
+        if (userLoadingMore || userCurrentPage >= userTotalPages) return;
+        fetchUsers(false, userCurrentPage + 1);
+    };
+    
+    // Handle user search
+    const handleUserSearch = (text: string) => {
+        setUserSearchQuery(text);
+        
+        if (!text.trim()) {
+            setFilteredUsers(users);
+            return;
+        }
+        
+        const filtered = users.filter(user => 
+            user.username.toLowerCase().includes(text.toLowerCase()) ||
+            user.email.toLowerCase().includes(text.toLowerCase()) ||
+            (user.full_name && user.full_name.toLowerCase().includes(text.toLowerCase()))
+        );
+        
+        setFilteredUsers(filtered);
+        // Reset pagination when searching
+        setUserCurrentPage(1);
+    };
+    
+    // Clear user search
+    const clearUserSearch = () => {
+        setUserSearchQuery('');
+        setFilteredUsers(users);
+        setIsUserSearchFocused(false);
     };
 
     const handleTabChange = (tab: string) => {
@@ -125,9 +206,10 @@ const AdminScreen = () => {
         if (tab === 'dashboard') {
             fetchDashboardData();
         } else if (tab === 'users') {
-            fetchUsers();
+            setUserCurrentPage(1);
+            fetchUsers(true, 1);
         } else if (tab === 'images') {
-            setCurrentPage(1);
+            setImageCurrentPage(1);
             fetchImages(true, 1);
         }
     };
@@ -137,11 +219,11 @@ const AdminScreen = () => {
             if (isInitialLoad) {
                 setLoading(true);
             } else if (page > 1) {
-                setLoadingMore(true);
+                setImageLoadingMore(true);
             }
             
             // Fetch images with pagination
-            const response = await adminService.getAllImages(page, perPage);
+            const response = await adminService.getAllImages(page, imagePerPage);
             
             // Process images to ensure they have proper URLs
             const processedImages = (response.images || []).map((img: ImageItem) => {
@@ -160,35 +242,79 @@ const AdminScreen = () => {
             // If loading more (pagination), append to existing images
             if (page > 1) {
                 setImages(prevImages => [...prevImages, ...processedImages]);
+                setFilteredImages(prevFilteredImages => {
+                    // If search is active, filter the new images too
+                    if (imageSearchQuery.trim()) {
+                        const newFilteredImages = processedImages.filter((img: ImageItem) => 
+                            img.description?.toLowerCase().includes(imageSearchQuery.toLowerCase()) ||
+                            (img.user_name && img.user_name.toLowerCase().includes(imageSearchQuery.toLowerCase()))
+                        );
+                        return [...prevFilteredImages, ...newFilteredImages];
+                    }
+                    return [...prevFilteredImages, ...processedImages];
+                });
             } else {
                 // First page, replace all images
                 setImages(processedImages);
+                setFilteredImages(processedImages);
             }
             
             // Update pagination info
-            setCurrentPage(page);
-            setTotalPages(Math.ceil(response.total / perPage) || 1);
+            setImageCurrentPage(page);
+            setImageTotalPages(Math.ceil(response.total / imagePerPage) || 1);
             
         } catch (error) {
             console.error('Failed to fetch images:', error);
             Alert.alert('Lỗi', 'Không thể tải danh sách hình ảnh. Vui lòng thử lại.');
         } finally {
             setLoading(false);
-            setLoadingMore(false);
+            setImageLoadingMore(false);
             setRefreshing(false);
         }
     };
     
     // Load more images when reaching the end of the list
     const loadMoreImages = () => {
-        if (loadingMore || currentPage >= totalPages) return;
-        fetchImages(false, currentPage + 1);
+        if (imageLoadingMore || imageCurrentPage >= imageTotalPages) return;
+        fetchImages(false, imageCurrentPage + 1);
     };
     
-    const onRefresh = async () => {
+    // Handle image search
+    const handleImageSearch = (text: string) => {
+        setImageSearchQuery(text);
+        
+        if (!text.trim()) {
+            setFilteredImages(images);
+            return;
+        }
+        
+        const filtered = images.filter(img => 
+            img.description?.toLowerCase().includes(text.toLowerCase()) ||
+            (img.user_name && img.user_name.toLowerCase().includes(text.toLowerCase()))
+        );
+        
+        setFilteredImages(filtered);
+        // Reset pagination when searching
+        setImageCurrentPage(1);
+    };
+    
+    // Clear image search
+    const clearImageSearch = () => {
+        setImageSearchQuery('');
+        setFilteredImages(images);
+        setIsImageSearchFocused(false);
+    };
+    
+    const onImageRefresh = async () => {
         setRefreshing(true);
-        setCurrentPage(1);
+        setImageCurrentPage(1);
         await fetchImages(false, 1);
+    };
+    
+    const onUserRefresh = async () => {
+        setRefreshing(true);
+        setUserCurrentPage(1);
+        await fetchUsers(false, 1);
     };
     
     const deleteImage = async (imageId: string) => {
@@ -460,19 +586,27 @@ const AdminScreen = () => {
                         start={{ x: 0.5, y: 0 }}
                         end={{ x: 0.5, y: 1 }}
                     />
+                    <View style={styles.userBadgeContainer}>
+                        <LinearGradient
+                            colors={[AppTheme.gradientStart, AppTheme.gradientEnd]}
+                            style={styles.userBadge}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                        >
+                            <Ionicons name="person" size={12} color="#fff" style={{marginRight: 4}} />
+                            <Text style={styles.userBadgeText} numberOfLines={1}>
+                                {item.user_name || 'Người dùng'}
+                            </Text>
+                        </LinearGradient>
+                    </View>
                 </View>
                 <View style={styles.imageCaptionContainer}>
                     <Text style={styles.imageCaption} numberOfLines={2}>
                         {item.description || 'Không có mô tả'}
                     </Text>
-                    <View style={styles.imageMetaContainer}>
-                        <Text style={styles.imageDate}>
-                            {new Date(item.created_at).toLocaleDateString()}
-                        </Text>
-                        <Text style={styles.imageUsername}>
-                            {item.user_name || 'Người dùng'}
-                        </Text>
-                    </View>
+                    <Text style={styles.imageDate}>
+                        {new Date(item.created_at).toLocaleDateString()}
+                    </Text>
                 </View>
             </TouchableOpacity>
         </Animatable.View>
@@ -566,12 +700,31 @@ const AdminScreen = () => {
     
     const renderImagesList = () => (
         <View style={styles.listContainer}>
+            <View style={styles.searchContainer}>
+                <View style={[styles.searchInputContainer, isImageSearchFocused && styles.searchInputFocused]}>
+                    <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Tìm kiếm hình ảnh..."
+                        value={imageSearchQuery}
+                        onChangeText={handleImageSearch}
+                        onFocus={() => setIsImageSearchFocused(true)}
+                        onBlur={() => setIsImageSearchFocused(false)}
+                    />
+                    {imageSearchQuery.length > 0 && (
+                        <TouchableOpacity onPress={clearImageSearch} style={styles.clearSearchButton}>
+                            <Ionicons name="close-circle" size={20} color={AppTheme.textLight} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+            
             {loading ? (
                 <ActivityIndicator size="large" color={AppTheme.primary} style={styles.loader} />
             ) : (
                 <>
                     <FlatList
-                        data={images}
+                        data={filteredImages}
                         renderItem={renderImageItem}
                         keyExtractor={(item) => item.id}
                         numColumns={2}
@@ -582,7 +735,7 @@ const AdminScreen = () => {
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}
-                                onRefresh={onRefresh}
+                                onRefresh={onImageRefresh}
                                 colors={[AppTheme.primary]}
                                 tintColor={AppTheme.primary}
                             />
@@ -590,16 +743,18 @@ const AdminScreen = () => {
                         ListEmptyComponent={
                             <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
                                 <Ionicons name="images-outline" size={60} color={AppTheme.textLight} style={{opacity: 0.5}} />
-                                <Text style={styles.emptyText}>Không có hình ảnh nào</Text>
+                                <Text style={styles.emptyText}>
+                                    {imageSearchQuery ? 'Không tìm thấy hình ảnh nào' : 'Không có hình ảnh nào'}
+                                </Text>
                             </Animatable.View>
                         }
                         ListFooterComponent={
-                            loadingMore ? (
+                            imageLoadingMore ? (
                                 <View style={styles.loadMoreContainer}>
                                     <ActivityIndicator size="small" color={AppTheme.primary} />
                                     <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
                                 </View>
-                            ) : currentPage < totalPages ? (
+                            ) : imageCurrentPage < imageTotalPages ? (
                                 <TouchableOpacity 
                                     style={styles.loadMoreButton}
                                     onPress={loadMoreImages}
@@ -608,7 +763,7 @@ const AdminScreen = () => {
                                     <Text style={styles.loadMoreButtonText}>Tải thêm ảnh</Text>
                                     <Feather name="chevron-down" size={16} color={AppTheme.primary} />
                                 </TouchableOpacity>
-                            ) : images.length > 0 ? (
+                            ) : filteredImages.length > 0 ? (
                                 <Text style={styles.endOfListText}>Đã hiển thị tất cả ảnh</Text>
                             ) : null
                         }
@@ -621,20 +776,70 @@ const AdminScreen = () => {
     
     const renderUsersList = () => (
         <View style={styles.listContainer}>
+            <View style={styles.searchContainer}>
+                <View style={[styles.searchInputContainer, isUserSearchFocused && styles.searchInputFocused]}>
+                    <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Tìm kiếm người dùng..."
+                        value={userSearchQuery}
+                        onChangeText={handleUserSearch}
+                        onFocus={() => setIsUserSearchFocused(true)}
+                        onBlur={() => setIsUserSearchFocused(false)}
+                    />
+                    {userSearchQuery.length > 0 && (
+                        <TouchableOpacity onPress={clearUserSearch} style={styles.clearSearchButton}>
+                            <Ionicons name="close-circle" size={20} color={AppTheme.textLight} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+            
             {loading ? (
                 <ActivityIndicator size="large" color={AppTheme.primary} style={styles.loader} />
             ) : (
-                <Animatable.View animation="fadeIn" duration={500}>
+                <Animatable.View animation="fadeIn" duration={500} style={{flex: 1}}>
                     <FlatList
-                        data={users}
+                        data={filteredUsers}
                         renderItem={renderUserItem}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.usersList}
+                        onEndReached={loadMoreUsers}
+                        onEndReachedThreshold={0.3}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onUserRefresh}
+                                colors={[AppTheme.primary]}
+                                tintColor={AppTheme.primary}
+                            />
+                        }
                         ListEmptyComponent={
                             <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
                                 <Ionicons name="people" size={60} color={AppTheme.textLight} style={{opacity: 0.5}} />
-                                <Text style={styles.emptyText}>Không có người dùng</Text>
+                                <Text style={styles.emptyText}>
+                                    {userSearchQuery ? 'Không tìm thấy người dùng nào' : 'Không có người dùng'}
+                                </Text>
                             </Animatable.View>
+                        }
+                        ListFooterComponent={
+                            userLoadingMore ? (
+                                <View style={styles.loadMoreContainer}>
+                                    <ActivityIndicator size="small" color={AppTheme.primary} />
+                                    <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
+                                </View>
+                            ) : userCurrentPage < userTotalPages ? (
+                                <TouchableOpacity 
+                                    style={styles.loadMoreButton}
+                                    onPress={loadMoreUsers}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.loadMoreButtonText}>Tải thêm người dùng</Text>
+                                    <Feather name="chevron-down" size={16} color={AppTheme.primary} />
+                                </TouchableOpacity>
+                            ) : filteredUsers.length > 0 ? (
+                                <Text style={styles.endOfListText}>Đã hiển thị tất cả người dùng</Text>
+                            ) : null
                         }
                     />
                 </Animatable.View>
@@ -723,6 +928,42 @@ const AdminScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    // Search styles
+    searchContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: 25,
+        paddingHorizontal: 15,
+        height: 46,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
+    },
+    searchInputFocused: {
+        borderColor: AppTheme.primary,
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+    searchIcon: {
+        marginRight: 10,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: AppTheme.text,
+        height: '100%',
+    },
+    clearSearchButton: {
+        padding: 5,
+    },
     // Image list styles
     imageList: {
         paddingVertical: 15,
@@ -773,19 +1014,30 @@ const styles = StyleSheet.create({
         color: AppTheme.text,
         marginBottom: 5,
     },
-    imageMetaContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
     imageDate: {
         fontSize: 12,
         color: AppTheme.textLight,
+        marginTop: 4,
     },
-    imageUsername: {
-        fontSize: 12,
-        color: AppTheme.primary,
-        fontWeight: '500',
+    userBadgeContainer: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 10,
+    },
+    userBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        backgroundColor: 'rgba(74,0,224,0.8)',
+    },
+    userBadgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: '600',
+        maxWidth: 80,
     },
     loadMoreContainer: {
         paddingVertical: 15,
