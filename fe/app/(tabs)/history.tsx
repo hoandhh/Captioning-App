@@ -66,6 +66,12 @@ const HistoryScreen = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const perPage = 8; // Số lượng ảnh mỗi trang
   const { user } = useAuth();
   const router = useRouter();
   const { lastImageUpdate } = useImageUpdate();
@@ -112,23 +118,28 @@ const HistoryScreen = () => {
   // Khi có ảnh mới được thêm vào từ trang captioning, lastImageUpdate sẽ thay đổi
   useEffect(() => {
     if (lastImageUpdate > 0) {
+      console.log('ImageUpdateContext changed, lastImageUpdate:', lastImageUpdate);
       // Tải lại dữ liệu khi có ảnh mới được thêm vào
-      fetchImages(false);
+      setCurrentPage(1); // Reset về trang đầu tiên
+      fetchImages(false, 1);
     }
   }, [lastImageUpdate]);
 
-  const fetchImages = async (isInitialLoad: boolean) => {
+  const fetchImages = async (isInitialLoad: boolean, page = 1) => {
     try {
       // Only show loading indicator for initial load
       // This prevents the loading screen flash when switching tabs
       if (isInitialLoad || !dataLoadedRef.current) {
         setLoading(true);
+      } else if (page > 1) {
+        setLoadingMore(true);
       }
-      // Change to getUserImages to fetch only the user's images
-      const response = await imageService.getUserImages(1, 20);
+      
+      // Fetch images with pagination
+      const response = await imageService.getUserImages(page, perPage);
       
       // Process images to ensure they have proper URLs
-      const processedImages = (response.images || []).map((img: any) => {
+      const processedImages = (response.images || []).map((img: ImageItem) => {
         // Check if the image already has a complete URL
         if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
           return img;
@@ -143,8 +154,29 @@ const HistoryScreen = () => {
       
       // Only update state if component is still mounted
       if (isMountedRef.current) {
-        setImages(processedImages);
-        setFilteredImages(processedImages);
+        // If loading more (pagination), append to existing images
+        if (page > 1) {
+          setImages(prevImages => [...prevImages, ...processedImages]);
+          setFilteredImages(prevFilteredImages => {
+            // If search is active, filter the new images too
+            if (searchQuery.trim()) {
+              const newFilteredImages = processedImages.filter((img: ImageItem) => 
+                img.description?.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+              return [...prevFilteredImages, ...newFilteredImages];
+            }
+            return [...prevFilteredImages, ...processedImages];
+          });
+        } else {
+          // First page, replace all images
+          setImages(processedImages);
+          setFilteredImages(processedImages);
+        }
+        
+        // Update pagination info
+        setCurrentPage(page);
+        setTotalPages(Math.ceil(response.total / perPage) || 1);
+        
         // Mark data as loaded
         dataLoadedRef.current = true;
         // Update the last update timestamp
@@ -157,13 +189,21 @@ const HistoryScreen = () => {
       // Only update state if component is still mounted
       if (isMountedRef.current) {
         setLoading(false);
+        setLoadingMore(false);
       }
     }
+  };
+  
+  // Load more images when reaching the end of the list
+  const loadMoreImages = () => {
+    if (loadingMore || currentPage >= totalPages) return;
+    fetchImages(false, currentPage + 1);
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchImages(false);
+    setCurrentPage(1); // Reset to first page when refreshing
+    await fetchImages(false, 1);
     setRefreshing(false);
   };
 
@@ -178,11 +218,13 @@ const HistoryScreen = () => {
     }
     
     // Lọc ảnh theo caption
-    const filtered = images.filter(img => 
+    const filtered = images.filter((img: ImageItem) => 
       img.description?.toLowerCase().includes(text.toLowerCase())
     );
     
     setFilteredImages(filtered);
+    // Reset pagination when searching
+    setCurrentPage(1);
   };
   
   // Xóa tìm kiếm
@@ -530,6 +572,27 @@ const HistoryScreen = () => {
                 colors={[AppTheme.primary]}
                 tintColor={AppTheme.primary}
               />
+            }
+            onEndReached={loadMoreImages}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={styles.loadMoreContainer}>
+                  <ActivityIndicator size="small" color={AppTheme.primary} />
+                  <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
+                </View>
+              ) : currentPage < totalPages ? (
+                <TouchableOpacity 
+                  style={styles.loadMoreButton}
+                  onPress={loadMoreImages}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.loadMoreButtonText}>Tải thêm ảnh</Text>
+                  <Feather name="chevron-down" size={16} color={AppTheme.primary} />
+                </TouchableOpacity>
+              ) : filteredImages.length > 0 ? (
+                <Text style={styles.endOfListText}>Đã hiển thị tất cả ảnh</Text>
+              ) : null
             }
             ListHeaderComponent={
               <Animatable.View 
@@ -911,6 +974,47 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  loadMoreContainer: {
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  loadMoreText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: AppTheme.textLight,
+  },
+  loadMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginVertical: 15,
+    marginHorizontal: 50,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(74,0,224,0.2)',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  loadMoreButtonText: {
+    color: AppTheme.primary,
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 5,
+  },
+  endOfListText: {
+    textAlign: 'center',
+    color: AppTheme.textLight,
+    fontSize: 14,
+    marginVertical: 20,
+    fontStyle: 'italic',
   },
 });
 
