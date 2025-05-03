@@ -11,11 +11,16 @@ import {
     ScrollView,
     Switch,
     Platform,
+    Image,
+    RefreshControl,
+    Modal,
+    TextInput,
+    Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { adminService } from '../../services/api';
+import { adminService, imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
@@ -50,11 +55,33 @@ interface Stats {
     pending_reports: number;
 }
 
+interface ImageItem {
+    id: string;
+    description: string;
+    url: string;
+    created_at: string;
+    file_name?: string;
+    user_id: string;
+    user_name?: string;
+}
+
 const AdminScreen = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [users, setUsers] = useState<User[]>([]);
+    const [images, setImages] = useState<ImageItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState<Stats | null>(null);
+    
+    // Pagination states for images
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const perPage = 8; // Số lượng ảnh mỗi trang
+    
+    // Modal states
+    const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
     const { user } = useAuth();
     const router = useRouter();
 
@@ -99,6 +126,84 @@ const AdminScreen = () => {
             fetchDashboardData();
         } else if (tab === 'users') {
             fetchUsers();
+        } else if (tab === 'images') {
+            setCurrentPage(1);
+            fetchImages(true, 1);
+        }
+    };
+    
+    const fetchImages = async (isInitialLoad: boolean, page = 1) => {
+        try {
+            if (isInitialLoad) {
+                setLoading(true);
+            } else if (page > 1) {
+                setLoadingMore(true);
+            }
+            
+            // Fetch images with pagination
+            const response = await adminService.getAllImages(page, perPage);
+            
+            // Process images to ensure they have proper URLs
+            const processedImages = (response.images || []).map((img: ImageItem) => {
+                // Check if the image already has a complete URL
+                if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
+                    return img;
+                }
+                
+                // If the image has a relative URL or no URL, construct the full URL
+                return {
+                    ...img,
+                    url: imageService.getImageUrl(img.id),
+                };
+            });
+            
+            // If loading more (pagination), append to existing images
+            if (page > 1) {
+                setImages(prevImages => [...prevImages, ...processedImages]);
+            } else {
+                // First page, replace all images
+                setImages(processedImages);
+            }
+            
+            // Update pagination info
+            setCurrentPage(page);
+            setTotalPages(Math.ceil(response.total / perPage) || 1);
+            
+        } catch (error) {
+            console.error('Failed to fetch images:', error);
+            Alert.alert('Lỗi', 'Không thể tải danh sách hình ảnh. Vui lòng thử lại.');
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+            setRefreshing(false);
+        }
+    };
+    
+    // Load more images when reaching the end of the list
+    const loadMoreImages = () => {
+        if (loadingMore || currentPage >= totalPages) return;
+        fetchImages(false, currentPage + 1);
+    };
+    
+    const onRefresh = async () => {
+        setRefreshing(true);
+        setCurrentPage(1);
+        await fetchImages(false, 1);
+    };
+    
+    const deleteImage = async (imageId: string) => {
+        try {
+            await adminService.adminDeleteImage(imageId);
+            // Remove the image from the list
+            setImages(images.filter(img => img.id !== imageId));
+            // Close modal if the deleted image was being viewed
+            if (selectedImage && selectedImage.id === imageId) {
+                setModalVisible(false);
+            }
+            Alert.alert('Thành công', 'Đã xóa hình ảnh thành công');
+        } catch (error) {
+            console.error('Failed to delete image:', error);
+            Alert.alert('Lỗi', 'Không thể xóa hình ảnh. Vui lòng thử lại.');
         }
     };
 
@@ -298,9 +403,7 @@ const AdminScreen = () => {
                         
                         <TouchableOpacity
                             style={styles.adminActionButtonContainer}
-                            onPress={() => {
-                                Alert.alert('Sắp ra mắt', 'Tính năng này đang được phát triển.');
-                            }}
+                            onPress={() => handleTabChange('images')}
                         >
                             <LinearGradient
                                 colors={['#0093E9', '#80D0C7']}
@@ -335,6 +438,187 @@ const AdminScreen = () => {
         </ScrollView>
     );
 
+    const renderImageItem = ({ item }: { item: ImageItem }) => (
+        <Animatable.View animation="fadeIn" duration={800} style={styles.imageCardContainer}>
+            <TouchableOpacity
+                style={styles.imageCard}
+                onPress={() => {
+                    setSelectedImage(item);
+                    setModalVisible(true);
+                }}
+                activeOpacity={0.9}
+            >
+                <View style={styles.imageWrapper}>
+                    <Image
+                        source={{ uri: item.url }}
+                        style={styles.image}
+                        resizeMode="cover"
+                    />
+                    <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.5)']}
+                        style={styles.imageGradient}
+                        start={{ x: 0.5, y: 0 }}
+                        end={{ x: 0.5, y: 1 }}
+                    />
+                </View>
+                <View style={styles.imageCaptionContainer}>
+                    <Text style={styles.imageCaption} numberOfLines={2}>
+                        {item.description || 'Không có mô tả'}
+                    </Text>
+                    <View style={styles.imageMetaContainer}>
+                        <Text style={styles.imageDate}>
+                            {new Date(item.created_at).toLocaleDateString()}
+                        </Text>
+                        <Text style={styles.imageUsername}>
+                            {item.user_name || 'Người dùng'}
+                        </Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </Animatable.View>
+    );
+    
+    const renderImageDetailModal = () => {
+        if (!selectedImage) return null;
+        
+        return (
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity
+                            style={styles.modalCloseButton}
+                            onPress={() => setModalVisible(false)}
+                        >
+                            <Ionicons name="close" size={24} color="#000" />
+                        </TouchableOpacity>
+                        
+                        <View style={styles.modalImageContainer}>
+                            <Image
+                                source={{ uri: selectedImage.url }}
+                                style={styles.modalImage}
+                                resizeMode="contain"
+                            />
+                        </View>
+                        
+                        <View style={styles.modalCaptionContainer}>
+                            <Text style={styles.modalCaption}>
+                                {selectedImage.description || 'Không có mô tả'}
+                            </Text>
+                            
+                            <View style={styles.modalInfoContainer}>
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="calendar-outline" size={16} color={AppTheme.textLight} />
+                                    <Text style={styles.infoText}>
+                                        {new Date(selectedImage.created_at).toLocaleString()}
+                                    </Text>
+                                </View>
+                                
+                                <View style={styles.infoRow}>
+                                    <Ionicons name="person-outline" size={16} color={AppTheme.textLight} />
+                                    <Text style={styles.infoText}>
+                                        {selectedImage.user_name || 'Người dùng'}
+                                    </Text>
+                                </View>
+                                
+                                {selectedImage.file_name && (
+                                    <View style={styles.infoRow}>
+                                        <Ionicons name="document-outline" size={16} color={AppTheme.textLight} />
+                                        <Text style={styles.infoText}>
+                                            {selectedImage.file_name}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            
+                            <View style={styles.modalActions}>
+                                <TouchableOpacity
+                                    style={[styles.actionButton, styles.deleteButton]}
+                                    onPress={() => {
+                                        Alert.alert(
+                                            'Xác nhận xóa',
+                                            'Bạn có chắc chắn muốn xóa hình ảnh này không?',
+                                            [
+                                                { text: 'Hủy', style: 'cancel' },
+                                                { 
+                                                    text: 'Xóa', 
+                                                    style: 'destructive',
+                                                    onPress: () => deleteImage(selectedImage.id)
+                                                }
+                                            ]
+                                        );
+                                    }}
+                                >
+                                    <Ionicons name="trash-outline" size={20} color="#fff" style={{marginRight: 8}} />
+                                    <Text style={styles.actionButtonText}>Xóa hình ảnh</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        );
+    };
+    
+    const renderImagesList = () => (
+        <View style={styles.listContainer}>
+            {loading ? (
+                <ActivityIndicator size="large" color={AppTheme.primary} style={styles.loader} />
+            ) : (
+                <>
+                    <FlatList
+                        data={images}
+                        renderItem={renderImageItem}
+                        keyExtractor={(item) => item.id}
+                        numColumns={2}
+                        columnWrapperStyle={styles.imageRow}
+                        contentContainerStyle={styles.imageList}
+                        onEndReached={loadMoreImages}
+                        onEndReachedThreshold={0.3}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[AppTheme.primary]}
+                                tintColor={AppTheme.primary}
+                            />
+                        }
+                        ListEmptyComponent={
+                            <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
+                                <Ionicons name="images-outline" size={60} color={AppTheme.textLight} style={{opacity: 0.5}} />
+                                <Text style={styles.emptyText}>Không có hình ảnh nào</Text>
+                            </Animatable.View>
+                        }
+                        ListFooterComponent={
+                            loadingMore ? (
+                                <View style={styles.loadMoreContainer}>
+                                    <ActivityIndicator size="small" color={AppTheme.primary} />
+                                    <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
+                                </View>
+                            ) : currentPage < totalPages ? (
+                                <TouchableOpacity 
+                                    style={styles.loadMoreButton}
+                                    onPress={loadMoreImages}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.loadMoreButtonText}>Tải thêm ảnh</Text>
+                                    <Feather name="chevron-down" size={16} color={AppTheme.primary} />
+                                </TouchableOpacity>
+                            ) : images.length > 0 ? (
+                                <Text style={styles.endOfListText}>Đã hiển thị tất cả ảnh</Text>
+                            ) : null
+                        }
+                    />
+                </>
+            )}
+            {renderImageDetailModal()}
+        </View>
+    );
+    
     const renderUsersList = () => (
         <View style={styles.listContainer}>
             {loading ? (
@@ -407,14 +691,212 @@ const AdminScreen = () => {
                         Người dùng
                     </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tabButton, activeTab === 'images' && styles.activeTab]}
+                    onPress={() => handleTabChange('images')}
+                >
+                    <Ionicons 
+                        name="images-outline" 
+                        size={20} 
+                        color={activeTab === 'images' ? AppTheme.primary : AppTheme.textLight} 
+                        style={styles.tabIcon}
+                    />
+                    <Text
+                        style={[
+                            styles.tabText,
+                            activeTab === 'images' && styles.activeTabText,
+                        ]}
+                    >
+                        Hình ảnh
+                    </Text>
+                </TouchableOpacity>
             </Animatable.View>
 
-            {activeTab === 'dashboard' ? renderDashboard() : renderUsersList()}
+            {activeTab === 'dashboard' 
+                ? renderDashboard() 
+                : activeTab === 'users' 
+                ? renderUsersList() 
+                : renderImagesList()
+            }
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    // Image list styles
+    imageList: {
+        paddingVertical: 15,
+    },
+    imageRow: {
+        justifyContent: 'space-between',
+        marginBottom: 15,
+    },
+    imageCardContainer: {
+        width: '48%',
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        backgroundColor: '#fff',
+    },
+    imageCard: {
+        width: '100%',
+        height: 220,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    imageWrapper: {
+        width: '100%',
+        height: 150,
+        position: 'relative',
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+    },
+    imageGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 50,
+    },
+    imageCaptionContainer: {
+        padding: 10,
+    },
+    imageCaption: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: AppTheme.text,
+        marginBottom: 5,
+    },
+    imageMetaContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    imageDate: {
+        fontSize: 12,
+        color: AppTheme.textLight,
+    },
+    imageUsername: {
+        fontSize: 12,
+        color: AppTheme.primary,
+        fontWeight: '500',
+    },
+    loadMoreContainer: {
+        paddingVertical: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+    },
+    loadMoreText: {
+        marginLeft: 10,
+        fontSize: 14,
+        color: AppTheme.textLight,
+    },
+    loadMoreButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        marginVertical: 15,
+        marginHorizontal: 50,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: 'rgba(74,0,224,0.2)',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    loadMoreButtonText: {
+        color: AppTheme.primary,
+        fontSize: 14,
+        fontWeight: '500',
+        marginRight: 5,
+    },
+    endOfListText: {
+        textAlign: 'center',
+        color: AppTheme.textLight,
+        fontSize: 14,
+        marginVertical: 20,
+        fontStyle: 'italic',
+    },
+    // Modal styles
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        overflow: 'hidden',
+        width: '90%',
+        maxWidth: 500,
+        maxHeight: '80%',
+    },
+    modalCloseButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 10,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        borderRadius: 20,
+        padding: 5,
+    },
+    modalImageContainer: {
+        width: '100%',
+        height: 250,
+        backgroundColor: '#f0f0f0',
+    },
+    modalImage: {
+        width: '100%',
+        height: '100%',
+    },
+    modalCaptionContainer: {
+        padding: 20,
+    },
+    modalCaption: {
+        fontSize: 16,
+        color: AppTheme.text,
+        lineHeight: 24,
+        marginBottom: 20,
+    },
+    modalInfoContainer: {
+        marginBottom: 20,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    infoText: {
+        fontSize: 14,
+        color: AppTheme.textLight,
+        marginLeft: 8,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    deleteButton: {
+        backgroundColor: AppTheme.danger,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    // Original styles
     container: {
         flex: 1,
         backgroundColor: AppTheme.background,
