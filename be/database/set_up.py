@@ -15,7 +15,7 @@ def initialize_db(app):
     # Thiết lập tự động migration
     setup_migrations(app)
     # Seed dữ liệu nếu cần
-    # seed_data(app)
+    seed_data(app)
 
 def setup_migrations(app):
     """

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useImageUpdate } from '../../context/ImageUpdateContext';
 import {
     View,
     Text,
@@ -49,6 +50,7 @@ const CaptioningScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedCaption, setEditedCaption] = useState<string>('');
     const router = useRouter();
+    const { updateImageTimestamp } = useImageUpdate();
 
     const pickImage = async () => {
         try {
@@ -128,6 +130,8 @@ const CaptioningScreen = () => {
                 const response = await imageService.uploadImage(formData);
                 setCaption(response.description);
                 setImageId(response.id);
+                // Cập nhật timestamp khi thêm ảnh mới thành công
+                updateImageTimestamp();
             } catch (error: any) {
                 console.error('Error details:', error.response?.data || error.message);
                 Alert.alert(

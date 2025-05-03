@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useImageUpdate } from '../../context/ImageUpdateContext';
 import {
   View,
   Text,
@@ -55,6 +56,7 @@ interface ImageItem {
 
 const HistoryScreen = () => {
   const [images, setImages] = useState<ImageItem[]>([]);
+  const [filteredImages, setFilteredImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -62,22 +64,66 @@ const HistoryScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedCaption, setEditedCaption] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  const { lastImageUpdate } = useImageUpdate();
+
+  // Track if data has been loaded already to prevent unnecessary reloads
+  const dataLoadedRef = useRef(false);
+  // Track if the component is mounted to prevent state updates after unmounting
+  const isMountedRef = useRef(true);
+  // Store the last update time to implement cache expiration
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
+  // Cache expiration time (5 minutes)
+  const CACHE_EXPIRATION_TIME = 5 * 60 * 1000;
 
   useEffect(() => {
-    fetchImages();
+    // Set mounted flag
+    isMountedRef.current = true;
+    
+    // Initial data load if not already loaded
+    if (!dataLoadedRef.current) {
+      fetchImages(true);
+    }
+    
+    return () => {
+      // Clear mounted flag on unmount
+      isMountedRef.current = false;
+    };
   }, []);
 
+  // Use useFocusEffect to refresh data only when needed
   useFocusEffect(
-    React.useCallback(() => {
-      fetchImages();
-    }, [])
+    useCallback(() => {
+      // Check if data is stale and needs refreshing
+      const currentTime = Date.now();
+      const isDataStale = currentTime - lastUpdateTime > CACHE_EXPIRATION_TIME;
+      
+      if (!dataLoadedRef.current || isDataStale) {
+        // Only fetch if data hasn't been loaded or is stale
+        fetchImages(false);
+      }
+    }, [lastUpdateTime])
   );
+  
+  // Lắng nghe thay đổi từ ImageUpdateContext
+  // Khi có ảnh mới được thêm vào từ trang captioning, lastImageUpdate sẽ thay đổi
+  useEffect(() => {
+    if (lastImageUpdate > 0) {
+      // Tải lại dữ liệu khi có ảnh mới được thêm vào
+      fetchImages(false);
+    }
+  }, [lastImageUpdate]);
 
-  const fetchImages = async () => {
+  const fetchImages = async (isInitialLoad: boolean) => {
     try {
-      setLoading(true);
+      // Only show loading indicator for initial load
+      // This prevents the loading screen flash when switching tabs
+      if (isInitialLoad || !dataLoadedRef.current) {
+        setLoading(true);
+      }
       // Change to getUserImages to fetch only the user's images
       const response = await imageService.getUserImages(1, 20);
       
@@ -95,19 +141,56 @@ const HistoryScreen = () => {
         };
       });
       
-      setImages(processedImages);
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setImages(processedImages);
+        setFilteredImages(processedImages);
+        // Mark data as loaded
+        dataLoadedRef.current = true;
+        // Update the last update timestamp
+        setLastUpdateTime(Date.now());
+      }
     } catch (error) {
       console.error('Failed to fetch user images:', error);
       Alert.alert('Error', 'Failed to load your images. Please try again later.');
     } finally {
-      setLoading(false);
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchImages();
+    await fetchImages(false);
     setRefreshing(false);
+  };
+
+  // Hàm tìm kiếm ảnh theo caption
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    
+    if (!text.trim()) {
+      // Nếu không có từ khóa tìm kiếm, hiển thị tất cả ảnh
+      setFilteredImages(images);
+      return;
+    }
+    
+    // Lọc ảnh theo caption
+    const filtered = images.filter(img => 
+      img.description?.toLowerCase().includes(text.toLowerCase())
+    );
+    
+    setFilteredImages(filtered);
+  };
+  
+  // Xóa tìm kiếm
+  const clearSearch = () => {
+    setSearchQuery('');
+    setFilteredImages(images);
+    setIsSearchFocused(false);
+    Keyboard.dismiss();
   };
 
   const renderImage = ({ item }: { item: ImageItem }) => {
@@ -432,10 +515,10 @@ const HistoryScreen = () => {
           </View>
         ) : (
           <FlatList
-            data={images}
+            data={filteredImages}
             renderItem={renderImage}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={images.length === 0 ? styles.emptyListContainer : styles.imageList}
+            contentContainerStyle={filteredImages.length === 0 ? styles.emptyListContainer : styles.imageList}
             numColumns={2}
             columnWrapperStyle={styles.imageRow}
             showsVerticalScrollIndicator={false}
@@ -447,6 +530,31 @@ const HistoryScreen = () => {
                 colors={[AppTheme.primary]}
                 tintColor={AppTheme.primary}
               />
+            }
+            ListHeaderComponent={
+              <Animatable.View 
+                animation="fadeIn" 
+                duration={500} 
+                style={styles.searchContainer}
+              >
+                <View style={[styles.searchInputContainer, isSearchFocused && styles.searchInputFocused]}>
+                  <Ionicons name="search" size={20} color={isSearchFocused ? AppTheme.primary : AppTheme.textLight} />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Tìm kiếm theo caption..."
+                    placeholderTextColor={AppTheme.textLighter}
+                    value={searchQuery}
+                    onChangeText={handleSearch}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                  />
+                  {searchQuery ? (
+                    <TouchableOpacity onPress={clearSearch}>
+                      <Ionicons name="close-circle" size={18} color={AppTheme.textLight} />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              </Animatable.View>
             }
           />
         )}
@@ -522,6 +630,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  searchContainer: {
+    paddingHorizontal: 5,
+    marginBottom: 15,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  searchInputFocused: {
+    borderColor: AppTheme.primary,
+    shadowColor: AppTheme.primary,
+    shadowOpacity: 0.2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: AppTheme.text,
+    marginLeft: 10,
+    paddingVertical: 5,
   },
   imageRow: {
     justifyContent: 'space-between',

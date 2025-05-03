@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImageUpdateProvider } from '../../context/ImageUpdateContext';
 import { Tabs } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -82,6 +83,7 @@ export default function TabLayout() {
   const isAdmin = user?.role === 'admin';
 
   return (
+    <ImageUpdateProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: AppTheme.primary,
@@ -206,5 +208,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </ImageUpdateProvider>
   );
 }
