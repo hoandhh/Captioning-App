@@ -67,6 +67,7 @@ interface ImageItem {
         id: string;
         username: string;
         full_name?: string;
+        role?: string;
     };
 }
 
@@ -79,6 +80,16 @@ const AdminScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState<Stats | null>(null);
+    
+    // Thống kê phân bố hình ảnh
+    const [imageDistribution, setImageDistribution] = useState({
+        adminCount: 0,
+        userCount: 0,
+        adminPercentage: 0,
+        userPercentage: 0,
+        adminRotation: '0deg',
+        userRotation: '0deg',
+    });
     
     // Search states
     const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -118,6 +129,52 @@ const AdminScreen = () => {
             setLoading(true);
             const statsData = await adminService.getStats();
             setStats(statsData);
+            
+            // Lấy dữ liệu phân bố hình ảnh theo người dùng
+            const allImagesData = await adminService.getAllImages(1, 100);
+            const allImages = allImagesData.images || [];
+            
+            // Tính toán số lượng ảnh theo loại người dùng
+            let adminImagesCount = 0;
+            let userImagesCount = 0;
+            
+            allImages.forEach((img: ImageItem) => {
+                // Kiểm tra nếu uploaded_by có thông tin role
+                if (img.uploaded_by && 'role' in img.uploaded_by && img.uploaded_by.role === 'admin') {
+                    adminImagesCount++;
+                } else {
+                    userImagesCount++;
+                }
+            });
+            
+            const totalImages = adminImagesCount + userImagesCount;
+            
+            if (totalImages > 0) {
+                // Tính phần trăm
+                const adminPercentage = Math.round((adminImagesCount / totalImages) * 100);
+                const userPercentage = 100 - adminPercentage;
+                
+                // Tính góc xoay cho biểu đồ tròn (360 độ = toàn bộ vòng tròn)
+                const adminDegrees = Math.round((adminPercentage / 100) * 360);
+                const userRotation = `${adminDegrees}deg`;
+                
+                setImageDistribution({
+                    adminCount: adminImagesCount,
+                    userCount: userImagesCount,
+                    adminPercentage: adminPercentage,
+                    userPercentage: userPercentage,
+                    adminRotation: '0deg',
+                    userRotation: userRotation,
+                });
+                
+                console.log('Image distribution calculated:', {
+                    adminCount: adminImagesCount,
+                    userCount: userImagesCount,
+                    adminPercentage,
+                    userPercentage,
+                    userRotation
+                });
+            }
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
             Alert.alert('Lỗi', 'Không thể tải dữ liệu bảng điều khiển. Vui lòng thử lại.');
@@ -571,48 +628,45 @@ const AdminScreen = () => {
                         animation="fadeInUp"
                         duration={800}
                         delay={300}
-                        style={styles.chartContainer}
+                        style={styles.statsContainer}
                     >
-                        <Text style={styles.chartTitle}>Phân bố hình ảnh theo người dùng</Text>
-                        <View style={styles.pieChartContainer}>
-                            <View style={styles.pieChart}>
-                                <Animatable.View 
-                                    animation="fadeIn" 
-                                    duration={1000} 
-                                    delay={400}
-                                    style={[styles.pieSlice, { backgroundColor: '#4A00E0', transform: [{ rotate: '0deg' }], zIndex: 5 }]}
-                                />
-                                <Animatable.View 
-                                    animation="fadeIn" 
-                                    duration={1000} 
-                                    delay={600}
-                                    style={[styles.pieSlice, { backgroundColor: '#00C9FF', transform: [{ rotate: '120deg' }], zIndex: 4 }]}
-                                />
-                                <Animatable.View 
-                                    animation="fadeIn" 
-                                    duration={1000} 
-                                    delay={800}
-                                    style={[styles.pieSlice, { backgroundColor: '#FF416C', transform: [{ rotate: '240deg' }], zIndex: 3 }]}
-                                />
-                                <View style={styles.pieChartCenter}>
-                                    <Text style={styles.pieChartCenterText}>{stats?.images || 0}</Text>
+                        <LinearGradient
+                            colors={['rgba(142, 45, 226, 0.2)', 'rgba(74, 0, 224, 0.2)']}
+                            style={[styles.statCard, { padding: 15 }]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <Text style={[styles.statLabel, { marginBottom: 10, color: '#4A00E0', fontSize: 16, fontWeight: 'bold' }]}>Phân bố hình ảnh theo người dùng</Text>
+                            <View style={styles.pieChartContainer}>
+                                <View style={styles.pieChart}>
+                                    <Animatable.View 
+                                        animation="fadeIn" 
+                                        duration={1000} 
+                                        delay={400}
+                                        style={[styles.pieSlice, { backgroundColor: '#4A00E0', transform: [{ rotate: '0deg' }], zIndex: 5 }]}
+                                    />
+                                    <Animatable.View 
+                                        animation="fadeIn" 
+                                        duration={1000} 
+                                        delay={600}
+                                        style={[styles.pieSlice, { backgroundColor: '#00C9FF', transform: [{ rotate: imageDistribution.userRotation }], zIndex: 4 }]}
+                                    />
+                                    <View style={styles.pieChartCenter}>
+                                        <Text style={styles.pieChartCenterText}>{stats?.images || 0}</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.chartLegend}>
+                                    <View style={styles.legendItem}>
+                                        <View style={[styles.legendColor, { backgroundColor: '#4A00E0' }]} />
+                                        <Text style={styles.legendText}>Quản trị viên ({imageDistribution.adminPercentage}%)</Text>
+                                    </View>
+                                    <View style={styles.legendItem}>
+                                        <View style={[styles.legendColor, { backgroundColor: '#00C9FF' }]} />
+                                        <Text style={styles.legendText}>Người dùng thường ({imageDistribution.userPercentage}%)</Text>
+                                    </View>
                                 </View>
                             </View>
-                            <View style={styles.chartLegend}>
-                                <View style={styles.legendItem}>
-                                    <View style={[styles.legendColor, { backgroundColor: '#4A00E0' }]} />
-                                    <Text style={styles.legendText}>Quản trị viên (40%)</Text>
-                                </View>
-                                <View style={styles.legendItem}>
-                                    <View style={[styles.legendColor, { backgroundColor: '#00C9FF' }]} />
-                                    <Text style={styles.legendText}>Người dùng thường (35%)</Text>
-                                </View>
-                                <View style={styles.legendItem}>
-                                    <View style={[styles.legendColor, { backgroundColor: '#FF416C' }]} />
-                                    <Text style={styles.legendText}>Khách (25%)</Text>
-                                </View>
-                            </View>
-                        </View>
+                        </LinearGradient>
                     </Animatable.View>
 
                     <Animatable.View 
@@ -1039,7 +1093,7 @@ const AdminScreen = () => {
 const styles = StyleSheet.create({
     // Chart styles
     chartContainer: {
-        marginHorizontal: 20,
+        marginHorizontal: 5,
         marginVertical: 15,
         backgroundColor: '#fff',
         borderRadius: 15,
@@ -1064,27 +1118,27 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     pieChart: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         position: 'relative',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 20,
+        marginRight: 10,
     },
     pieSlice: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         position: 'absolute',
         top: 0,
         left: 0,
         overflow: 'hidden',
     },
     pieChartCenter: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
@@ -1102,11 +1156,13 @@ const styles = StyleSheet.create({
     },
     chartLegend: {
         flex: 1,
+        paddingLeft: 5,
+        marginTop: 10,
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 5,
     },
     legendColor: {
         width: 16,
@@ -1115,8 +1171,8 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     legendText: {
-        fontSize: 14,
-        color: AppTheme.textLight,
+        fontSize: 12,
+        color: '#333',
     },
     // Search styles
     searchContainer: {

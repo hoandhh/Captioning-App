@@ -158,7 +158,8 @@ def get_all_images():
                 'uploaded_by': {
                     'id': str(img.uploaded_by.id) if img.uploaded_by else None,
                     'username': img.uploaded_by.username if img.uploaded_by else None,
-                    'full_name': img.uploaded_by.full_name if img.uploaded_by else None
+                    'full_name': img.uploaded_by.full_name if img.uploaded_by else None,
+                    'role': img.uploaded_by.role if img.uploaded_by else None
                 }
             } for img in images.items
         ],

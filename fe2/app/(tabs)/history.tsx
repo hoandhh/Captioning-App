@@ -419,7 +419,7 @@ const HistoryScreen = () => {
                         style={styles.editInput}
                         value={editedCaption}
                         onChangeText={setEditedCaption}
-                        placeholder="Enter a new caption..."
+                        placeholder="Nhập mô tả mới..."
                         multiline
                         autoFocus
                       />
@@ -428,7 +428,7 @@ const HistoryScreen = () => {
                           style={[styles.editButton, styles.cancelEditButton]}
                           onPress={cancelEditing}
                         >
-                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                          <Text style={styles.cancelButtonText}>Hủy</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
@@ -442,7 +442,7 @@ const HistoryScreen = () => {
                           {updateLoading ? (
                             <ActivityIndicator size="small" color="#fff" />
                           ) : (
-                            <Text style={styles.editButtonText}>Save</Text>
+                            <Text style={styles.editButtonText}>Lưu</Text>
                           )}
                         </TouchableOpacity>
                       </View>
@@ -451,7 +451,7 @@ const HistoryScreen = () => {
                 ) : (
                   <View style={styles.modalCaptionContainer}>
                     <View style={styles.captionHeader}>
-                      <Text style={styles.captionTitle}>Caption</Text>
+                      <Text style={styles.captionTitle}>Mô tả</Text>
                       <TouchableOpacity 
                         style={styles.editIconButton}
                         onPress={startEditing}
@@ -460,7 +460,7 @@ const HistoryScreen = () => {
                       </TouchableOpacity>
                     </View>
                     <Text style={styles.modalCaption}>
-                      {selectedImage.description || 'No caption available'}
+                      {selectedImage.description || 'Chưa có mô tả'}
                     </Text>
                     
                     <View style={styles.modalInfoContainer}>
@@ -489,7 +489,7 @@ const HistoryScreen = () => {
                           end={{ x: 1, y: 1 }}
                         >
                           <Feather name="download" size={18} color="#fff" />
-                          <Text style={styles.actionButtonText}>Download</Text>
+                          <Text style={styles.actionButtonText}>Tải xuống</Text>
                         </LinearGradient>
                       </TouchableOpacity>
                       
@@ -517,7 +517,7 @@ const HistoryScreen = () => {
                           end={{ x: 1, y: 1 }}
                         >
                           <Feather name="trash-2" size={18} color="#fff" />
-                          <Text style={styles.actionButtonText}>Delete</Text>
+                          <Text style={styles.actionButtonText}>Xóa</Text>
                         </LinearGradient>
                       </TouchableOpacity>
                     </View>
@@ -652,12 +652,12 @@ const HistoryScreen = () => {
                   <Ionicons name="search" size={20} color={isSearchFocused ? AppTheme.primary : AppTheme.textLight} />
                   <TextInput
                     style={styles.searchInput}
-                    placeholder="Tìm kiếm theo caption..."
-                    placeholderTextColor={AppTheme.textLighter}
+                    placeholder="Tìm kiếm theo mô tả..."
+                    placeholderTextColor="#666666"
                     value={searchQuery}
                     onChangeText={handleSearch}
                     onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
+                    // Removed onBlur to prevent keyboard auto-dismiss issues
                   />
                   {searchQuery ? (
                     <TouchableOpacity onPress={clearSearch}>
@@ -745,6 +745,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 5,
     marginBottom: 15,
+    width: '100%',
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -760,6 +761,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
+    minWidth: '100%',
   },
   searchInputFocused: {
     borderColor: AppTheme.primary,
