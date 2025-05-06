@@ -281,9 +281,27 @@ const CaptioningScreen = () => {
                             duration={800}
                             style={styles.previewContainer}
                         >
-                            <View style={styles.imageContainer}>
+                            <Animatable.View 
+                                animation="zoomIn" 
+                                duration={800} 
+                                style={styles.imageContainer}
+                            >
                                 <Image source={{ uri: image }} style={styles.previewImage} />
-                            </View>
+                                <LinearGradient
+                                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']}
+                                    style={styles.imageOverlay}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 0, y: 1 }}
+                                >
+                                    <TouchableOpacity 
+                                        style={styles.changeImageButton}
+                                        onPress={pickImage}
+                                    >
+                                        <Ionicons name="refresh" size={20} color="#fff" />
+                                        <Text style={styles.changeImageText}>Đổi ảnh</Text>
+                                    </TouchableOpacity>
+                                </LinearGradient>
+                            </Animatable.View>
 
                             {loading ? (
                                 <Animatable.View 
@@ -594,6 +612,38 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.2,
         shadowRadius: 5,
+        position: 'relative',
+    },
+    imageOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 70,
+        justifyContent: 'flex-end',
+        paddingBottom: 10,
+        paddingHorizontal: 15,
+    },
+    changeImageButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        alignSelf: 'flex-end',
+    },
+    changeImageText: {
+        color: '#fff',
+        fontSize: 14,
+        marginLeft: 5,
+    },
+    blurView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        borderRadius: 15,
     },
     previewImage: {
         width: '100%',

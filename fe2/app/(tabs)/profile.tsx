@@ -146,20 +146,63 @@ const ProfileScreen = () => {
             
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <Animatable.View animation="fadeInUp" duration={800} delay={300} style={styles.avatarContainer}>
-                    <LinearGradient
-                        colors={AppTheme.primaryGradient as any}
-                        style={styles.avatarGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                    >
-                        <Text style={styles.avatarText}>
-                            {user.full_name
-                                ? user.full_name.charAt(0).toUpperCase()
-                                : user.username.charAt(0).toUpperCase()}
-                        </Text>
-                    </LinearGradient>
-                    <Text style={styles.username}>{user.username}</Text>
-                    <Text style={styles.role}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Text>
+                    <Animatable.View animation="pulse" iterationCount="infinite" duration={3000}>
+                        <LinearGradient
+                            colors={AppTheme.primaryGradient as any}
+                            style={styles.avatarGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <Text style={styles.avatarText}>
+                                {user.full_name
+                                    ? user.full_name.charAt(0).toUpperCase()
+                                    : user.username.charAt(0).toUpperCase()}
+                            </Text>
+                        </LinearGradient>
+                    </Animatable.View>
+                    <Animatable.Text animation="fadeIn" duration={1000} style={styles.username}>{user.username}</Animatable.Text>
+                    <Animatable.Text animation="fadeIn" duration={1000} delay={200} style={styles.role}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Animatable.Text>
+                </Animatable.View>
+                
+                <Animatable.View animation="fadeInUp" duration={800} delay={400} style={styles.activityStatsContainer}>
+                    <Text style={styles.activityStatsTitle}>Hoạt động của bạn</Text>
+                    <View style={styles.statsRow}>
+                        <Animatable.View animation="fadeInLeft" delay={600} duration={800} style={styles.statItem}>
+                            <LinearGradient
+                                colors={['#4A00E0', '#8E2DE2']}
+                                style={styles.statCircle}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            >
+                                <Text style={styles.statNumber}>12</Text>
+                            </LinearGradient>
+                            <Text style={styles.statTitle}>Hình ảnh</Text>
+                        </Animatable.View>
+                        
+                        <Animatable.View animation="fadeInLeft" delay={800} duration={800} style={styles.statItem}>
+                            <LinearGradient
+                                colors={['#00C9FF', '#92FE9D']}
+                                style={styles.statCircle}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            >
+                                <Text style={styles.statNumber}>5</Text>
+                            </LinearGradient>
+                            <Text style={styles.statTitle}>Hôm nay</Text>
+                        </Animatable.View>
+                        
+                        <Animatable.View animation="fadeInLeft" delay={1000} duration={800} style={styles.statItem}>
+                            <LinearGradient
+                                colors={['#FF416C', '#FF4B2B']}
+                                style={styles.statCircle}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            >
+                                <Text style={styles.statNumber}>85%</Text>
+                            </LinearGradient>
+                            <Text style={styles.statTitle}>Chính xác</Text>
+                        </Animatable.View>
+                    </View>
                 </Animatable.View>
 
                 <View style={styles.profileSection}>
@@ -314,6 +357,58 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: AppTheme.background,
         paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    },
+    activityStatsContainer: {
+        marginHorizontal: 20,
+        marginVertical: 10,
+        backgroundColor: AppTheme.card,
+        borderRadius: 15,
+        padding: 15,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    activityStatsTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: AppTheme.text,
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    statsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        marginTop: 5,
+    },
+    statItem: {
+        alignItems: 'center',
+        width: '30%',
+    },
+    statCircle: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+    },
+    statNumber: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    statTitle: {
+        fontSize: 14,
+        color: AppTheme.textLight,
+        textAlign: 'center',
     },
     scrollContent: {
         flexGrow: 1,

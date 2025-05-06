@@ -9,6 +9,7 @@ import {
   Dimensions,
   StatusBar,
   ImageBackground,
+  Platform,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -40,18 +41,33 @@ const HomeScreen = () => {
         style={styles.backgroundImage}
         imageStyle={{ opacity: 0.15 }}
       >
-        <LinearGradient
-          colors={['#4A00E0', '#8E2DE2', '#6A82FB']}
-          style={styles.header}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-        </LinearGradient>
-
         <ScrollView 
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          <LinearGradient
+            colors={['#4A00E0', '#8E2DE2', '#6A82FB']}
+            style={styles.header}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Animatable.View animation="fadeIn" duration={1000} style={styles.headerContent}>
+              <Animatable.Text animation="fadeInDown" duration={1000} style={styles.welcomeText}>
+                Xin chào, {user?.full_name || user?.username || 'Người dùng'}!
+              </Animatable.Text>
+              <Animatable.View animation="fadeInUp" duration={1200} style={styles.headerIcons}>
+                <Animatable.View animation="pulse" iterationCount="infinite" duration={3000}>
+                  <MaterialCommunityIcons name="image-multiple" size={24} color="#fff" />
+                </Animatable.View>
+                <Animatable.View animation="pulse" iterationCount="infinite" duration={3000} delay={300}>
+                  <FontAwesome5 name="brain" size={24} color="#fff" />
+                </Animatable.View>
+                <Animatable.View animation="pulse" iterationCount="infinite" duration={3000} delay={600}>
+                  <MaterialCommunityIcons name="text-recognition" size={24} color="#fff" />
+                </Animatable.View>
+              </Animatable.View>
+            </Animatable.View>
+          </LinearGradient>
           <Animatable.View 
             animation="fadeInUp" 
             duration={800} 
@@ -180,6 +196,95 @@ const HomeScreen = () => {
               </LinearGradient>
             </TouchableOpacity>
           </Animatable.View>
+          
+          <Animatable.View 
+            animation="fadeInUp" 
+            duration={800} 
+            delay={900}
+            style={styles.animationContainer}
+          >
+            <Text style={styles.animationTitle}>Quy trình xử lý</Text>
+            
+            <View style={styles.processFlow}>
+              <Animatable.View 
+                animation="bounceIn" 
+                duration={1500} 
+                delay={1100} 
+                style={styles.processStep}
+              >
+                <LinearGradient
+                  colors={['#4A00E0', '#8E2DE2']}
+                  style={styles.processIcon}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="cloud-upload" size={28} color="#fff" />
+                </LinearGradient>
+                <Text style={styles.processText}>Tải lên</Text>
+              </Animatable.View>
+              
+              <Animatable.View 
+                animation="fadeIn" 
+                duration={800} 
+                delay={1300} 
+                style={styles.processArrow}
+              >
+                <MaterialCommunityIcons name="arrow-right" size={24} color="#6A82FB" />
+              </Animatable.View>
+              
+              <Animatable.View 
+                animation="bounceIn" 
+                duration={1500} 
+                delay={1500} 
+                style={styles.processStep}
+              >
+                <LinearGradient
+                  colors={['#00C9FF', '#92FE9D']}
+                  style={styles.processIcon}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <FontAwesome5 name="brain" size={24} color="#fff" />
+                </LinearGradient>
+                <Text style={styles.processText}>Phân tích</Text>
+              </Animatable.View>
+              
+              <Animatable.View 
+                animation="fadeIn" 
+                duration={800} 
+                delay={1700} 
+                style={styles.processArrow}
+              >
+                <MaterialCommunityIcons name="arrow-right" size={24} color="#6A82FB" />
+              </Animatable.View>
+              
+              <Animatable.View 
+                animation="bounceIn" 
+                duration={1500} 
+                delay={1900} 
+                style={styles.processStep}
+              >
+                <LinearGradient
+                  colors={['#FF416C', '#FF4B2B']}
+                  style={styles.processIcon}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <MaterialCommunityIcons name="text-box" size={28} color="#fff" />
+                </LinearGradient>
+                <Text style={styles.processText}>Kết quả</Text>
+              </Animatable.View>
+            </View>
+            
+            <Animatable.View 
+              animation="fadeIn" 
+              duration={1000} 
+              delay={2100} 
+              style={styles.animationNote}
+            >
+              <Text style={styles.noteText}>Công nghệ AI tiên tiến giúp tạo ra mô tả chi tiết và chính xác</Text>
+            </Animatable.View>
+          </Animatable.View>
         </ScrollView>
       </ImageBackground>
     </View>
@@ -191,6 +296,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#4A00E0',
   },
+  headerContent: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '70%',
+    marginTop: 5,
+  },
   backgroundImage: {
     flex: 1,
     width: '100%',
@@ -198,14 +325,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A00E0',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    paddingTop: 50,
-    elevation: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    paddingTop: Platform.OS === 'ios' ? 40 : 20,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    marginBottom: 5,
   },
   greeting: {
     fontSize: 30,
@@ -375,6 +503,72 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginRight: 10,
+  },
+  // Animation container styles
+  animationContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 25,
+    marginBottom: 40,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  animationTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1A5276',
+    textAlign: 'center',
+    marginBottom: 25,
+  },
+  processFlow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginVertical: 15,
+  },
+  processStep: {
+    alignItems: 'center',
+    width: 80,
+  },
+  processIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    marginBottom: 10,
+  },
+  processText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+  },
+  processArrow: {
+    marginHorizontal: 5,
+  },
+  animationNote: {
+    backgroundColor: 'rgba(106, 130, 251, 0.1)',
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#6A82FB',
+  },
+  noteText: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
 

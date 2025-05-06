@@ -119,7 +119,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Trang chủ',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="home" size={24} color="#fff" />
@@ -193,7 +193,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Hồ sơ',
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="person" size={24} color="#fff" />

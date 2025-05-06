@@ -566,6 +566,54 @@ const AdminScreen = () => {
                             <Text style={styles.statLabel}>Báo cáo chờ xử lý</Text>
                         </LinearGradient>
                     </Animatable.View>
+                    
+                    <Animatable.View
+                        animation="fadeInUp"
+                        duration={800}
+                        delay={300}
+                        style={styles.chartContainer}
+                    >
+                        <Text style={styles.chartTitle}>Phân bố hình ảnh theo người dùng</Text>
+                        <View style={styles.pieChartContainer}>
+                            <View style={styles.pieChart}>
+                                <Animatable.View 
+                                    animation="fadeIn" 
+                                    duration={1000} 
+                                    delay={400}
+                                    style={[styles.pieSlice, { backgroundColor: '#4A00E0', transform: [{ rotate: '0deg' }], zIndex: 5 }]}
+                                />
+                                <Animatable.View 
+                                    animation="fadeIn" 
+                                    duration={1000} 
+                                    delay={600}
+                                    style={[styles.pieSlice, { backgroundColor: '#00C9FF', transform: [{ rotate: '120deg' }], zIndex: 4 }]}
+                                />
+                                <Animatable.View 
+                                    animation="fadeIn" 
+                                    duration={1000} 
+                                    delay={800}
+                                    style={[styles.pieSlice, { backgroundColor: '#FF416C', transform: [{ rotate: '240deg' }], zIndex: 3 }]}
+                                />
+                                <View style={styles.pieChartCenter}>
+                                    <Text style={styles.pieChartCenterText}>{stats?.images || 0}</Text>
+                                </View>
+                            </View>
+                            <View style={styles.chartLegend}>
+                                <View style={styles.legendItem}>
+                                    <View style={[styles.legendColor, { backgroundColor: '#4A00E0' }]} />
+                                    <Text style={styles.legendText}>Quản trị viên (40%)</Text>
+                                </View>
+                                <View style={styles.legendItem}>
+                                    <View style={[styles.legendColor, { backgroundColor: '#00C9FF' }]} />
+                                    <Text style={styles.legendText}>Người dùng thường (35%)</Text>
+                                </View>
+                                <View style={styles.legendItem}>
+                                    <View style={[styles.legendColor, { backgroundColor: '#FF416C' }]} />
+                                    <Text style={styles.legendText}>Khách (25%)</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </Animatable.View>
 
                     <Animatable.View 
                         animation="fadeInUp" 
@@ -989,6 +1037,87 @@ const AdminScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    // Chart styles
+    chartContainer: {
+        marginHorizontal: 20,
+        marginVertical: 15,
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 20,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    chartTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: AppTheme.text,
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    pieChartContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    pieChart: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 20,
+    },
+    pieSlice: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        overflow: 'hidden',
+    },
+    pieChartCenter: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        zIndex: 10,
+    },
+    pieChartCenterText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: AppTheme.text,
+    },
+    chartLegend: {
+        flex: 1,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    legendColor: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        marginRight: 8,
+    },
+    legendText: {
+        fontSize: 14,
+        color: AppTheme.textLight,
+    },
     // Search styles
     searchContainer: {
         paddingHorizontal: 20,
