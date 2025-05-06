@@ -174,28 +174,7 @@ const HomeScreen = () => {
             </Animatable.View>
           </Animatable.View>
           
-          <Animatable.View 
-            animation="fadeInUp" 
-            duration={800} 
-            delay={1700}
-            style={styles.getStartedContainer}
-          >
-            <TouchableOpacity 
-              style={styles.getStartedButton}
-              onPress={navigateToCaptioning}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#4A00E0', '#8E2DE2']}
-                style={styles.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.getStartedText}>Bắt đầu ngay</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" />
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animatable.View>
+
           
           <Animatable.View 
             animation="fadeInUp" 
@@ -285,6 +264,8 @@ const HomeScreen = () => {
               <Text style={styles.noteText}>Công nghệ AI tiên tiến giúp tạo ra mô tả chi tiết và chính xác</Text>
             </Animatable.View>
           </Animatable.View>
+
+
         </ScrollView>
       </ImageBackground>
     </View>
@@ -325,7 +306,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A00E0',
   },
   header: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     paddingVertical: 15,
     paddingTop: Platform.OS === 'ios' ? 40 : 20,
     elevation: 4,
@@ -333,7 +314,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    marginBottom: 5,
+    marginBottom: 15,
+    marginHorizontal: 20,
+    borderRadius: 20,
   },
   greeting: {
     fontSize: 30,
@@ -353,8 +336,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   content: {
-    padding: 20,
-    paddingTop: 30,
+    padding: 0,
+    paddingTop: 15,
   },
   // Hero section styles
   heroContainer: {
@@ -363,6 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 30,
+    marginHorizontal: 20,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -424,6 +408,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 30,
     marginBottom: 30,
+    marginHorizontal: 20,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -478,7 +463,8 @@ const styles = StyleSheet.create({
   // Get Started button
   getStartedContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginVertical: 30,
+    marginHorizontal: 20,
   },
   getStartedButton: {
     width: width * 0.8,
@@ -510,6 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 25,
     marginBottom: 40,
+    marginHorizontal: 20,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
