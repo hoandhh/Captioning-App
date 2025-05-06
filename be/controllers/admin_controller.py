@@ -153,13 +153,9 @@ def get_all_images():
             {
                 'id': str(img.id),
                 'description': img.description,
-                'url': f"/api/images/file/{str(img.id)}",  # Sử dụng ID thay vì file_path
+                'url': f"/api/images/file/{str(img.id)}",  # Sửa để sử dụng ID thay vì file_path
                 'created_at': img.created_at.isoformat() if hasattr(img, 'created_at') and img.created_at else None,
-                'uploaded_by': {
-                    'id': str(img.uploaded_by.id) if img.uploaded_by else None,
-                    'username': img.uploaded_by.username if img.uploaded_by else None,
-                    'full_name': img.uploaded_by.full_name if img.uploaded_by else None
-                }
+                'uploaded_by': str(img.uploaded_by.id) if img.uploaded_by else None
             } for img in images.items
         ],
         'total': images.total,
