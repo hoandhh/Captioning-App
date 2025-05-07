@@ -146,19 +146,26 @@ class AuthService:
         from services.email_service import EmailService
         
         try:
-            # Tạo token đặt lại mật khẩu với JWT (thời hạn 30 phút)
+            # Tạo mã đặt lại mật khẩu đơn giản (6 chữ số)
+            import random
+            import string
+            reset_code = ''.join(random.choices(string.digits, k=6))
+            
+            # Tạo token JWT như trước
             expires = datetime.datetime.now() + datetime.timedelta(minutes=30)
             reset_token = create_access_token(
                 identity=str(user.id),
                 expires_delta=datetime.timedelta(minutes=30),
-                additional_claims={"purpose": "password_reset"}
+                additional_claims={"purpose": "password_reset", "code": reset_code}
             )
             
+            print(f"Mã đặt lại mật khẩu: {reset_code}")
             print(f"Token đã được tạo: {reset_token[:20]}...")
             
-            # Lưu token và thời gian hết hạn vào database
+            # Lưu cả token và mã đơn giản vào database
             user.reset_password_token = reset_token
             user.reset_password_expires = expires
+            user.reset_code = reset_code
             user.save()
             
             print("Token đã được lưu vào database")
@@ -187,24 +194,55 @@ class AuthService:
         
     @staticmethod
     def reset_password_with_token(token, new_password):
-        """Đặt lại mật khẩu bằng token"""
+        """Đặt lại mật khẩu bằng token hoặc mã đặt lại mật khẩu"""
+        # Kiểm tra token hoặc mã
+        if not token:
+            raise ValueError("Mã đặt lại mật khẩu là bắt buộc")
+        
+        print(f"Mã đặt lại mật khẩu nhận được: {token}")
+        
+        # Xử lý mã đặt lại mật khẩu
+        try:
+            # Loại bỏ khoảng trắng và ký tự không mong muốn
+            code = token.strip().replace('\r', '').replace('\n', '')
+            print(f"Mã đặt lại mật khẩu sau khi xử lý: {code}")
+            
+            # Kiểm tra độ dài của mã
+            if len(code) != 6:
+                print(f"Mã đặt lại mật khẩu không hợp lệ: độ dài {len(code)} (cần 6 ký tự)")
+                # Thử tìm kiếm bằng token JWT nếu mã không đúng định dạng
+                user = User.objects(reset_password_token=token).first()
+            else:
+                # Tìm kiếm người dùng bằng mã đặt lại mật khẩu
+                user = User.objects(reset_code=code).first()
+                print(f"Tìm kiếm người dùng với mã: {code}")
+        except Exception as e:
+            print(f"Lỗi khi xử lý mã đặt lại mật khẩu: {str(e)}")
+            # Thử tìm kiếm bằng token gốc
+            user = User.objects(reset_password_token=token).first()
+        
         # Kiểm tra mật khẩu mới có đủ mạnh không
         is_valid, error = AuthService.validate_password(new_password)
         if not is_valid:
             raise ValueError(error)
             
-        # Tìm người dùng bằng token
-        user = User.objects(reset_password_token=token).first()
+        # Kiểm tra user đã tìm thấy chưa (user đã được tìm ở trên)
         if not user:
+            print("Không tìm thấy người dùng với token này")
             raise ValueError("Token không hợp lệ hoặc đã hết hạn")
+        else:
+            print(f"Tìm thấy người dùng: {user.username}, ID: {user.id}")
             
         # Kiểm tra token còn hiệu lực không
         if not user.reset_password_expires or user.reset_password_expires < datetime.datetime.now():
             # Xóa token hết hạn
+            print(f"Token đã hết hạn: {user.reset_password_expires}")
             user.reset_password_token = None
             user.reset_password_expires = None
             user.save()
             raise ValueError("Token đã hết hạn, vui lòng yêu cầu đặt lại mật khẩu mới")
+        else:
+            print(f"Token còn hiệu lực, hết hạn vào: {user.reset_password_expires}")
             
         # Đặt mật khẩu mới
         user.password = generate_password_hash(new_password)

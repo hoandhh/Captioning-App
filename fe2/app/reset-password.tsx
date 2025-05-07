@@ -55,28 +55,49 @@ const ResetPasswordScreen = () => {
     const [requirements, setRequirements] = useState(passwordRequirements);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [token, setToken] = useState('');
+    const [resetCode, setResetCode] = useState('');
 
     const router = useRouter();
     const params = useLocalSearchParams();
 
     useEffect(() => {
-        // Lấy token từ URL
-        if (params.token) {
-            const tokenValue = params.token as string;
-            setToken(tokenValue);
-            console.log("Nhận được token:", tokenValue);
-            
-            // Kiểm tra token có hợp lệ không (không rỗng và đúng định dạng)
-            if (!tokenValue || tokenValue === 'undefined' || tokenValue === 'null') {
-                setErrorMessage('Liên kết đặt lại mật khẩu không hợp lệ');
+        // Lấy mã đặt lại mật khẩu từ URL
+        if (params.code) {
+            try {
+                // Lấy mã đặt lại mật khẩu
+                const code = params.code as string;
+                console.log("Mã đặt lại mật khẩu từ URL:", code);
+                
+                // Xử lý mã đặt lại mật khẩu
+                const cleanCode = code.trim();
+                setResetCode(cleanCode);
+                
+                // Kiểm tra mã có hợp lệ không
+                if (!cleanCode || cleanCode.length !== 6) {
+                    setErrorMessage('Mã đặt lại mật khẩu không hợp lệ');
+                    setShowError(true);
+                    console.log("Mã đặt lại mật khẩu không hợp lệ:", cleanCode);
+                }
+            } catch (error) {
+                console.error("Lỗi khi xử lý mã đặt lại mật khẩu:", error);
+                setErrorMessage('Lỗi khi xử lý mã đặt lại mật khẩu');
                 setShowError(true);
-                console.log("Token không hợp lệ:", tokenValue);
+            }
+        } else if (params.token) {
+            // Hỗ trợ cả token JWT cũ và mã đặt lại mật khẩu mới
+            try {
+                const tokenValue = params.token as string;
+                console.log("Token từ URL:", tokenValue);
+                setResetCode(tokenValue);
+            } catch (error) {
+                console.error("Lỗi khi xử lý token:", error);
+                setErrorMessage('Lỗi khi xử lý liên kết đặt lại mật khẩu');
+                setShowError(true);
             }
         } else {
             setErrorMessage('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
             setShowError(true);
-            console.log("Không tìm thấy token trong URL");
+            console.log("Không tìm thấy mã đặt lại mật khẩu trong URL");
         }
     }, [params]);
 
@@ -125,8 +146,8 @@ const ResetPasswordScreen = () => {
             return;
         }
 
-        if (!token) {
-            setErrorMessage('Không tìm thấy token đặt lại mật khẩu');
+        if (!resetCode) {
+            setErrorMessage('Không tìm thấy mã đặt lại mật khẩu');
             setShowError(true);
             return;
         }
@@ -134,7 +155,7 @@ const ResetPasswordScreen = () => {
         setIsLoading(true);
         try {
             await authService.resetPassword({
-                token,
+                token: resetCode,
                 new_password: newPassword
             });
             
@@ -293,11 +314,13 @@ const ResetPasswordScreen = () => {
                             duration={300} 
                             style={styles.successContainer}
                         >
-                            <Ionicons name="checkmark-circle" size={20} color={AppTheme.success} />
-                            <Text style={styles.successText}>{successMessage}</Text>
+                            <View style={styles.successHeader}>
+                                <Ionicons name="checkmark-circle" size={24} color={AppTheme.success} />
+                                <Text style={styles.successText}>{successMessage}</Text>
+                            </View>
                             
                             <TouchableOpacity
-                                style={styles.buttonContainer}
+                                style={[styles.buttonContainer, { marginTop: 15, width: '100%' }]}
                                 onPress={() => router.push('/login' as any)}
                                 activeOpacity={0.8}
                             >
@@ -315,9 +338,9 @@ const ResetPasswordScreen = () => {
                     )}
 
                     <TouchableOpacity
-                        style={[styles.buttonContainer, (!token || isLoading) && styles.buttonDisabled]}
+                        style={[styles.buttonContainer, (!resetCode || isLoading) && styles.buttonDisabled]}
                         onPress={handleResetPassword}
-                        disabled={!token || isLoading}
+                        disabled={!resetCode || isLoading}
                         activeOpacity={0.8}
                     >
                         <LinearGradient
@@ -477,12 +500,17 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     successContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
         backgroundColor: 'rgba(40, 167, 69, 0.1)',
-        padding: 12,
+        padding: 15,
         borderRadius: 8,
         marginVertical: 10,
+        alignItems: 'center',
+    },
+    successHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+        width: '100%',
     },
     successText: {
         color: AppTheme.success,

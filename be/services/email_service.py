@@ -82,12 +82,32 @@ class EmailService:
     
     @staticmethod
     def send_password_reset_email(to_email, reset_token, username):
-        """Gửi email đặt lại mật khẩu với token"""
-        # Tạo URL đặt lại mật khẩu với token
-        # Sử dụng biến API_HOST và FRONTEND_PORT từ file .env
+        """Gửi email đặt lại mật khẩu với token và mã xác nhận"""
+        # Lấy mã đặt lại mật khẩu từ database
+        from models.user import User
+        from flask_jwt_extended import decode_token
+        
+        try:
+            # Giải mã token để lấy user_id và reset_code
+            decoded = decode_token(reset_token)
+            user_id = decoded["sub"]
+            reset_code = decoded.get("code", "")
+            
+            # Nếu không có reset_code trong token, lấy từ database
+            if not reset_code:
+                user = User.objects(id=user_id).first()
+                if user and user.reset_code:
+                    reset_code = user.reset_code
+            
+            print(f"Mã đặt lại mật khẩu: {reset_code}")
+        except Exception as e:
+            print(f"Lỗi khi giải mã token: {str(e)}")
+            reset_code = ""
+        
+        # Tạo URL đặt lại mật khẩu với mã đơn giản
         api_host = os.getenv("API_HOST", "localhost")
         frontend_port = os.getenv("FRONTEND_PORT", "8081")
-        reset_url = f"http://{api_host}:{frontend_port}/reset-password?token={reset_token}"
+        reset_url = f"http://{api_host}:{frontend_port}/reset-password?code={reset_code}"
         print(f"Reset URL: {reset_url}")
         
         # Tạo nội dung email

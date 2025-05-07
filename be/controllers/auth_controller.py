@@ -122,13 +122,25 @@ def forgot_password():
 def reset_password():
     try:
         data = request.get_json()
+        print(f"Yêu cầu đặt lại mật khẩu nhận được: {data}")
         
-        if not all(k in data for k in ('token', 'new_password')):
-            return jsonify({'error': 'Thiếu các trường bắt buộc'}), 400
+        # Kiểm tra các trường bắt buộc
+        if 'new_password' not in data:
+            return jsonify({'error': 'Thiếu mật khẩu mới'}), 400
+            
+        # Kiểm tra token hoặc mã đặt lại mật khẩu
+        if 'token' in data:
+            reset_key = data['token']
+            print(f"Sử dụng token: {reset_key[:10]}...")
+        elif 'code' in data:
+            reset_key = data['code']
+            print(f"Sử dụng mã đặt lại mật khẩu: {reset_key}")
+        else:
+            return jsonify({'error': 'Thiếu token hoặc mã đặt lại mật khẩu'}), 400
         
-        # Gọi service để đặt lại mật khẩu bằng token
+        # Gọi service để đặt lại mật khẩu
         AuthService.reset_password_with_token(
-            token=data['token'],
+            token=reset_key,
             new_password=data['new_password']
         )
         

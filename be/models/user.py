@@ -1,20 +1,20 @@
 # models/user.py
-from database.set_up import db
+from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField
 import datetime
 
-class User(db.Document):
-    username = db.StringField(required=True, unique=True)
-    password = db.StringField(required=True)
-    email = db.EmailField(required=True, unique=True)
-    full_name = db.StringField(required=False)  
-    is_active = db.BooleanField(default=True)   
-    role = db.StringField(default="user", choices=["user", "admin"])
-    created_at = db.DateTimeField(default=datetime.datetime.now)
-    last_login = db.DateTimeField()
-    
-    # Các trường cho chức năng đặt lại mật khẩu
-    reset_password_token = db.StringField()
-    reset_password_expires = db.DateTimeField()
+class User(Document):
+    username = StringField(required=True, unique=True)
+    password = StringField(required=True)
+    email = EmailField(required=True, unique=True)
+    full_name = StringField(default="")
+    role = StringField(default="user", choices=["user", "admin"])
+    created_at = DateTimeField(default=datetime.datetime.now)
+    last_login = DateTimeField(default=datetime.datetime.now)
+    is_active = BooleanField(default=True)
+    reset_password_token = StringField()
+    reset_password_expires = DateTimeField()
+    # Thêm trường mới để lưu mã đơn giản cho đặt lại mật khẩu
+    reset_code = StringField()
     
     meta = {
         'collection': 'users',
