@@ -31,6 +31,8 @@ def upload_with_caption():
         
         # Lấy tên địa điểm từ form data
         location = request.form.get('location')
+        if not location:
+            location = 'Không rõ'
         
         # 1. Upload ảnh vào MongoDB (không có mô tả ban đầu)
         image = ImageService.upload_image(

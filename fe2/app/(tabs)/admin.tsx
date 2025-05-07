@@ -869,7 +869,7 @@ const AdminScreen = () => {
                                     </View>
                                 )}
                                 
-                                {selectedImage.location && (
+                                {selectedImage.location ? (
                                     <Animatable.View 
                                         animation="fadeIn" 
                                         duration={500} 
@@ -878,6 +878,17 @@ const AdminScreen = () => {
                                         <Ionicons name="location-outline" size={16} color={AppTheme.textLight} />
                                         <Text style={styles.infoText}>
                                             {selectedImage.location}
+                                        </Text>
+                                    </Animatable.View>
+                                ) : (
+                                    <Animatable.View 
+                                        animation="fadeIn" 
+                                        duration={500} 
+                                        style={styles.infoRow}
+                                    >
+                                        <Ionicons name="location-outline" size={16} color={AppTheme.textLight} />
+                                        <Text style={styles.infoText}>
+                                            Không rõ
                                         </Text>
                                     </Animatable.View>
                                 )}

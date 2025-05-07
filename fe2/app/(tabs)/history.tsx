@@ -568,12 +568,19 @@ const HistoryScreen = () => {
                           </Text>
                         </View>
                       )}
-                      {selectedImage.location && (
+                      {selectedImage.location ? (
                         <View style={styles.infoRow}>
-                          <Feather name="map-pin" size={16} color={AppTheme.textLight} />
-                          <Text style={styles.infoText}>
-                            {selectedImage.location}
-                          </Text>
+                            <Feather name="map-pin" size={16} color={AppTheme.textLight} />
+                            <Text style={styles.infoText}>
+                                {selectedImage.location}
+                            </Text>
+                        </View>
+                      ) : (
+                        <View style={styles.infoRow}>
+                            <Feather name="map-pin" size={16} color={AppTheme.textLight} />
+                            <Text style={styles.infoText}>
+                                Không rõ
+                            </Text>
                         </View>
                       )}
                     </View>
