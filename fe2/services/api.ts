@@ -131,6 +131,11 @@ export const userService = {
     const response = await api.post("/auth/change-password", passwordData);
     return response.data;
   },
+
+  getActivityStats: async () => {
+    const response = await api.get("/users/activity/stats");
+    return response.data;
+  },
 };
 
 // Image services

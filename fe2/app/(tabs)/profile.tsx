@@ -46,12 +46,50 @@ const ProfileScreen = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPasswordFields, setShowPasswordFields] = useState(false);
+    // Define proper types for activity stats
+    interface DailyStat {
+        date: string;
+        count: number;
+    }
+    
+    interface ActivityStats {
+        total_images: number;
+        images_today: number;
+        daily_stats: DailyStat[];
+    }
+    
+    const [activityStats, setActivityStats] = useState<ActivityStats>({
+        total_images: 0,
+        images_today: 0,
+        daily_stats: []
+    });
+    const [statsLoading, setStatsLoading] = useState(true);
 
     useEffect(() => {
         if (user) {
             setFullName(user.full_name || '');
             setEmail(user.email || '');
         }
+    }, [user]);
+
+    // Fetch user activity statistics
+    useEffect(() => {
+        const fetchActivityStats = async () => {
+            if (!user) return;
+            
+            try {
+                setStatsLoading(true);
+                const stats = await userService.getActivityStats();
+                setActivityStats(stats);
+            } catch (error) {
+                console.error('Failed to fetch activity stats:', error);
+                // Fallback to default values if API fails
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        fetchActivityStats();
     }, [user]);
 
     const handleSaveProfile = async () => {
@@ -166,43 +204,51 @@ const ProfileScreen = () => {
                 
                 <Animatable.View animation="fadeInUp" duration={800} delay={400} style={styles.activityStatsContainer}>
                     <Text style={styles.activityStatsTitle}>Hoạt động của bạn</Text>
-                    <View style={styles.statsRow}>
-                        <Animatable.View animation="fadeInLeft" delay={600} duration={800} style={styles.statItem}>
-                            <LinearGradient
-                                colors={['#4A00E0', '#8E2DE2']}
-                                style={styles.statCircle}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            >
-                                <Text style={styles.statNumber}>12</Text>
-                            </LinearGradient>
-                            <Text style={styles.statTitle}>Hình ảnh</Text>
+                    {statsLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={AppTheme.primary} />
+                        </View>
+                    ) : (
+                        <View style={styles.statsRow}>
+                            <Animatable.View animation="fadeInLeft" delay={600} duration={800} style={styles.statItem}>
+                                <LinearGradient
+                                    colors={['#4A00E0', '#8E2DE2']}
+                                    style={styles.statCircle}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                >
+                                    <Text style={styles.statNumber}>{activityStats.total_images}</Text>
+                                </LinearGradient>
+                                <Text style={styles.statTitle}>Hình ảnh</Text>
+                            </Animatable.View>
+                            
+                            <Animatable.View animation="fadeInLeft" delay={800} duration={800} style={styles.statItem}>
+                                <LinearGradient
+                                    colors={['#00C9FF', '#92FE9D']}
+                                    style={styles.statCircle}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                >
+                                    <Text style={styles.statNumber}>{activityStats.images_today}</Text>
+                                </LinearGradient>
+                                <Text style={styles.statTitle}>Hôm nay</Text>
+                            </Animatable.View>
+                        </View>
+                    )}
+                    
+                    {!statsLoading && activityStats.daily_stats && activityStats.daily_stats.length > 0 && (
+                        <Animatable.View animation="fadeIn" delay={1200} duration={800} style={styles.dailyStatsContainer}>
+                            <Text style={styles.dailyStatsTitle}>Hoạt động 7 ngày qua</Text>
+                            <View style={styles.dailyStatsRow}>
+                                {activityStats.daily_stats.map((stat, index) => (
+                                    <View key={index} style={styles.dailyStatItem}>
+                                        <View style={[styles.dailyStatBar, { height: Math.max(20, stat.count * 15) }]} />
+                                        <Text style={styles.dailyStatText}>{stat.date}</Text>
+                                    </View>
+                                ))}
+                            </View>
                         </Animatable.View>
-                        
-                        <Animatable.View animation="fadeInLeft" delay={800} duration={800} style={styles.statItem}>
-                            <LinearGradient
-                                colors={['#00C9FF', '#92FE9D']}
-                                style={styles.statCircle}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            >
-                                <Text style={styles.statNumber}>5</Text>
-                            </LinearGradient>
-                            <Text style={styles.statTitle}>Hôm nay</Text>
-                        </Animatable.View>
-                        
-                        <Animatable.View animation="fadeInLeft" delay={1000} duration={800} style={styles.statItem}>
-                            <LinearGradient
-                                colors={['#FF416C', '#FF4B2B']}
-                                style={styles.statCircle}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            >
-                                <Text style={styles.statNumber}>85%</Text>
-                            </LinearGradient>
-                            <Text style={styles.statTitle}>Chính xác</Text>
-                        </Animatable.View>
-                    </View>
+                    )}
                 </Animatable.View>
 
                 <View style={styles.profileSection}>
@@ -356,19 +402,27 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: AppTheme.background,
-        paddingTop: Platform.OS === 'ios' ? 50 : 20,
+        paddingTop: StatusBar.currentHeight || 0,
+    },
+    scrollContent: {
+        paddingBottom: 30,
+    },
+    loadingContainer: {
+        height: 150,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     activityStatsContainer: {
         marginHorizontal: 20,
-        marginVertical: 10,
+        marginVertical: 15,
         backgroundColor: AppTheme.card,
         borderRadius: 15,
-        padding: 15,
+        padding: 20,
         elevation: 3,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 3,
+        shadowRadius: 4,
     },
     activityStatsTitle: {
         fontSize: 18,
@@ -410,9 +464,38 @@ const styles = StyleSheet.create({
         color: AppTheme.textLight,
         textAlign: 'center',
     },
-    scrollContent: {
-        flexGrow: 1,
-        paddingBottom: 30,
+    dailyStatsContainer: {
+        marginTop: 20,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.05)',
+    },
+    dailyStatsTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: AppTheme.text,
+        marginBottom: 15,
+    },
+    dailyStatsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        height: 100,
+    },
+    dailyStatItem: {
+        alignItems: 'center',
+        width: '12%',
+    },
+    dailyStatBar: {
+        width: 8,
+        backgroundColor: AppTheme.primary,
+        borderRadius: 4,
+        minHeight: 20,
+    },
+    dailyStatText: {
+        fontSize: 10,
+        color: AppTheme.textLight,
+        marginTop: 5,
     },
     avatarContainer: {
         alignItems: 'center',

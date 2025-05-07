@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
     PROFILE: `${API_BASE_URL}/users/profile`,
     GET_BY_ID: (id: string) => `${API_BASE_URL}/users/${id}`,
     SEARCH: `${API_BASE_URL}/users/search`,
+    ACTIVITY_STATS: `${API_BASE_URL}/users/activity/stats`,
   },
   
   // Image endpoints

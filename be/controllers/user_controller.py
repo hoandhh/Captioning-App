@@ -3,6 +3,8 @@ from flask import request, jsonify
 from services.user_service import UserService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user import User
+from models.image import Image
+from datetime import datetime, timedelta
 
 @jwt_required()
 def get_profile():
@@ -74,6 +76,46 @@ def get_user_by_id(user_id):
             'role': user.role,
             'created_at': user.created_at.isoformat() if hasattr(user, 'created_at') and user.created_at else None,
             'last_login': user.last_login.isoformat() if hasattr(user, 'last_login') and user.last_login else None
+        }), 200
+        
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': f'Lỗi máy chủ nội bộ: {str(e)}'}), 500
+
+@jwt_required()
+def get_user_activity_stats():
+    """Lấy thống kê hoạt động của người dùng hiện tại"""
+    try:
+        user_id = get_jwt_identity()
+        user = UserService.get_user_by_id(user_id)
+        
+        # Tổng số hình ảnh của người dùng
+        total_images = Image.objects(uploaded_by=user).count()
+        
+        # Số hình ảnh tải lên hôm nay
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        images_today = Image.objects(uploaded_by=user, created_at__gte=today).count()
+        
+        # Không còn cần tính độ chính xác
+        
+        # Thống kê theo thời gian (7 ngày gần đây)
+        days = 7
+        daily_stats = []
+        
+        for i in range(days):
+            day = today - timedelta(days=i)
+            next_day = day + timedelta(days=1)
+            count = Image.objects(uploaded_by=user, created_at__gte=day, created_at__lt=next_day).count()
+            daily_stats.append({
+                'date': day.strftime('%d/%m'),
+                'count': count
+            })
+        
+        return jsonify({
+            'total_images': total_images,
+            'images_today': images_today,
+            'daily_stats': daily_stats
         }), 200
         
     except ValueError as e:
