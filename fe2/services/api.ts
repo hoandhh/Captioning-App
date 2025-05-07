@@ -92,12 +92,12 @@ export const authService = {
   },
 
   forgotPassword: async (email: string) => {
-    const response = await api.post("/auth/forgot-password", { email });
+    const response = await api.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD.replace(API_BASE_URL, ""), { email });
     return response.data;
   },
 
   resetPassword: async (resetData: { token: string; new_password: string }) => {
-    const response = await api.post("/auth/reset-password", resetData);
+    const response = await api.post(API_ENDPOINTS.AUTH.RESET_PASSWORD.replace(API_BASE_URL, ""), resetData);
     return response.data;
   },
 };

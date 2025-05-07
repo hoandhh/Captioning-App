@@ -12,10 +12,15 @@ class User(db.Document):
     created_at = db.DateTimeField(default=datetime.datetime.now)
     last_login = db.DateTimeField()
     
+    # Các trường cho chức năng đặt lại mật khẩu
+    reset_password_token = db.StringField()
+    reset_password_expires = db.DateTimeField()
+    
     meta = {
         'collection': 'users',
         'indexes': [
             {'fields': ['username'], 'unique': True},
-            {'fields': ['email'], 'unique': True}
+            {'fields': ['email'], 'unique': True},
+            {'fields': ['reset_password_token']}
         ]
     }

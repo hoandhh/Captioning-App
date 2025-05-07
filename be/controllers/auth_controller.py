@@ -91,21 +91,33 @@ def change_password():
 def forgot_password():
     try:
         data = request.get_json()
+        print(f"Yêu cầu quên mật khẩu nhận được: {data}")
         
         if 'email' not in data:
+            print("Lỗi: Thiếu trường email trong yêu cầu")
             return jsonify({'error': 'Email là bắt buộc'}), 400
         
-        # Reset mật khẩu (validate sẽ được thực hiện trong service)
-        AuthService.reset_password(data['email'])
+        email = data['email']
+        print(f"Xử lý quên mật khẩu cho email: {email}")
+        
+        # Gọi service để xử lý yêu cầu quên mật khẩu
+        result = AuthService.forgot_password(email)
+        print(f"Kết quả xử lý quên mật khẩu: {result}")
         
         # Không tiết lộ liệu email có tồn tại hay không vì lý do bảo mật
         return jsonify({'message': 'Nếu email tồn tại, một liên kết đặt lại sẽ được gửi'}), 200
         
     except ValueError as e:
-        # Không tiết lộ lỗi cụ thể để bảo mật
+        # Log lỗi nhưng không tiết lộ chi tiết cho người dùng
+        print(f"Lỗi quên mật khẩu (ValueError): {str(e)}")
+        import traceback
+        print(traceback.format_exc())
         return jsonify({'message': 'Nếu email tồn tại, một liên kết đặt lại sẽ được gửi'}), 200
     except Exception as e:
-        return jsonify({'error': f'Lỗi máy chủ nội bộ: {str(e)}'}), 500
+        print(f"Lỗi máy chủ khi xử lý quên mật khẩu: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({'error': f'Lỗi máy chủ nội bộ'}), 500
 
 def reset_password():
     try:
@@ -114,12 +126,16 @@ def reset_password():
         if not all(k in data for k in ('token', 'new_password')):
             return jsonify({'error': 'Thiếu các trường bắt buộc'}), 400
         
-        # Trong triển khai thực tế, bạn sẽ xác thực token và đặt lại mật khẩu
-        # Hiện tại, đây chỉ là một hàm giả
+        # Gọi service để đặt lại mật khẩu bằng token
+        AuthService.reset_password_with_token(
+            token=data['token'],
+            new_password=data['new_password']
+        )
         
         return jsonify({'message': 'Đặt lại mật khẩu thành công'}), 200
         
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': f'Lỗi máy chủ nội bộ: {str(e)}'}), 500
+        print(f"Lỗi máy chủ khi đặt lại mật khẩu: {str(e)}")
+        return jsonify({'error': f'Lỗi máy chủ nội bộ'}), 500

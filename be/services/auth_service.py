@@ -117,27 +117,103 @@ class AuthService:
         return True
     
     @staticmethod
-    def reset_password(email):
+    def forgot_password(email):
         """Tạo token đặt lại mật khẩu và gửi email"""
+        print(f"Bắt đầu xử lý quên mật khẩu cho email: {email}")
+        
         # Kiểm tra email hợp lệ
         is_valid, error = AuthService.validate_email(email)
         if not is_valid:
+            print(f"Email không hợp lệ: {error}")
             raise ValueError(error)
             
         # Tìm người dùng bằng email
         user = User.objects(email=email.lower()).first()
         if not user:
+            print(f"Không tìm thấy người dùng với email: {email}")
             return False
             
         # Kiểm tra trạng thái hoạt động
         if not user.is_active:
+            print(f"Tài khoản không hoạt động: {email}")
             return False
             
-        # Trong triển khai thực tế:
-        # 1. Tạo token đặt lại mật khẩu
-        # 2. Lưu token vào database với thời gian hết hạn
-        # 3. Gửi email với link đặt lại mật khẩu
+        print(f"Tìm thấy người dùng: {user.username}, ID: {user.id}")
+            
+        # Import các module cần thiết
+        from flask_jwt_extended import create_access_token
+        import datetime
+        from services.email_service import EmailService
         
+        try:
+            # Tạo token đặt lại mật khẩu với JWT (thời hạn 30 phút)
+            expires = datetime.datetime.now() + datetime.timedelta(minutes=30)
+            reset_token = create_access_token(
+                identity=str(user.id),
+                expires_delta=datetime.timedelta(minutes=30),
+                additional_claims={"purpose": "password_reset"}
+            )
+            
+            print(f"Token đã được tạo: {reset_token[:20]}...")
+            
+            # Lưu token và thời gian hết hạn vào database
+            user.reset_password_token = reset_token
+            user.reset_password_expires = expires
+            user.save()
+            
+            print("Token đã được lưu vào database")
+            
+            # Gửi email với link đặt lại mật khẩu
+            print("Bắt đầu gửi email đặt lại mật khẩu...")
+            success, message = EmailService.send_password_reset_email(
+                to_email=user.email,
+                reset_token=reset_token,
+                username=user.username
+            )
+            
+            if not success:
+                print(f"Lỗi khi gửi email: {message}")
+                raise ValueError(f"Không thể gửi email: {message}")
+            
+            print("Email đặt lại mật khẩu đã được gửi thành công")
+            return True
+            
+        except Exception as e:
+            print(f"Lỗi trong quá trình xử lý quên mật khẩu: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            raise ValueError(f"Lỗi xử lý quên mật khẩu: {str(e)}")
+        
+        
+    @staticmethod
+    def reset_password_with_token(token, new_password):
+        """Đặt lại mật khẩu bằng token"""
+        # Kiểm tra mật khẩu mới có đủ mạnh không
+        is_valid, error = AuthService.validate_password(new_password)
+        if not is_valid:
+            raise ValueError(error)
+            
+        # Tìm người dùng bằng token
+        user = User.objects(reset_password_token=token).first()
+        if not user:
+            raise ValueError("Token không hợp lệ hoặc đã hết hạn")
+            
+        # Kiểm tra token còn hiệu lực không
+        if not user.reset_password_expires or user.reset_password_expires < datetime.datetime.now():
+            # Xóa token hết hạn
+            user.reset_password_token = None
+            user.reset_password_expires = None
+            user.save()
+            raise ValueError("Token đã hết hạn, vui lòng yêu cầu đặt lại mật khẩu mới")
+            
+        # Đặt mật khẩu mới
+        user.password = generate_password_hash(new_password)
+        
+        # Xóa token đặt lại mật khẩu
+        user.reset_password_token = None
+        user.reset_password_expires = None
+        
+        user.save()
         return True
     
     @staticmethod

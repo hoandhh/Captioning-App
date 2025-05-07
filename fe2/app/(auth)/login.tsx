@@ -254,7 +254,7 @@ const LoginScreen = () => {
 
                     <TouchableOpacity 
                         style={styles.forgotPassword} 
-                        onPress={() => Alert.alert('Thông báo', 'Tính năng quên mật khẩu sẽ có trong phiên bản tới.')}
+                        onPress={() => router.push('/(auth)/forgot-password' as any)}
                     >
                         <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
                     </TouchableOpacity>

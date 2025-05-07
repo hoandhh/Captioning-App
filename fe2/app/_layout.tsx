@@ -30,6 +30,8 @@ function useProtectedRoutes() {
     const inPublicGroup = segments[0] === '(public)';
     const inIntroScreen = segments[0] === 'intro';
     const inWelcomeScreen = segments[0] === 'welcome';
+    const inResetPasswordScreen = segments[0] === 'reset-password';
+    const inForgotPasswordScreen = segments[0] === 'forgot-password';
     
     // Kiểm tra trang chính an toàn hơn, tránh lỗi TypeScript
     const inRootScreen = segments.length <= 0 || !segments[0];
@@ -42,16 +44,16 @@ function useProtectedRoutes() {
     // Cập nhật tham chiếu cho lần render tiếp theo
     previousSegmentsRef.current = [...segments];
 
-    // Bỏ qua việc chuyển hướng nếu đang ở trang public, trang welcome hoặc đang vuốt back từ trang đăng nhập
-    if (inPublicGroup || inWelcomeScreen || isNavigatingBackFromAuth) return;
+    // Bỏ qua việc chuyển hướng nếu đang ở trang public, trang welcome, trang reset-password, trang forgot-password hoặc đang vuốt back từ trang đăng nhập
+    if (inPublicGroup || inWelcomeScreen || inResetPasswordScreen || inForgotPasswordScreen || isNavigatingBackFromAuth) return;
 
     const checkIntroStatus = async () => {
       const isIntroCompleted = await AsyncStorage.getItem('introCompleted');
 
       // Logic chuyển hướng chính
       if (!isAuthenticated) {
-        // Nếu chưa đăng nhập và không ở trang auth, trang chính, trang welcome hoặc trang public
-        if (!inAuthGroup && !inRootScreen && !inWelcomeScreen && !inPublicGroup) {
+        // Nếu chưa đăng nhập và không ở trang auth, trang chính, trang welcome, trang reset-password, trang forgot-password hoặc trang public
+        if (!inAuthGroup && !inRootScreen && !inWelcomeScreen && !inPublicGroup && !inResetPasswordScreen && !inForgotPasswordScreen) {
           // Sử dụng router.push thay vì router.replace để giữ lại lịch sử điều hướng
           router.push('/(auth)/login');
         }
