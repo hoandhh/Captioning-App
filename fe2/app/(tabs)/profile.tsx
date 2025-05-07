@@ -242,8 +242,14 @@ const ProfileScreen = () => {
                             <View style={styles.dailyStatsRow}>
                                 {activityStats.daily_stats.map((stat, index) => (
                                     <View key={index} style={styles.dailyStatItem}>
-                                        <View style={[styles.dailyStatBar, { height: Math.max(20, stat.count * 15) }]} />
-                                        <Text style={styles.dailyStatText}>{stat.date}</Text>
+                                        <View style={[styles.dailyStatBar, { 
+                                            height: stat.count > 0 ? Math.max(20, stat.count * 15) : 5,
+                                            backgroundColor: stat.count > 0 ? AppTheme.primary : '#E0E0E0',
+                                            opacity: stat.count > 0 ? 1 : 0.5
+                                        }]} />
+                                        <Text style={[styles.dailyStatText, {
+                                            color: stat.count > 0 ? AppTheme.textLight : '#AAAAAA'
+                                        }]}>{stat.date}</Text>
                                     </View>
                                 ))}
                             </View>
