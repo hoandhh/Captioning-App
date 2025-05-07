@@ -50,7 +50,8 @@ def get_all_images():
                 'id': str(img.id),
                 'description': img.description,
                 'url': f"/api/images/file/{str(img.id)}",
-                'created_at': img.created_at.isoformat() if hasattr(img, 'created_at') else None
+                'created_at': img.created_at.isoformat() if hasattr(img, 'created_at') else None,
+                'location': img.location if hasattr(img, 'location') else None
             } for img in images.items
         ],
         'total': images.total,
@@ -72,7 +73,8 @@ def get_user_images():
                 'id': str(img.id),
                 'description': img.description,
                 'url': f"/api/images/file/{str(img.id)}",
-                'created_at': img.created_at.isoformat() if hasattr(img, 'created_at') else None
+                'created_at': img.created_at.isoformat() if hasattr(img, 'created_at') else None,
+                'location': img.location if hasattr(img, 'location') else None
             } for img in images.items
         ],
         'total': images.total,

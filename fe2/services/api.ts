@@ -62,6 +62,18 @@ api.interceptors.response.use(
   }
 );
 
+interface ImageItem {
+  id: string;
+  url: string;
+  description: string;
+  created_at: string;
+  file_name?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
 // Authentication services
 export const authService = {
   login: async (credentials: {

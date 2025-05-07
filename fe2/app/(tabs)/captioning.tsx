@@ -22,6 +22,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { BlurView } from 'expo-blur';
+import * as Location from 'expo-location';
 
 // Bảng màu đồng bộ với thiết kế mới
 const AppTheme = {
@@ -49,6 +50,7 @@ const CaptioningScreen = () => {
     const [imageId, setImageId] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedCaption, setEditedCaption] = useState<string>('');
+    const [location, setLocation] = useState<string | null>(null);
     const router = useRouter();
     const { updateImageTimestamp } = useImageUpdate();
 
@@ -73,6 +75,7 @@ const CaptioningScreen = () => {
                 setImage(result.assets[0].uri);
                 setCaption(null); // Reset caption when new image is selected
                 setImageId(null); // Reset imageId when new image is selected
+                setLocation(null); // Reset location when picking from gallery
             }
         } catch (error) {
             console.error('Error picking image:', error);
@@ -83,10 +86,54 @@ const CaptioningScreen = () => {
     const takePicture = async () => {
         try {
             // Request camera permission
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            if (status !== 'granted') {
+            const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+            if (cameraStatus !== 'granted') {
                 Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào camera!');
                 return;
+            }
+
+            // Request location permission
+            const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
+            if (locationStatus !== 'granted') {
+                Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào vị trí để lưu thông tin địa điểm!');
+                return;
+            }
+
+            // Get current location with timeout
+            let locationName: string | null = null;
+            try {
+                const locationResult = await Promise.race([
+                    Location.getCurrentPositionAsync({
+                        accuracy: Location.Accuracy.Balanced,
+                        timeInterval: 5000
+                    }),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), 10000)
+                    )
+                ]) as Location.LocationObject;
+                
+                if (locationResult) {
+                    // Lấy tên địa điểm từ tọa độ
+                    const [address] = await Location.reverseGeocodeAsync({
+                        latitude: locationResult.coords.latitude,
+                        longitude: locationResult.coords.longitude
+                    });
+                    
+                    if (address) {
+                        // Tạo tên địa điểm từ thông tin địa chỉ
+                        const parts = [];
+                        if (address.name) parts.push(address.name);
+                        if (address.street) parts.push(address.street);
+                        if (address.city) parts.push(address.city);
+                        if (address.region) parts.push(address.region);
+                        if (address.country) parts.push(address.country);
+                        
+                        locationName = parts.join(', ');
+                    }
+                }
+            } catch (locationError) {
+                console.warn('Không thể lấy vị trí:', locationError);
+                // Vẫn tiếp tục chụp ảnh nếu không lấy được vị trí
             }
 
             const result = await ImagePicker.launchCameraAsync({
@@ -97,8 +144,9 @@ const CaptioningScreen = () => {
 
             if (!result.canceled) {
                 setImage(result.assets[0].uri);
-                setCaption(null); // Reset caption when new image is selected
-                setImageId(null); // Reset imageId when new image is selected
+                setCaption(null);
+                setImageId(null);
+                setLocation(locationName);
             }
         } catch (error) {
             console.error('Error taking picture:', error);
@@ -124,6 +172,11 @@ const CaptioningScreen = () => {
                 name: filename,
                 type,
             });
+
+            // Add location if available
+            if (location) {
+                formData.append('location', location);
+            }
 
             // Upload image and get caption
             try {
@@ -195,6 +248,7 @@ const CaptioningScreen = () => {
         setImage(null);
         setCaption(null);
         setImageId(null);
+        setLocation(null);
     };
 
     const viewMyImages = () => {
@@ -743,14 +797,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
-    // cancelButton: {
-    //     paddingVertical: 15,
-    //     borderRadius: 25,
-    //     alignItems: 'center',
-    //     borderWidth: 1,
-    //     borderColor: '#ddd',
-    //     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    // },
     cancelButtonText: {
         color: AppTheme.textLight,
         fontSize: 16,

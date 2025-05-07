@@ -3,6 +3,7 @@ from flask import request, jsonify
 from services.image_service import ImageService
 from services.image_caption_service import ImageCaptionService
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import json
 
 @jwt_required()
 def upload_with_caption():
@@ -28,11 +29,15 @@ def upload_with_caption():
         if not allowed_file(image_file.filename):
             return jsonify({"error": "Định dạng file không được hỗ trợ"}), 400
         
+        # Lấy tên địa điểm từ form data
+        location = request.form.get('location')
+        
         # 1. Upload ảnh vào MongoDB (không có mô tả ban đầu)
         image = ImageService.upload_image(
             file=image_file,
             description="",  # Mô tả trống, sẽ được cập nhật sau
-            user_id=user_id
+            user_id=user_id,
+            location=location
         )
         
         # 2. Tạo caption từ dữ liệu nhị phân
@@ -45,7 +50,8 @@ def upload_with_caption():
         return jsonify({
             "success": True,
             "id": str(image.id),
-            "description": caption
+            "description": caption,
+            "location": image.location
         }), 200
         
     except ValueError as e:

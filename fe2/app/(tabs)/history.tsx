@@ -55,6 +55,7 @@ interface ImageItem {
   url: string;
   created_at: string;
   file_name?: string;
+  location?: string;  // Tên địa điểm
 }
 
 const HistoryScreen = () => {
@@ -564,6 +565,14 @@ const HistoryScreen = () => {
                           <Feather name="file" size={16} color={AppTheme.textLight} />
                           <Text style={styles.infoText}>
                             {selectedImage.file_name}
+                          </Text>
+                        </View>
+                      )}
+                      {selectedImage.location && (
+                        <View style={styles.infoRow}>
+                          <Feather name="map-pin" size={16} color={AppTheme.textLight} />
+                          <Text style={styles.infoText}>
+                            {selectedImage.location}
                           </Text>
                         </View>
                       )}

@@ -63,6 +63,12 @@ interface ImageItem {
     file_name?: string;
     user_id: string;
     user_name?: string;
+    location?: string; // Địa điểm dạng chuỗi văn bản
+    location_data?: {
+        latitude: number;
+        longitude: number;
+        address?: string;
+    };
     uploaded_by?: {
         id: string;
         username: string;
@@ -861,6 +867,19 @@ const AdminScreen = () => {
                                             {selectedImage.file_name}
                                         </Text>
                                     </View>
+                                )}
+                                
+                                {selectedImage.location && (
+                                    <Animatable.View 
+                                        animation="fadeIn" 
+                                        duration={500} 
+                                        style={styles.infoRow}
+                                    >
+                                        <Ionicons name="location-outline" size={16} color={AppTheme.textLight} />
+                                        <Text style={styles.infoText}>
+                                            {selectedImage.location}
+                                        </Text>
+                                    </Animatable.View>
                                 )}
                             </View>
                             

@@ -9,6 +9,7 @@ class Image(db.Document):
     image_data = db.BinaryField(required=True)  # Dữ liệu nhị phân của ảnh
     uploaded_by = db.ReferenceField('User')
     created_at = db.DateTimeField(default=datetime.datetime.now)
+    location = db.StringField()  # Lưu tên địa điểm
     
     meta = {
         'collection': 'images',

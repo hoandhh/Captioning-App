@@ -10,7 +10,7 @@ from flask import send_file
 class ImageService:
     
     @staticmethod
-    def upload_image(file, description, user_id):
+    def upload_image(file, description, user_id, location=None):
         """Tải lên hình ảnh mới vào MongoDB"""
         # Tạo tên tệp duy nhất
         filename = secure_filename(file.filename)
@@ -26,7 +26,8 @@ class ImageService:
             file_name=unique_filename,
             content_type=file.content_type,
             image_data=file_data,
-            uploaded_by=user
+            uploaded_by=user,
+            location=location
         )
         image.save()
         
