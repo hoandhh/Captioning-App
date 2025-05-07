@@ -18,7 +18,10 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Platform,
+  Share,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { BlurView } from 'expo-blur';
@@ -292,7 +295,87 @@ const HistoryScreen = () => {
   
   // Xử lý xóa hình ảnh
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
   
+  // Xử lý tải xuống hình ảnh
+  const handleDownloadImage = async (image: ImageItem) => {
+    if (!image || !image.url) {
+      Alert.alert('Lỗi', 'Không thể tải xuống hình ảnh này');
+      return;
+    }
+
+    try {
+      // Hiển thị loading
+      setDownloadLoading(true);
+      console.log('Bắt đầu tải xuống ảnh:', image.id);
+      
+      // Yêu cầu quyền truy cập vào thư viện ảnh
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Quyền truy cập', 'Cần quyền truy cập vào thư viện ảnh để lưu hình ảnh');
+        return;
+      }
+      
+      // Tạo tên file dựa trên id hoặc tên file gốc
+      const fileName = image.file_name || `image_${image.id}.jpg`;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      
+      console.log('Đang tải ảnh từ URL:', image.url);
+      console.log('Lưu vào đường dẫn:', fileUri);
+      
+      // Đảm bảo URL hợp lệ
+      let downloadUrl = image.url;
+      if (!downloadUrl.startsWith('http')) {
+        // Nếu là đường dẫn tương đối, chuyển thành đường dẫn tuyệt đối
+        downloadUrl = imageService.getImageUrl(image.id);
+        console.log('Đã chuyển đổi URL thành:', downloadUrl);
+      }
+      
+      // Tải ảnh từ URL
+      const downloadResult = await FileSystem.downloadAsync(downloadUrl, fileUri);
+      console.log('Kết quả tải xuống:', downloadResult);
+      
+      if (downloadResult.status === 200) {
+        // Lưu vào thư viện ảnh
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        
+        // Tạo album nếu chưa tồn tại (Android sẽ bỏ qua nếu album đã tồn tại)
+        try {
+          await MediaLibrary.createAlbumAsync('Captioning App', asset, false);
+        } catch (albumError) {
+          console.log('Lưu ý khi tạo album:', albumError);
+          // Vẫn tiếp tục vì ảnh đã được lưu vào thư viện
+        }
+        
+        Alert.alert(
+          'Thành công', 
+          'Đã lưu hình ảnh vào thư viện ảnh', 
+          [
+            { 
+              text: 'OK', 
+              onPress: () => console.log('Đã lưu ảnh thành công') 
+            },
+            Platform.OS === 'ios' ? {
+              text: 'Chia sẻ',
+              onPress: () => Share.share({
+                url: downloadResult.uri,
+                message: `Ảnh từ Captioning App: ${image.description || ''}`,
+              })
+            } : undefined,
+          ].filter(Boolean) as any
+        );
+      } else {
+        throw new Error(`Tải xuống không thành công, mã trạng thái: ${downloadResult.status}`);
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải xuống ảnh:', error);
+      Alert.alert('Lỗi', 'Không thể tải xuống hình ảnh. Vui lòng thử lại sau.');
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
   const handleDeleteImage = async (imageId: string) => {
     if (!imageId) return;
     
@@ -487,15 +570,25 @@ const HistoryScreen = () => {
                     </View>
                     
                     <View style={styles.modalActions}>
-                      <TouchableOpacity style={styles.actionButton}>
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleDownloadImage(selectedImage)}
+                        disabled={downloadLoading}
+                      >
                         <LinearGradient
                           colors={AppTheme.primaryGradient as any}
                           style={styles.actionButtonGradient}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
                         >
-                          <Feather name="download" size={18} color="#fff" />
-                          <Text style={styles.actionButtonText}>Tải xuống</Text>
+                          {downloadLoading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <>
+                              <Feather name="download" size={18} color="#fff" />
+                              <Text style={styles.actionButtonText}>Tải xuống</Text>
+                            </>
+                          )}
                         </LinearGradient>
                       </TouchableOpacity>
                       
