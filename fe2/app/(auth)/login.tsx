@@ -67,6 +67,8 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [identifierType, setIdentifierType] = useState<'email' | 'username'>('email');
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showError, setShowError] = useState(false);
 
     const router = useRouter();
     const { login } = useAuth();
@@ -77,14 +79,20 @@ const LoginScreen = () => {
     };
 
     const handleLogin = async () => {
+        // Reset error state
+        setShowError(false);
+        setErrorMessage('');
+        
         if (!identifier.trim() || !password.trim()) {
-            Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
+            setErrorMessage('Vui lòng điền đầy đủ thông tin');
+            setShowError(true);
             return;
         }
 
         // Kiểm tra định dạng email nếu người dùng chọn đăng nhập bằng email
         if (identifierType === 'email' && !validateEmail(identifier)) {
-            Alert.alert('Lỗi', 'Email không hợp lệ');
+            setErrorMessage('Email không hợp lệ');
+            setShowError(true);
             return;
         }
 
@@ -97,7 +105,9 @@ const LoginScreen = () => {
             await login(credentials);
             router.replace('/(tabs)');
         } catch (error: any) {
-            Alert.alert('Lỗi', error.response?.data?.error || 'Đăng nhập thất bại. Vui lòng thử lại.');
+            const errorMsg = error.response?.data?.error || 'Thông tin đăng nhập không chính xác. Vui lòng thử lại.';
+            setErrorMessage(errorMsg);
+            setShowError(true);
         } finally {
             setIsLoading(false);
         }
@@ -224,6 +234,17 @@ const LoginScreen = () => {
                             />
                         </View>
                     </View>
+                    
+                    {showError && (
+                        <Animatable.View 
+                            animation="fadeIn" 
+                            duration={300} 
+                            style={styles.errorContainer}
+                        >
+                            <Ionicons name="alert-circle" size={20} color={AppTheme.danger} />
+                            <Text style={styles.errorText}>{errorMessage}</Text>
+                        </Animatable.View>
+                    )}
 
                     <TouchableOpacity style={styles.toggleContainer} onPress={toggleIdentifierType}>
                         <Text style={styles.toggleText}>
@@ -274,6 +295,20 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+        padding: 12,
+        borderRadius: 8,
+        marginVertical: 10,
+    },
+    errorText: {
+        color: AppTheme.danger,
+        marginLeft: 8,
+        fontSize: 14,
+        flex: 1,
+    },
     container: {
         flex: 1,
         backgroundColor: AppTheme.background,
