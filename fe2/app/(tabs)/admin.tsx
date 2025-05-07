@@ -639,18 +639,32 @@ const AdminScreen = () => {
                             <Text style={[styles.statLabel, { marginBottom: 10, color: '#4A00E0', fontSize: 16, fontWeight: 'bold' }]}>Phân bố hình ảnh theo người dùng</Text>
                             <View style={styles.pieChartContainer}>
                                 <View style={styles.pieChart}>
+                                    {/* Nền màu xanh cho toàn bộ biểu đồ */}
+                                    <View style={[styles.pieSegment, { backgroundColor: '#00C9FF' }]} />
+                                    
+                                    {/* Phần màu tím cho quản trị viên */}
                                     <Animatable.View 
                                         animation="fadeIn" 
                                         duration={1000} 
                                         delay={400}
-                                        style={[styles.pieSlice, { backgroundColor: '#4A00E0', transform: [{ rotate: '0deg' }], zIndex: 5 }]}
+                                        style={[styles.pieSegmentAdmin, { 
+                                            transform: [{ rotate: '0deg' }],
+                                            width: 100,
+                                            height: 100,
+                                        }]}
                                     />
+                                    
+                                    {/* Phần che đi một phần màu tím để hiển thị màu xanh */}
                                     <Animatable.View 
                                         animation="fadeIn" 
                                         duration={1000} 
                                         delay={600}
-                                        style={[styles.pieSlice, { backgroundColor: '#00C9FF', transform: [{ rotate: imageDistribution.userRotation }], zIndex: 4 }]}
+                                        style={[styles.pieSegmentMask, { 
+                                            transform: [{ rotate: `${imageDistribution.adminPercentage * 3.6}deg` }],
+                                        }]}
                                     />
+                                    
+                                    {/* Hiển thị số lượng hình ảnh ở giữa */}
                                     <View style={styles.pieChartCenter}>
                                         <Text style={styles.pieChartCenterText}>{stats?.images || 0}</Text>
                                     </View>
@@ -1124,7 +1138,6 @@ const styles = StyleSheet.create({
         position: 'relative',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 10,
     },
     pieSlice: {
         width: 100,
@@ -1134,6 +1147,50 @@ const styles = StyleSheet.create({
         top: 0,
         left: 0,
         overflow: 'hidden',
+    },
+    pieSegment: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        position: 'absolute',
+    },
+    pieSegmentAdmin: {
+        position: 'absolute',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#4A00E0',
+    },
+    pieSegmentMask: {
+        position: 'absolute',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#00C9FF',
+        top: 0,
+        left: 0,
+    },
+    pieSegmentOverlay: {
+        position: 'absolute',
+        borderRadius: 50,
+        top: 0,
+        left: 0,
+        overflow: 'hidden',
+    },
+    pieChartMask: {
+        position: 'absolute',
+        width: 50,
+        height: 100,
+        top: 0,
+        left: 0,
+        backgroundColor: 'white',
+    },
+    pieSegmentCover: {
+        position: 'absolute',
+        width: 50,
+        height: 100,
+        right: 0,
+        backgroundColor: 'white',
     },
     pieChartCenter: {
         width: 50,
