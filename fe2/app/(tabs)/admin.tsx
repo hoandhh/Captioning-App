@@ -87,7 +87,6 @@ const AdminScreen = () => {
         userCount: 0,
         adminPercentage: 0,
         userPercentage: 0,
-        adminRotation: '0deg',
         userRotation: '0deg',
     });
     
@@ -163,7 +162,6 @@ const AdminScreen = () => {
                     userCount: userImagesCount,
                     adminPercentage: adminPercentage,
                     userPercentage: userPercentage,
-                    adminRotation: '0deg',
                     userRotation: userRotation,
                 });
                 
@@ -636,50 +634,70 @@ const AdminScreen = () => {
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                         >
-                            <Text style={[styles.statLabel, { marginBottom: 10, color: '#4A00E0', fontSize: 16, fontWeight: 'bold' }]}>Phân bố hình ảnh theo người dùng</Text>
-                            <View style={styles.pieChartContainer}>
-                                <View style={styles.pieChart}>
-                                    {/* Nền màu xanh cho toàn bộ biểu đồ */}
-                                    <View style={[styles.pieSegment, { backgroundColor: '#00C9FF' }]} />
-                                    
-                                    {/* Phần màu tím cho quản trị viên */}
-                                    <Animatable.View 
-                                        animation="fadeIn" 
-                                        duration={1000} 
-                                        delay={400}
-                                        style={[styles.pieSegmentAdmin, { 
-                                            transform: [{ rotate: '0deg' }],
-                                            width: 100,
-                                            height: 100,
-                                        }]}
-                                    />
-                                    
-                                    {/* Phần che đi một phần màu tím để hiển thị màu xanh */}
-                                    <Animatable.View 
-                                        animation="fadeIn" 
-                                        duration={1000} 
-                                        delay={600}
-                                        style={[styles.pieSegmentMask, { 
-                                            transform: [{ rotate: `${imageDistribution.adminPercentage * 3.6}deg` }],
-                                        }]}
-                                    />
-                                    
-                                    {/* Hiển thị số lượng hình ảnh ở giữa */}
-                                    <View style={styles.pieChartCenter}>
-                                        <Text style={styles.pieChartCenterText}>{stats?.images || 0}</Text>
+                            <Text style={[styles.statLabel, { marginBottom: 15, color: '#4A00E0', fontSize: 16, fontWeight: 'bold' }]}>Phân bố hình ảnh theo người dùng</Text>
+                            
+                            <Animatable.View 
+                                animation="fadeIn"
+                                duration={1000}
+                                style={styles.distributionContainer}
+                            >
+                                {/* Biểu đồ hình tròn đơn giản */}
+                                <Animatable.View 
+                                    animation="zoomIn"
+                                    duration={800}
+                                    style={styles.circleChartContainer}
+                                >
+                                    <View style={styles.circleChart}>
+                                        {/* Nền màu tím cho toàn bộ biểu đồ */}
+                                        <View style={styles.adminSlice} />
+                                        
+                                        {/* Phần màu xanh cho người dùng */}
+                                        <View style={styles.userSliceContainer}>
+                                            <View style={[styles.userSlice, { 
+                                                width: `${imageDistribution.userPercentage}%`, 
+                                            }]} />
+                                        </View>
+                                        
+                                        {/* Viền trắng */}
+                                        <View style={styles.circleBorder} />
+                                        
+                                        {/* Hiển thị số lượng hình ảnh ở giữa */}
+                                        <View style={styles.circleCenter}>
+                                            <Text style={styles.circleCenterText}>{stats?.images || 0}</Text>
+                                        </View>
                                     </View>
-                                </View>
-                                <View style={styles.chartLegend}>
-                                    <View style={styles.legendItem}>
-                                        <View style={[styles.legendColor, { backgroundColor: '#4A00E0' }]} />
-                                        <Text style={styles.legendText}>Quản trị viên ({imageDistribution.adminPercentage}%)</Text>
+                                </Animatable.View>
+                                
+                                <Animatable.View 
+                                    animation="fadeInRight"
+                                    duration={800}
+                                    delay={300}
+                                    style={styles.chartLegendContainer}
+                                >
+                                    <View style={styles.chartLegend}>
+                                        <View style={styles.legendItem}>
+                                            <View style={[styles.legendColor, { backgroundColor: '#4A00E0' }]} />
+                                            <View style={styles.legendTextContainer}>
+                                                <Text style={styles.legendTitle}>Quản trị viên</Text>
+                                                <View style={styles.legendStatsRow}>
+                                                    <Text style={styles.legendCount}>{imageDistribution.adminCount} ảnh</Text>
+                                                    <Text style={styles.legendPercentage}>({imageDistribution.adminPercentage}%)</Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                        <View style={styles.legendItem}>
+                                            <View style={[styles.legendColor, { backgroundColor: '#00C9FF' }]} />
+                                            <View style={styles.legendTextContainer}>
+                                                <Text style={styles.legendTitle}>Người dùng thường</Text>
+                                                <View style={styles.legendStatsRow}>
+                                                    <Text style={styles.legendCount}>{imageDistribution.userCount} ảnh</Text>
+                                                    <Text style={styles.legendPercentage}>({imageDistribution.userPercentage}%)</Text>
+                                                </View>
+                                            </View>
+                                        </View>
                                     </View>
-                                    <View style={styles.legendItem}>
-                                        <View style={[styles.legendColor, { backgroundColor: '#00C9FF' }]} />
-                                        <Text style={styles.legendText}>Người dùng thường ({imageDistribution.userPercentage}%)</Text>
-                                    </View>
-                                </View>
-                            </View>
+                                </Animatable.View>
+                            </Animatable.View>
                         </LinearGradient>
                     </Animatable.View>
 
@@ -1130,72 +1148,155 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginTop: 10,
+        width: '100%',
+    },
+    pieChartWrapper: {
+        width: 120,
+        height: 120,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
     },
     pieChart: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         position: 'relative',
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
+    },
+    distributionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    circleChartContainer: {
+        width: 120,
+        height: 120,
+        position: 'relative',
+        marginRight: 15,
+    },
+    circleChart: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    adminSlice: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#4A00E0',
+        borderRadius: 60,
+        zIndex: 1,
+    },
+    userSliceContainer: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        borderRadius: 60,
+        overflow: 'hidden',
+        zIndex: 2,
+    },
+    userSlice: {
+        position: 'absolute',
+        height: '100%',
+        backgroundColor: '#00C9FF',
+        right: 0,
+        top: 0,
+    },
+    circleBorder: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        borderRadius: 60,
+        borderWidth: 2,
+        borderColor: 'white',
+        zIndex: 3,
+    },
+    circleCenter: {
+        position: 'absolute',
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: 'white',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -25 }, { translateY: -25 }],
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        zIndex: 10,
+    },
+    circleCenterText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
     },
     pieSlice: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         position: 'absolute',
         top: 0,
         left: 0,
         overflow: 'hidden',
     },
     pieSegment: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         position: 'absolute',
     },
     pieSegmentAdmin: {
         position: 'absolute',
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         backgroundColor: '#4A00E0',
     },
     pieSegmentMask: {
         position: 'absolute',
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         backgroundColor: '#00C9FF',
         top: 0,
         left: 0,
     },
     pieSegmentOverlay: {
         position: 'absolute',
-        borderRadius: 50,
+        borderRadius: 60,
         top: 0,
         left: 0,
         overflow: 'hidden',
     },
     pieChartMask: {
         position: 'absolute',
-        width: 50,
-        height: 100,
+        width: 60,
+        height: 120,
         top: 0,
         left: 0,
         backgroundColor: 'white',
     },
     pieSegmentCover: {
         position: 'absolute',
-        width: 50,
-        height: 100,
+        width: 60,
+        height: 120,
         right: 0,
         backgroundColor: 'white',
     },
     pieChartCenter: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
@@ -1211,21 +1312,46 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: AppTheme.text,
     },
+    chartLegendContainer: {
+        flex: 1,
+        justifyContent: 'center',
+    },
     chartLegend: {
         flex: 1,
-        paddingLeft: 5,
-        marginTop: 10,
+        paddingLeft: 10,
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 5,
+        marginBottom: 15,
     },
     legendColor: {
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        marginRight: 8,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        marginRight: 10,
+    },
+    legendTextContainer: {
+        flex: 1,
+    },
+    legendTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 2,
+    },
+    legendStatsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    legendCount: {
+        fontSize: 13,
+        color: '#555',
+        marginRight: 5,
+    },
+    legendPercentage: {
+        fontSize: 13,
+        color: '#777',
     },
     legendText: {
         fontSize: 12,
