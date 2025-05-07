@@ -388,7 +388,12 @@ const HistoryScreen = () => {
           }}
         >
           <BlurView intensity={90} style={styles.blurContainer}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <TouchableWithoutFeedback onPress={(e) => {
+              e.stopPropagation();
+              if (isEditing) {
+                Keyboard.dismiss();
+              }
+            }}>
               <Animatable.View 
                 animation="zoomIn" 
                 duration={300} 
@@ -422,6 +427,7 @@ const HistoryScreen = () => {
                         placeholder="Nhập mô tả mới..."
                         multiline
                         autoFocus
+                        onBlur={Keyboard.dismiss}
                       />
                       <View style={styles.editButtons}>
                         <TouchableOpacity
