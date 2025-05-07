@@ -103,7 +103,7 @@ def get_user_activity_stats():
         days = 7
         daily_stats = []
         
-        for i in range(days):
+        for i in range(days-1, -1, -1):  # Đảo ngược vòng lặp để hiển thị từ ngày xa nhất đến gần nhất
             day = today - timedelta(days=i)
             next_day = day + timedelta(days=1)
             count = Image.objects(uploaded_by=user, created_at__gte=day, created_at__lt=next_day).count()
