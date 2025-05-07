@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useImageUpdate } from '../../context/ImageUpdateContext';
 import {
     View,
     Text,
@@ -72,6 +73,9 @@ const ProfileScreen = () => {
         }
     }, [user]);
 
+    // Import the image update context
+    const { lastImageUpdate, activityUpdated, setActivityUpdated } = useImageUpdate();
+
     // Fetch user activity statistics
     useEffect(() => {
         const fetchActivityStats = async () => {
@@ -91,6 +95,24 @@ const ProfileScreen = () => {
 
         fetchActivityStats();
     }, [user]);
+    
+    // Refresh activity stats when new images are uploaded
+    useEffect(() => {
+        const refreshActivityStats = async () => {
+            if (!user || !activityUpdated) return;
+            
+            try {
+                const stats = await userService.getActivityStats();
+                setActivityStats(stats);
+                // Reset the flag after fetching
+                setActivityUpdated(false);
+            } catch (error) {
+                console.error('Failed to refresh activity stats:', error);
+            }
+        };
+
+        refreshActivityStats();
+    }, [user, activityUpdated, setActivityUpdated, lastImageUpdate]);
 
     const handleSaveProfile = async () => {
         if (!user) return;
