@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, SafeAreaView, Dimensions, Modal, Platform } from 'react-native';
 import { createGroupCaption } from '../services/groupCaptionService';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 interface ImageItem {
   id: string;
@@ -22,6 +23,8 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [groupCaption, setGroupCaption] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const toggleImageSelection = (imageId: string) => {
     if (selectedImages.includes(imageId)) {
@@ -38,6 +41,8 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
       setLoading(true);
       const response = await createGroupCaption(selectedImages);
       setGroupCaption(response.group_caption);
+      // Hiển thị modal kết quả sau khi tạo mô tả thành công
+      setShowResultModal(true);
     } catch (error) {
       console.error('Lỗi khi tạo mô tả nhóm:', error);
     } finally {
@@ -59,6 +64,88 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
     }
   };
 
+  // Render modal hiển thị kết quả
+  const renderResultModal = () => {
+    // Lấy danh sách các ảnh đã chọn
+    const selectedImagesList = images.filter(img => selectedImages.includes(img.id));
+    
+    return (
+      <Modal
+        visible={showResultModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowResultModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <BlurView intensity={Platform.OS === 'ios' ? 50 : 30} style={styles.blurContainer}>
+            <Animatable.View animation="zoomIn" duration={300} style={styles.modalContainer}>
+              <TouchableOpacity 
+                style={styles.modalCloseButton}
+                onPress={() => setShowResultModal(false)}
+              >
+                <Ionicons name="close-circle" size={32} color="#4A00E0" />
+              </TouchableOpacity>
+              
+              <Text style={styles.modalTitle}>Mô tả nhóm</Text>
+              
+              <View style={styles.resultImagesContainer}>
+                {selectedImagesList.length === 2 && (
+                  <View style={styles.twoImagesResult}>
+                    {selectedImagesList.map((img, index) => (
+                      <Image key={index} source={{ uri: img.url }} style={styles.resultImage} />
+                    ))}
+                  </View>
+                )}
+                
+                {selectedImagesList.length === 3 && (
+                  <View style={styles.threeImagesResult}>
+                    <Image source={{ uri: selectedImagesList[0].url }} style={styles.resultImageLarge} />
+                    <View style={styles.resultImagesRow}>
+                      <Image source={{ uri: selectedImagesList[1].url }} style={styles.resultImageSmall} />
+                      <Image source={{ uri: selectedImagesList[2].url }} style={styles.resultImageSmall} />
+                    </View>
+                  </View>
+                )}
+                
+                {selectedImagesList.length === 4 && (
+                  <View style={styles.fourImagesResult}>
+                    <View style={styles.resultImagesRow}>
+                      <Image source={{ uri: selectedImagesList[0].url }} style={styles.resultImageMedium} />
+                      <Image source={{ uri: selectedImagesList[1].url }} style={styles.resultImageMedium} />
+                    </View>
+                    <View style={styles.resultImagesRow}>
+                      <Image source={{ uri: selectedImagesList[2].url }} style={styles.resultImageMedium} />
+                      <Image source={{ uri: selectedImagesList[3].url }} style={styles.resultImageMedium} />
+                    </View>
+                  </View>
+                )}
+              </View>
+              
+              <View style={styles.modalCaptionContainer}>
+                <Text style={styles.modalCaptionText}>{groupCaption}</Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.modalButton}
+                onPress={() => setShowResultModal(false)}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#4A00E0', '#8E2DE2']}
+                  style={styles.modalButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.modalButtonText}>Đóng</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animatable.View>
+          </BlurView>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
@@ -71,7 +158,11 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
         <Text style={styles.title}>Tạo mô tả nhóm</Text>
       </LinearGradient>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.content} 
+        contentContainerStyle={styles.contentContainer}
+      >
         <Animatable.Text animation="fadeIn" style={styles.instruction}>
           Chọn tối đa 4 hình ảnh để tạo mô tả nhóm
         </Animatable.Text>
@@ -140,6 +231,8 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
           </TouchableOpacity>
         </View>
       )}
+      
+      {renderResultModal()}
     </SafeAreaView>
   );
 };
@@ -296,5 +389,113 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: '#333',
+  },
+  // Modal styles
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blurContainer: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+    width: '100%',
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4A00E0',
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  resultImagesContainer: {
+    width: '100%',
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+  },
+  twoImagesResult: {
+    flexDirection: 'row',
+    height: 200,
+  },
+  threeImagesResult: {
+    height: 250,
+  },
+  fourImagesResult: {
+    height: 250,
+  },
+  resultImagesRow: {
+    flexDirection: 'row',
+    flex: 1,
+  },
+  resultImage: {
+    flex: 1,
+    height: '100%',
+  },
+  resultImageLarge: {
+    width: '100%',
+    height: '60%',
+  },
+  resultImageSmall: {
+    flex: 1,
+    height: '100%',
+  },
+  resultImageMedium: {
+    flex: 1,
+    height: '100%',
+  },
+  modalCaptionContainer: {
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 10,
+    width: '100%',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  modalCaptionText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+  },
+  modalButton: {
+    borderRadius: 25,
+    overflow: 'hidden',
+    width: '100%',
+    marginTop: 10,
+  },
+  modalButtonGradient: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
