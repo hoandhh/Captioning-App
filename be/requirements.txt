@@ -12,3 +12,4 @@ faker
 googletrans==4.0.0-rc1
 gTTs
 playsound==1.2.2
+google-generativeai

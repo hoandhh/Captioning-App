@@ -29,6 +29,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { LocationFilter } from '../../components/LocationFilter';
+import { GroupCaptionView } from '../../components/GroupCaptionView';
+import { getLocations } from '../../services/locationService';
+import { Location } from '../../services/locationService';
 
 const { width } = Dimensions.get('window');
 
@@ -52,6 +56,7 @@ const AppTheme = {
 interface ImageItem {
   id: string;
   description: string;
+  caption?: string;  // Thêm trường caption để tương thích với GroupCaptionView
   url: string;
   created_at: string;
   file_name?: string;
@@ -70,6 +75,9 @@ const HistoryScreen = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [groupCaptionModalVisible, setGroupCaptionModalVisible] = useState(false);
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,6 +104,7 @@ const HistoryScreen = () => {
     // Initial data load if not already loaded
     if (!dataLoadedRef.current) {
       fetchImages(true);
+      fetchLocations();
     }
     
     return () => {
@@ -103,6 +112,39 @@ const HistoryScreen = () => {
       isMountedRef.current = false;
     };
   }, []);
+
+  // Fetch locations
+  const fetchLocations = async () => {
+    try {
+      const locationsData = await getLocations();
+      setLocations(locationsData);
+    } catch (error) {
+      console.error('Failed to fetch locations:', error);
+    }
+  };
+
+  // Filter images by location
+  useEffect(() => {
+    console.log('Selected location:', selectedLocation);
+    console.log('Images before filter:', images);
+    
+    if (selectedLocation) {
+      const filtered = images.filter(img => {
+        console.log('Image location:', img.location, 'Selected location:', selectedLocation);
+        return img.location && img.location.toLowerCase() === selectedLocation.toLowerCase();
+      });
+      console.log('Filtered images:', filtered);
+      setFilteredImages(filtered);
+    } else {
+      setFilteredImages(images);
+    }
+  }, [selectedLocation, images]);
+
+  const clearLocationFilter = () => {
+    console.log('Clearing location filter');
+    setSelectedLocation(null);
+    setFilteredImages(images);
+  };
 
   // Use useFocusEffect to refresh data only when needed
   useFocusEffect(
@@ -131,38 +173,30 @@ const HistoryScreen = () => {
 
   const fetchImages = async (isInitialLoad: boolean, page = 1) => {
     try {
-      // Only show loading indicator for initial load
-      // This prevents the loading screen flash when switching tabs
       if (isInitialLoad || !dataLoadedRef.current) {
         setLoading(true);
       } else if (page > 1) {
         setLoadingMore(true);
       }
       
-      // Fetch images with pagination
       const response = await imageService.getUserImages(page, perPage);
       
-      // Process images to ensure they have proper URLs
-      const processedImages = (response.images || []).map((img: ImageItem) => {
-        // Check if the image already has a complete URL
-        if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
-          return img;
-        }
-        
-        // If the image has a relative URL or no URL, construct the full URL using the environment config
+      const processedImages = (response.images || []).map((img: any) => {
+        const imageUrl = img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))
+          ? img.url
+          : imageService.getImageUrl(img.id);
+
         return {
           ...img,
-          url: imageService.getImageUrl(img.id),
+          url: imageUrl,
+          caption: img.description, // Sử dụng description làm caption
         };
       });
       
-      // Only update state if component is still mounted
       if (isMountedRef.current) {
-        // If loading more (pagination), append to existing images
         if (page > 1) {
           setImages(prevImages => [...prevImages, ...processedImages]);
           setFilteredImages(prevFilteredImages => {
-            // If search is active, filter the new images too
             if (searchQuery.trim()) {
               const newFilteredImages = processedImages.filter((img: ImageItem) => 
                 img.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -172,25 +206,19 @@ const HistoryScreen = () => {
             return [...prevFilteredImages, ...processedImages];
           });
         } else {
-          // First page, replace all images
           setImages(processedImages);
           setFilteredImages(processedImages);
         }
         
-        // Update pagination info
         setCurrentPage(page);
         setTotalPages(Math.ceil(response.total / perPage) || 1);
-        
-        // Mark data as loaded
         dataLoadedRef.current = true;
-        // Update the last update timestamp
         setLastUpdateTime(Date.now());
       }
     } catch (error) {
       console.error('Failed to fetch user images:', error);
       Alert.alert('Error', 'Failed to load your images. Please try again later.');
     } finally {
-      // Only update state if component is still mounted
       if (isMountedRef.current) {
         setLoading(false);
         setLoadingMore(false);
@@ -682,111 +710,83 @@ const HistoryScreen = () => {
     );
   };
 
+  const renderHeader = () => {
+    return (
+      <View style={styles.header}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm mô tả..."
+            value={searchQuery}
+            onChangeText={handleSearch}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color={AppTheme.textLight} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+        <View style={styles.filterContainer}>
+          <LocationFilter
+            locations={locations}
+            selectedLocation={selectedLocation}
+            onSelectLocation={setSelectedLocation}
+          />
+          {selectedLocation && (
+            <TouchableOpacity
+              style={styles.clearFilterButton}
+              onPress={clearLocationFilter}
+            >
+              <Ionicons name="close-circle" size={24} color={AppTheme.primary} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.groupButton}
+            onPress={() => setGroupCaptionModalVisible(true)}
+          >
+            <Ionicons name="images" size={24} color={AppTheme.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={AppTheme.primary} />
-      
-      <View style={styles.content}>
-        <Animatable.View 
-          animation="fadeInUp" 
-          duration={600}
-          style={styles.sectionHeader}
-        >
-          <View style={styles.titleContainer}>
-            <Feather name="image" size={24} color={AppTheme.primary} />
-            <Text style={styles.sectionTitle}>Ảnh của tôi</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.uploadNewButton}
-            onPress={() => router.push('/(tabs)/captioning')}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={AppTheme.primaryGradient as any}
-              style={styles.uploadButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Feather name="plus" size={16} color="#fff" />
-              <Text style={styles.uploadNewText}>Thêm ảnh</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animatable.View>
-
-        {loading && !refreshing ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={AppTheme.primary} />
-            <Text style={styles.loadingText}>Đang tải hình ảnh...</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredImages}
-            renderItem={renderImage}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={filteredImages.length === 0 ? styles.emptyListContainer : styles.imageList}
-            numColumns={2}
-            columnWrapperStyle={styles.imageRow}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={renderEmptyList}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[AppTheme.primary]}
-                tintColor={AppTheme.primary}
-              />
-            }
-            onEndReached={loadMoreImages}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={
-              loadingMore ? (
-                <View style={styles.loadMoreContainer}>
-                  <ActivityIndicator size="small" color={AppTheme.primary} />
-                  <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
-                </View>
-              ) : currentPage < totalPages ? (
-                <TouchableOpacity 
-                  style={styles.loadMoreButton}
-                  onPress={loadMoreImages}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.loadMoreButtonText}>Tải thêm ảnh</Text>
-                  <Feather name="chevron-down" size={16} color={AppTheme.primary} />
-                </TouchableOpacity>
-              ) : filteredImages.length > 0 ? (
-                <Text style={styles.endOfListText}>Đã hiển thị tất cả ảnh</Text>
-              ) : null
-            }
-            ListHeaderComponent={
-              <Animatable.View 
-                animation="fadeIn" 
-                duration={500} 
-                style={styles.searchContainer}
-              >
-                <View style={[styles.searchInputContainer, isSearchFocused && styles.searchInputFocused]}>
-                  <Ionicons name="search" size={20} color={isSearchFocused ? AppTheme.primary : AppTheme.textLight} />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Tìm kiếm theo mô tả..."
-                    placeholderTextColor="#666666"
-                    value={searchQuery}
-                    onChangeText={handleSearch}
-                    onFocus={() => setIsSearchFocused(true)}
-                    // Removed onBlur to prevent keyboard auto-dismiss issues
-                  />
-                  {searchQuery ? (
-                    <TouchableOpacity onPress={clearSearch}>
-                      <Ionicons name="close-circle" size={18} color={AppTheme.textLight} />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              </Animatable.View>
-            }
+      <StatusBar barStyle="dark-content" />
+      {renderHeader()}
+      <FlatList
+        data={filteredImages}
+        renderItem={renderImage}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.imageGrid}
+        onEndReached={loadMoreImages}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={renderEmptyList}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[AppTheme.primary]}
+            tintColor={AppTheme.primary}
           />
-        )}
-      </View>
-      
+        }
+      />
       {renderImageDetailModal()}
+      <Modal
+        visible={groupCaptionModalVisible}
+        animationType="slide"
+        onRequestClose={() => setGroupCaptionModalVisible(false)}
+      >
+        <GroupCaptionView
+          images={images}
+          onClose={() => setGroupCaptionModalVisible(false)}
+        />
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -858,37 +858,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchContainer: {
-    paddingHorizontal: 5,
-    marginBottom: 15,
-    width: '100%',
-  },
-  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    minWidth: '100%',
+    backgroundColor: AppTheme.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
-  searchInputFocused: {
-    borderColor: AppTheme.primary,
-    shadowColor: AppTheme.primary,
-    shadowOpacity: 0.2,
+  searchIcon: {
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    height: 40,
     color: AppTheme.text,
-    marginLeft: 10,
-    paddingVertical: 5,
+  },
+  clearButton: {
+    padding: 4,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  groupButton: {
+    padding: 8,
   },
   imageRow: {
     justifyContent: 'space-between',
@@ -1180,6 +1174,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginVertical: 20,
     fontStyle: 'italic',
+  },
+  header: {
+    padding: 16,
+    backgroundColor: AppTheme.card,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  imageGrid: {
+    paddingBottom: 20,
+  },
+  clearFilterButton: {
+    padding: 8,
+    marginRight: 8,
   },
 });
 

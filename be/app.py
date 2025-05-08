@@ -7,6 +7,8 @@ from routes.image_route import image_routes
 from routes.admin_route import admin_routes
 from routes.image_caption_route import image_caption_routes
 from routes.auth_route import auth_routes
+from controllers.group_caption_controller import group_caption_bp
+from controllers.location_controller import location_bp
 from flask_jwt_extended import JWTManager
 import datetime
 import os
@@ -35,6 +37,8 @@ app.register_blueprint(user_routes, url_prefix="/api/users")
 app.register_blueprint(image_routes, url_prefix="/api/images")
 app.register_blueprint(admin_routes, url_prefix="/api/admin")
 app.register_blueprint(image_caption_routes, url_prefix="/api/image-caption")
+app.register_blueprint(group_caption_bp)
+app.register_blueprint(location_bp)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
