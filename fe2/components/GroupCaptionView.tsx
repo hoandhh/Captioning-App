@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
 import { createGroupCaption } from '../services/groupCaptionService';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface ImageItem {
   id: string;
@@ -58,56 +60,91 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#4A00E0', '#8E2DE2']}
+        style={styles.header}
+      >
         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-          <Ionicons name="close" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.title}>Tạo mô tả nhóm</Text>
-      </View>
+      </LinearGradient>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        <Animatable.Text animation="fadeIn" style={styles.instruction}>
+          Chọn tối đa 4 hình ảnh để tạo mô tả nhóm
+        </Animatable.Text>
+        
         <View style={[styles.imageGrid, getGridLayout()]}>
-          {images.map((image) => (
-            <TouchableOpacity
-              key={image.id}
-              onPress={() => toggleImageSelection(image.id)}
-              style={[
-                styles.imageContainer,
-                selectedImages.includes(image.id) && styles.selectedImage
-              ]}
+          {images.map((image, index) => (
+            <Animatable.View 
+              key={image.id} 
+              animation="fadeInUp" 
+              delay={index * 100}
+              duration={500}
             >
-              <Image source={{ uri: image.url }} style={styles.image} />
-              {selectedImages.includes(image.id) && (
-                <View style={styles.checkmark}>
-                  <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                </View>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => toggleImageSelection(image.id)}
+                style={[
+                  styles.imageContainer,
+                  selectedImages.includes(image.id) && styles.selectedImage
+                ]}
+                activeOpacity={0.8}
+              >
+                <Image source={{ uri: image.url }} style={styles.image} />
+                {selectedImages.includes(image.id) && (
+                  <View style={styles.checkmark}>
+                    <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </Animatable.View>
           ))}
         </View>
 
-        {selectedImages.length >= 2 && (
+        {groupCaption && (
+          <Animatable.View animation="fadeInUp" style={styles.captionContainer}>
+            <View style={styles.captionHeader}>
+              <Feather name="file-text" size={20} color="#4A00E0" />
+              <Text style={styles.captionHeaderText}>Mô tả nhóm</Text>
+            </View>
+            <Text style={styles.captionText}>{groupCaption}</Text>
+          </Animatable.View>
+        )}
+      </ScrollView>
+      
+      {selectedImages.length >= 2 && (
+        <View style={styles.bottomButtonContainer}>
           <TouchableOpacity
             style={styles.createButton}
             onPress={handleCreateGroupCaption}
             disabled={loading}
+            activeOpacity={0.8}
           >
-            <Text style={styles.createButtonText}>
-              {loading ? 'Đang tạo...' : 'Tạo mô tả nhóm'}
-            </Text>
+            <LinearGradient
+              colors={['#4A00E0', '#8E2DE2']}
+              style={styles.createButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Feather name="cpu" size={20} color="#fff" style={styles.buttonIcon} />
+                  <Text style={styles.createButtonText}>Tạo mô tả nhóm</Text>
+                </>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
-        )}
-
-        {groupCaption && (
-          <View style={styles.captionContainer}>
-            <Text style={styles.captionText}>{groupCaption}</Text>
-          </View>
-        )}
-      </ScrollView>
-    </View>
+        </View>
+      )}
+    </SafeAreaView>
   );
 };
+
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -118,24 +155,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   closeButton: {
     padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 16,
+    color: '#fff',
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 100, // Để đảm bảo nội dung không bị che bởi nút ở dưới
+  },
+  instruction: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
   },
   imageGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     padding: 8,
+    justifyContent: 'center',
   },
   singleImageLayout: {
     justifyContent: 'center',
@@ -150,15 +201,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   imageContainer: {
-    width: '48%',
+    width: width * 0.45,
     aspectRatio: 1,
-    margin: '1%',
-    borderRadius: 8,
+    margin: 5,
+    borderRadius: 12,
     overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   selectedImage: {
-    borderWidth: 2,
-    borderColor: '#007AFF',
+    borderWidth: 3,
+    borderColor: '#4A00E0',
   },
   image: {
     width: '100%',
@@ -168,15 +225,43 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(74,0,224,0.8)',
     borderRadius: 12,
+    padding: 2,
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
   createButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    margin: 16,
-    borderRadius: 8,
+    borderRadius: 25,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  createButtonGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+  },
+  buttonIcon: {
+    marginRight: 8,
   },
   createButtonText: {
     color: '#fff',
@@ -184,13 +269,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   captionContainer: {
-    padding: 16,
-    backgroundColor: '#f8f8f8',
+    padding: 20,
+    backgroundColor: '#f8f9fa',
     margin: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  captionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  captionHeaderText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4A00E0',
+    marginLeft: 8,
   },
   captionText: {
     fontSize: 16,
     lineHeight: 24,
+    color: '#333',
   },
-}); 
+});

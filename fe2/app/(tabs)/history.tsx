@@ -267,9 +267,14 @@ const HistoryScreen = () => {
     Keyboard.dismiss();
   };
 
-  const renderImage = ({ item }: { item: ImageItem }) => {
+  const renderImage = ({ item, index }: { item: ImageItem, index: number }) => {
     return (
-      <Animatable.View animation="fadeIn" duration={800} style={styles.imageCardContainer}>
+      <Animatable.View 
+        animation="fadeIn" 
+        duration={800} 
+        delay={index * 50} // Thêm delay để tạo hiệu ứng staggered
+        style={styles.imageCardContainer}
+      >
         <TouchableOpacity
           style={styles.imageCard}
           onPress={() => {
@@ -286,21 +291,20 @@ const HistoryScreen = () => {
               onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
             />
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.5)']}
+              colors={['transparent', 'rgba(0,0,0,0.6)']}
               style={styles.imageGradient}
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 1 }}
             />
-            <View style={styles.imageOverlay}>
-              <Ionicons name="image-outline" size={24} color="#fff" />
+            <View style={styles.dateOverlay}>
+              <Text style={styles.dateOverlayText}>
+                {new Date(item.created_at).toLocaleDateString()}
+              </Text>
             </View>
           </View>
           <View style={styles.captionContainer}>
             <Text style={styles.caption} numberOfLines={2}>
-              {item.description || 'No caption available'}
-            </Text>
-            <Text style={styles.dateText}>
-              {new Date(item.created_at).toLocaleDateString()}
+              {item.description || 'Chưa có mô tả'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -686,38 +690,44 @@ const HistoryScreen = () => {
 
     return (
       <Animatable.View animation="fadeIn" duration={800} style={styles.emptyContainer}>
-        <View style={styles.emptyIconContainer}>
-          <MaterialCommunityIcons name="image-multiple-outline" size={90} color={AppTheme.primary} />
-        </View>
-        <Text style={styles.emptyText}>Chưa có ảnh nào</Text>
-        <Text style={styles.emptySubtext}>Bắt đầu bằng cách tải lên ảnh đầu tiên</Text>
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => router.push('/(tabs)/captioning')}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={AppTheme.primaryGradient as any}
-            style={styles.uploadGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        <Animatable.View animation="pulse" iterationCount="infinite" duration={2000} style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons name="image-multiple-outline" size={100} color={AppTheme.primary} />
+        </Animatable.View>
+        <Animatable.Text animation="fadeInUp" delay={300} style={styles.emptyText}>Chưa có ảnh nào</Animatable.Text>
+        <Animatable.Text animation="fadeInUp" delay={500} style={styles.emptySubtext}>Bắt đầu bằng cách tải lên ảnh đầu tiên</Animatable.Text>
+        <Animatable.View animation="fadeInUp" delay={700}>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => router.push('/(tabs)/captioning')}
+            activeOpacity={0.8}
           >
-            <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-            <Text style={styles.uploadButtonText}>Tải ảnh lên</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={AppTheme.primaryGradient as any}
+              style={styles.uploadGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
+              <Text style={styles.uploadButtonText}>Tải ảnh lên</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animatable.View>
       </Animatable.View>
     );
   };
 
   const renderHeader = () => {
     return (
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#f8f9fa', '#ffffff']}
+        style={styles.header}
+      >
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm mô tả..."
+            placeholderTextColor="#666666"
             value={searchQuery}
             onChangeText={handleSearch}
             onFocus={() => setIsSearchFocused(true)}
@@ -736,12 +746,14 @@ const HistoryScreen = () => {
             onSelectLocation={setSelectedLocation}
           />
           {selectedLocation && (
-            <TouchableOpacity
-              style={styles.clearFilterButton}
-              onPress={clearLocationFilter}
-            >
-              <Ionicons name="close-circle" size={24} color={AppTheme.primary} />
-            </TouchableOpacity>
+            <Animatable.View animation="fadeIn" duration={300}>
+              <TouchableOpacity
+                style={styles.clearFilterButton}
+                onPress={clearLocationFilter}
+              >
+                <Ionicons name="close-circle" size={24} color={AppTheme.primary} />
+              </TouchableOpacity>
+            </Animatable.View>
           )}
           <TouchableOpacity
             style={styles.groupButton}
@@ -750,7 +762,7 @@ const HistoryScreen = () => {
             <Ionicons name="images" size={24} color={AppTheme.primary} />
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
     );
   };
 
@@ -763,6 +775,7 @@ const HistoryScreen = () => {
         renderItem={renderImage}
         keyExtractor={(item) => item.id}
         numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.imageGrid}
         onEndReached={loadMoreImages}
         onEndReachedThreshold={0.5}
@@ -861,9 +874,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: AppTheme.background,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    minWidth: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   searchIcon: {
     marginRight: 8,
@@ -880,16 +901,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 5,
   },
   groupButton: {
     padding: 8,
+    backgroundColor: 'rgba(74,0,224,0.1)',
+    borderRadius: 20,
   },
-  imageRow: {
+  columnWrapper: {
     justifyContent: 'space-between',
-    marginBottom: 16,
+    paddingHorizontal: 5,
   },
   imageCardContainer: {
     width: (width - 40) / 2,
+    margin: 5,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#fff',
@@ -906,8 +931,11 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     width: '100%',
-    height: 120,
+    height: 140,
     position: 'relative',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
@@ -918,7 +946,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 40,
+    height: 60,
   },
   imageOverlay: {
     position: 'absolute',
@@ -933,32 +961,55 @@ const styles = StyleSheet.create({
   },
   captionContainer: {
     padding: 12,
+    height: 80, // Cố định chiều cao để đồng nhất các card
   },
   caption: {
     fontSize: 14,
     fontWeight: '600',
     color: AppTheme.text,
     marginBottom: 5,
+    minHeight: 40,
   },
   dateText: {
     fontSize: 12,
     color: AppTheme.textLighter,
+  },
+  dateOverlay: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  dateOverlayText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    marginTop: 50,
   },
   emptyIconContainer: {
-    marginBottom: 20,
-    opacity: 0.7,
+    marginBottom: 30,
+    opacity: 0.8,
+    backgroundColor: 'rgba(74,0,224,0.1)',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: AppTheme.text,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   emptySubtext: {
     fontSize: 14,
@@ -969,17 +1020,18 @@ const styles = StyleSheet.create({
   uploadButton: {
     borderRadius: 25,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    marginTop: 10,
   },
   uploadGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 25,
+    paddingVertical: 14,
   },
   uploadButtonText: {
     color: '#fff',
@@ -1004,6 +1056,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
   modalCloseButton: {
     position: 'absolute',
@@ -1019,6 +1076,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    overflow: 'hidden',
   },
   modalImage: {
     width: '100%',
@@ -1180,13 +1238,22 @@ const styles = StyleSheet.create({
     backgroundColor: AppTheme.card,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    zIndex: 10,
   },
   imageGrid: {
+    paddingHorizontal: 10,
     paddingBottom: 20,
   },
   clearFilterButton: {
     padding: 8,
     marginRight: 8,
+    backgroundColor: 'rgba(74,0,224,0.1)',
+    borderRadius: 20,
   },
 });
 
