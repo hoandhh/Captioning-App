@@ -682,8 +682,10 @@ const HistoryScreen = () => {
     if (loading) {
       return (
         <Animatable.View animation="fadeIn" duration={800} style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={AppTheme.primary} />
-          <Text style={styles.loadingText}>Đang tải hình ảnh...</Text>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color={AppTheme.primary} />
+            <Text style={styles.loadingText}>Đang tải hình ảnh...</Text>
+          </View>
         </Animatable.View>
       );
     }
@@ -751,7 +753,7 @@ const HistoryScreen = () => {
                 style={styles.clearFilterButton}
                 onPress={clearLocationFilter}
               >
-                <Ionicons name="close-circle" size={24} color={AppTheme.primary} />
+                <Ionicons name="close-circle" size={24} color="#4A00E0" />
               </TouchableOpacity>
             </Animatable.View>
           )}
@@ -759,7 +761,7 @@ const HistoryScreen = () => {
             style={styles.groupButton}
             onPress={() => setGroupCaptionModalVisible(true)}
           >
-            <Ionicons name="images" size={24} color={AppTheme.primary} />
+            <Ionicons name="images" size={24} color="#4A00E0" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -856,6 +858,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    height: '100%',
+    paddingVertical: 50,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
     marginTop: 10,
