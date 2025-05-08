@@ -125,23 +125,21 @@ const HistoryScreen = () => {
 
   // Filter images by location
   useEffect(() => {
-    console.log('Selected location:', selectedLocation);
-    console.log('Images before filter:', images);
-    
     if (selectedLocation) {
       const filtered = images.filter(img => {
-        console.log('Image location:', img.location, 'Selected location:', selectedLocation);
-        return img.location && img.location.toLowerCase() === selectedLocation.toLowerCase();
+        // Kiểm tra nếu location của ảnh tồn tại và chứa selectedLocation
+        return img.location && 
+               (img.location.toLowerCase() === selectedLocation.toLowerCase() ||
+                img.location.toLowerCase().includes(selectedLocation.toLowerCase()));
       });
-      console.log('Filtered images:', filtered);
       setFilteredImages(filtered);
     } else {
+      // Nếu không có location được chọn, hiển thị tất cả ảnh
       setFilteredImages(images);
     }
   }, [selectedLocation, images]);
 
   const clearLocationFilter = () => {
-    console.log('Clearing location filter');
     setSelectedLocation(null);
     setFilteredImages(images);
   };
@@ -742,18 +740,27 @@ const HistoryScreen = () => {
           ) : null}
         </View>
         <View style={styles.filterContainer}>
-          <LocationFilter
-            locations={locations}
-            selectedLocation={selectedLocation}
-            onSelectLocation={setSelectedLocation}
-          />
-          {selectedLocation && (
+          {!selectedLocation ? (
+            <LocationFilter
+              locations={locations}
+              selectedLocation={selectedLocation}
+              onSelectLocation={setSelectedLocation}
+            />
+          ) : (
             <Animatable.View animation="fadeIn" duration={300}>
               <TouchableOpacity
-                style={styles.clearFilterButton}
+                style={styles.filterButton}
                 onPress={clearLocationFilter}
+                activeOpacity={0.7}
               >
-                <Ionicons name="close-circle" size={24} color="#4A00E0" />
+                <LinearGradient
+                  colors={['#4A00E0', '#8E2DE2']}
+                  style={styles.filterButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.filterButtonText}>Bỏ lọc</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </Animatable.View>
           )}
@@ -1258,10 +1265,43 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   clearFilterButton: {
-    padding: 8,
-    marginRight: 8,
-    backgroundColor: 'rgba(74,0,224,0.1)',
-    borderRadius: 20,
+    marginLeft: 10,
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  clearFilterGradient: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+  },
+  clearFilterText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  filterButton: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  filterButtonGradient: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+  },
+  filterButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
