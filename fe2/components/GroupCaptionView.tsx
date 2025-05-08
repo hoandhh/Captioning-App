@@ -1,10 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, SafeAreaView, Dimensions, Modal, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, SafeAreaView, Dimensions, Modal, Platform, Share, Alert } from 'react-native';
 import { createGroupCaption } from '../services/groupCaptionService';
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import ViewShot from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
 
 interface ImageItem {
   id: string;
@@ -24,7 +27,18 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
   const [groupCaption, setGroupCaption] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [sharingLoading, setSharingLoading] = useState(false);
+  const [hasMediaPermission, setHasMediaPermission] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const viewShotRef = useRef<any>(null);
+  
+  // Kiểm tra quyền truy cập vào thư viện ảnh
+  useEffect(() => {
+    (async () => {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      setHasMediaPermission(status === 'granted');
+    })();
+  }, []);
 
   const toggleImageSelection = (imageId: string) => {
     if (selectedImages.includes(imageId)) {
@@ -65,6 +79,52 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
   };
 
   // Render modal hiển thị kết quả
+  // Hàm xử lý chia sẻ nội dung
+  const handleShareContent = async () => {
+    if (!groupCaption) return;
+    
+    try {
+      setSharingLoading(true);
+      
+      if (!hasMediaPermission) {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Quyền truy cập', 'Cần quyền truy cập vào thư viện ảnh để chia sẻ');
+          setSharingLoading(false);
+          return;
+        }
+        setHasMediaPermission(true);
+      }
+      
+      // Chụp ảnh màn hình kết quả
+      if (!viewShotRef.current) {
+        throw new Error('ViewShot ref không khả dụng');
+      }
+      const uri = await viewShotRef.current.capture();
+      
+      // Lưu ảnh vào thư viện
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      
+      // Lấy đường dẫn thực của ảnh đã lưu
+      const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+      
+      // Chia sẻ ảnh và caption
+      await Share.share({
+        message: groupCaption,
+        url: Platform.OS === 'ios' ? assetInfo.uri : uri,
+        title: 'Mô tả nhóm từ Captioning App'
+      });
+      
+      console.log('Đã chia sẻ thành công');
+      
+    } catch (error) {
+      console.error('Lỗi khi chia sẻ:', error);
+      Alert.alert('Lỗi', 'Không thể chia sẻ nội dung. Vui lòng thử lại sau.');
+    } finally {
+      setSharingLoading(false);
+    }
+  };
+  
   const renderResultModal = () => {
     // Lấy danh sách các ảnh đã chọn
     const selectedImagesList = images.filter(img => selectedImages.includes(img.id));
@@ -88,57 +148,85 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
               
               <Text style={styles.modalTitle}>Mô tả nhóm</Text>
               
-              <View style={styles.resultImagesContainer}>
-                {selectedImagesList.length === 2 && (
-                  <View style={styles.twoImagesResult}>
-                    {selectedImagesList.map((img, index) => (
-                      <Image key={index} source={{ uri: img.url }} style={styles.resultImage} />
-                    ))}
-                  </View>
-                )}
-                
-                {selectedImagesList.length === 3 && (
-                  <View style={styles.threeImagesResult}>
-                    <Image source={{ uri: selectedImagesList[0].url }} style={styles.resultImageLarge} />
-                    <View style={styles.resultImagesRow}>
-                      <Image source={{ uri: selectedImagesList[1].url }} style={styles.resultImageSmall} />
-                      <Image source={{ uri: selectedImagesList[2].url }} style={styles.resultImageSmall} />
+              <ViewShot ref={viewShotRef} style={styles.viewShot} options={{quality: 1, format: 'jpg'}}>
+                <View style={styles.resultImagesContainer}>
+                  {selectedImagesList.length === 2 && (
+                    <View style={styles.twoImagesResult}>
+                      {selectedImagesList.map((img, index) => (
+                        <Image key={index} source={{ uri: img.url }} style={styles.resultImage} />
+                      ))}
                     </View>
-                  </View>
-                )}
-                
-                {selectedImagesList.length === 4 && (
-                  <View style={styles.fourImagesResult}>
-                    <View style={styles.resultImagesRow}>
-                      <Image source={{ uri: selectedImagesList[0].url }} style={styles.resultImageMedium} />
-                      <Image source={{ uri: selectedImagesList[1].url }} style={styles.resultImageMedium} />
+                  )}
+                  
+                  {selectedImagesList.length === 3 && (
+                    <View style={styles.threeImagesResult}>
+                      <Image source={{ uri: selectedImagesList[0].url }} style={styles.resultImageLarge} />
+                      <View style={styles.resultImagesRow}>
+                        <Image source={{ uri: selectedImagesList[1].url }} style={styles.resultImageSmall} />
+                        <Image source={{ uri: selectedImagesList[2].url }} style={styles.resultImageSmall} />
+                      </View>
                     </View>
-                    <View style={styles.resultImagesRow}>
-                      <Image source={{ uri: selectedImagesList[2].url }} style={styles.resultImageMedium} />
-                      <Image source={{ uri: selectedImagesList[3].url }} style={styles.resultImageMedium} />
+                  )}
+                  
+                  {selectedImagesList.length === 4 && (
+                    <View style={styles.fourImagesResult}>
+                      <View style={styles.resultImagesRow}>
+                        <Image source={{ uri: selectedImagesList[0].url }} style={styles.resultImageMedium} />
+                        <Image source={{ uri: selectedImagesList[1].url }} style={styles.resultImageMedium} />
+                      </View>
+                      <View style={styles.resultImagesRow}>
+                        <Image source={{ uri: selectedImagesList[2].url }} style={styles.resultImageMedium} />
+                        <Image source={{ uri: selectedImagesList[3].url }} style={styles.resultImageMedium} />
+                      </View>
                     </View>
+                  )}
+                  
+                  <View style={styles.viewShotCaptionContainer}>
+                    <Text style={styles.viewShotCaptionText}>{groupCaption}</Text>
+                    <Text style={styles.viewShotAppName}>Captioning App</Text>
                   </View>
-                )}
-              </View>
+                </View>
+              </ViewShot>
               
-              <View style={styles.modalCaptionContainer}>
-                <Text style={styles.modalCaptionText}>{groupCaption}</Text>
-              </View>
-              
-              <TouchableOpacity 
-                style={styles.modalButton}
-                onPress={() => setShowResultModal(false)}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#4A00E0', '#8E2DE2']}
-                  style={styles.modalButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+              <View style={styles.modalButtonsContainer}>
+                <TouchableOpacity 
+                  style={styles.shareButton}
+                  onPress={handleShareContent}
+                  disabled={sharingLoading}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.modalButtonText}>Đóng</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#4A00E0', '#8E2DE2']}
+                    style={styles.shareButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {sharingLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <Feather name="share-2" size={20} color="#fff" style={styles.buttonIcon} />
+                        <Text style={styles.modalButtonText}>Chia sẻ</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.modalButton}
+                  onPress={() => setShowResultModal(false)}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={['#4A00E0', '#8E2DE2']}
+                    style={[styles.modalButtonGradient, styles.closeButtonGradient]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.modalButtonText}>Đóng</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             </Animatable.View>
           </BlurView>
         </View>
@@ -482,20 +570,64 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#333',
   },
+  modalButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 10,
+  },
   modalButton: {
     borderRadius: 25,
     overflow: 'hidden',
-    width: '100%',
-    marginTop: 10,
+    width: '48%',
+  },
+  shareButton: {
+    borderRadius: 25,
+    overflow: 'hidden',
+    width: '48%',
   },
   modalButtonGradient: {
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  shareButtonGradient: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  closeButtonGradient: {
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  viewShot: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  viewShotCaptionContainer: {
+    padding: 15,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  viewShotCaptionText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    marginBottom: 10,
+  },
+  viewShotAppName: {
+    fontSize: 12,
+    color: '#4A00E0',
+    textAlign: 'right',
     fontWeight: 'bold',
   },
 });
