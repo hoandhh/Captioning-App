@@ -77,10 +77,23 @@ class UserService:
         if role is not None:
             query['role'] = role
             
-        # Lọc và phân trang
-        # User.objects(**query) tương đương với User.objects.filter(**query) trong Django ORM
-        # Ví dụ: User.objects(is_active=True, role="admin")
-        return User.objects(**query).paginate(page=page, per_page=per_page)
+        # Tính toán skip và limit cho phân trang
+        skip = (page - 1) * per_page
+        
+        # Lấy tổng số bản ghi
+        total = User.objects(**query).count()
+        
+        # Lấy dữ liệu với phân trang
+        users = User.objects(**query).skip(skip).limit(per_page)
+        
+        # Tạo đối tượng phân trang
+        return {
+            'items': list(users),
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'pages': (total + per_page - 1) // per_page
+        }
     
     @staticmethod
     def delete_user(user_id):

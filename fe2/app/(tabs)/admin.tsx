@@ -197,7 +197,7 @@ const AdminScreen = () => {
             
             // Fetch users with pagination
             const userData = await adminService.getAllUsers({ page, per_page: userPerPage });
-            const fetchedUsers = userData.users || [];
+            const fetchedUsers = userData.items || [];
             
             // If loading more (pagination), append to existing users
             if (page > 1) {
@@ -222,7 +222,7 @@ const AdminScreen = () => {
             
             // Update pagination info
             setUserCurrentPage(page);
-            setUserTotalPages(Math.ceil(userData.total / userPerPage) || 1);
+            setUserTotalPages(userData.pages || 1);
             
         } catch (error) {
             console.error('Failed to fetch users:', error);
