@@ -42,8 +42,13 @@ def upload_with_caption():
             location=location
         )
         
-        # 2. Tạo caption từ dữ liệu nhị phân
-        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=True)
+        # Lấy loại mô hình từ form data (mặc định hoặc du lịch)
+        model_type = request.form.get('model_type', 'default')
+        if model_type not in ['default', 'travel']:
+            model_type = 'default'
+            
+        # 2. Tạo caption từ dữ liệu nhị phân với mô hình đã chọn
+        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=True, model_type=model_type)
         
         # 3. Cập nhật mô tả của ảnh với caption vừa tạo
         ImageService.update_image(str(image.id), user_id, caption)
@@ -118,9 +123,15 @@ def regenerate_caption(image_id):
         # Kiểm tra quyền
         if str(image.uploaded_by.id) != user_id and not hasattr(image.uploaded_by, 'role') or image.uploaded_by.role != 'admin':
             return jsonify({"error": "Không có quyền truy cập ảnh này"}), 403
+        
+        # Lấy loại mô hình từ request JSON
+        data = request.get_json() or {}
+        model_type = data.get('model_type', 'default')
+        if model_type not in ['default', 'travel']:
+            model_type = 'default'
             
-        # Tạo caption mới từ dữ liệu nhị phân trong MongoDB
-        caption = ImageCaptionService.generate_caption_from_binary(image.image_data)
+        # Tạo caption mới từ dữ liệu nhị phân trong MongoDB với mô hình đã chọn
+        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, model_type=model_type)
         
         # Cập nhật mô tả với caption mới
         ImageService.update_image(image_id, user_id, caption)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useImageUpdate } from '../../context/ImageUpdateContext';
 import {
     View,
@@ -14,6 +14,8 @@ import {
     Dimensions,
     TextInput,
     StatusBar,
+    KeyboardAvoidingView,
+    Keyboard,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { imageService } from '../../services/api';
@@ -51,6 +53,7 @@ const CaptioningScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedCaption, setEditedCaption] = useState<string>('');
     const [location, setLocation] = useState<string | null>(null);
+    const [selectedModel, setSelectedModel] = useState<'default' | 'travel'>('default');
     const router = useRouter();
     const { updateImageTimestamp } = useImageUpdate();
 
@@ -177,6 +180,9 @@ const CaptioningScreen = () => {
             if (location) {
                 formData.append('location', location);
             }
+            
+            // Add selected model type
+            formData.append('model_type', selectedModel);
 
             // Upload image and get caption
             try {
@@ -206,7 +212,7 @@ const CaptioningScreen = () => {
 
         try {
             setLoading(true);
-            const response = await imageService.regenerateCaption(imageId);
+            const response = await imageService.regenerateCaption(imageId, selectedModel);
             setCaption(response.image.description);
         } catch (error) {
             console.error('Error regenerating caption:', error);
@@ -256,15 +262,42 @@ const CaptioningScreen = () => {
         router.push('/(tabs)/history');
     };
 
+    // Tham chiếu đến ScrollView để có thể cuộn đến vị trí cụ thể
+    const scrollViewRef = useRef<ScrollView>(null);
+    
+    // Xử lý khi bàn phím hiện lên
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener(
+            'keyboardDidShow',
+            () => {
+                // Cuộn xuống dưới khi bàn phím hiện ra
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+            }
+        );
+
+        return () => {
+            keyboardDidShowListener.remove();
+        };
+    }, []);
+
     return (
-        <SafeAreaView style={styles.container}>
-            <LinearGradient
-                colors={['rgba(74, 0, 224, 0.05)', 'rgba(255, 255, 255, 0.8)']}
-                style={styles.background}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            >
-                <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView 
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        >
+            <SafeAreaView style={styles.container}>
+                <LinearGradient
+                    colors={['rgba(74, 0, 224, 0.05)', 'rgba(255, 255, 255, 0.8)']}
+                    style={styles.background}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                >
+                    <ScrollView 
+                        ref={scrollViewRef}
+                        contentContainerStyle={styles.scrollContainer} 
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled">
                     <Animatable.View animation="fadeIn" duration={800}>
                         <Text style={styles.title}>Mô tả ảnh bằng AI</Text>
                         <Text style={styles.subtitle}>Chuyển đổi hình ảnh thành văn bản mô tả</Text>
@@ -286,7 +319,7 @@ const CaptioningScreen = () => {
                                 <MaterialCommunityIcons name="image-text" size={90} color={AppTheme.primary} />
                             </Animatable.View>
                             <Text style={styles.uploadText}>Chọn một hình ảnh để tạo mô tả</Text>
-
+                        
                             <View style={styles.buttonRow}>
                                 <TouchableOpacity 
                                     style={styles.pickButton} 
@@ -321,6 +354,71 @@ const CaptioningScreen = () => {
                                 </TouchableOpacity>
                             </View>
 
+                            <Animatable.View animation="fadeIn" duration={800} style={styles.modelSelectionContainer}>
+                                <Text style={styles.modelSelectionTitle}>Chọn mô hình mô tả:</Text>
+                                <View style={styles.modelOptions}>
+                                    <Animatable.View 
+                                        animation="fadeIn" 
+                                        duration={600} 
+                                        delay={100}
+                                        style={styles.modelOptionContainer}
+                                    >
+                                        <TouchableOpacity 
+                                            style={[styles.modelOption, selectedModel === 'default' && styles.selectedModelOption]}
+                                            onPress={() => setSelectedModel('default')}
+                                            activeOpacity={0.8}
+                                        >
+                                            <LinearGradient
+                                                colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : ['#f8f8f8', '#f0f0f0']}
+                                                style={styles.modelOptionGradient}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 1 }}
+                                            >
+                                                <MaterialCommunityIcons 
+                                                    name="robot" 
+                                                    size={20} 
+                                                    color={selectedModel === 'default' ? '#fff' : AppTheme.primary} 
+                                                />
+                                                <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>Mặc định</Text>
+                                                {selectedModel === 'default' && (
+                                                    <Ionicons name="checkmark-circle" size={16} color="#fff" style={{marginLeft: 5}} />
+                                                )}
+                                            </LinearGradient>
+                                        </TouchableOpacity>
+                                    </Animatable.View>
+                                    
+                                    <Animatable.View 
+                                        animation="fadeIn" 
+                                        duration={600} 
+                                        delay={200}
+                                        style={styles.modelOptionContainer}
+                                    >
+                                        <TouchableOpacity 
+                                            style={[styles.modelOption, selectedModel === 'travel' && styles.selectedModelOption]}
+                                            onPress={() => setSelectedModel('travel')}
+                                            activeOpacity={0.8}
+                                        >
+                                            <LinearGradient
+                                                colors={selectedModel === 'travel' ? AppTheme.secondaryGradient as any : ['#f8f8f8', '#f0f0f0']}
+                                                style={styles.modelOptionGradient}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 1 }}
+                                            >
+                                                <MaterialCommunityIcons 
+                                                    name="airplane" 
+                                                    size={20} 
+                                                    color={selectedModel === 'travel' ? '#fff' : AppTheme.secondary} 
+                                                />
+                                                <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>Du lịch</Text>
+                                                {selectedModel === 'travel' && (
+                                                    <Ionicons name="checkmark-circle" size={16} color="#fff" style={{marginLeft: 5}} />
+                                                )}
+                                            </LinearGradient>
+                                        </TouchableOpacity>
+                                    </Animatable.View>
+                                </View>
+                            </Animatable.View>
+
                             <TouchableOpacity 
                                 style={styles.myImagesButton} 
                                 onPress={viewMyImages}
@@ -341,6 +439,23 @@ const CaptioningScreen = () => {
                                 style={styles.imageContainer}
                             >
                                 <Image source={{ uri: image }} style={styles.previewImage} />
+                                <View style={styles.modelBadge}>
+                                    <LinearGradient
+                                        colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : AppTheme.secondaryGradient as any}
+                                        style={styles.modelBadgeGradient}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                    >
+                                        <MaterialCommunityIcons 
+                                            name={selectedModel === 'default' ? "robot" : "airplane"} 
+                                            size={16} 
+                                            color="#fff" 
+                                        />
+                                        <Text style={styles.modelBadgeText}>
+                                            {selectedModel === 'default' ? 'Mô hình mặc định' : 'Mô hình du lịch'}
+                                        </Text>
+                                    </LinearGradient>
+                                </View>
                                 <LinearGradient
                                     colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']}
                                     style={styles.imageOverlay}
@@ -386,6 +501,13 @@ const CaptioningScreen = () => {
                                                 multiline
                                                 placeholder="Nhập mô tả của bạn ở đây..."
                                                 placeholderTextColor="#888"
+                                                autoFocus={true}
+                                                onFocus={() => {
+                                                    // Đảm bảo cuộn đến vùng chỉnh sửa khi focus vào TextInput
+                                                    setTimeout(() => {
+                                                        scrollViewRef.current?.scrollToEnd({ animated: true });
+                                                    }, 200);
+                                                }}
                                             />
                                             <View style={styles.editButtons}>
                                                 <TouchableOpacity 
@@ -398,61 +520,47 @@ const CaptioningScreen = () => {
                                                     style={[styles.editButton, styles.cancelButton]} 
                                                     onPress={cancelEditingCaption}
                                                 >
-                                                    <Text style={styles.cancelButtonText}>Hủy</Text>
+                                                    <Text style={styles.editButtonText}>Hủy</Text>
                                                 </TouchableOpacity>
                                             </View>
                                         </View>
                                     ) : (
-                                        <Text style={styles.caption}>"{caption}"</Text>
-                                    )}
-
-                                    {!isEditing && (
-                                        <View style={styles.actionButtons}>
+                                        <View>
+                                            <Text style={styles.captionText}>{caption}</Text>
+                                            <View style={styles.captionActions}>
+                                                <TouchableOpacity 
+                                                    style={styles.captionButton} 
+                                                    onPress={startEditingCaption}
+                                                >
+                                                    <Feather name="edit-2" size={18} color={AppTheme.primary} />
+                                                    <Text style={styles.captionButtonText}>Chỉnh sửa</Text>
+                                                </TouchableOpacity>
+                                                
+                                                <TouchableOpacity 
+                                                    style={styles.captionButton} 
+                                                    onPress={regenerateCaption}
+                                                >
+                                                    <Feather name="refresh-cw" size={18} color={AppTheme.primary} />
+                                                    <Text style={styles.captionButtonText}>Tạo lại</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                            
                                             <TouchableOpacity 
-                                                style={styles.actionButtonContainer} 
-                                                onPress={regenerateCaption}
-                                                activeOpacity={0.8}
+                                                style={styles.newCaptionButton} 
+                                                onPress={() => {
+                                                    setCaption(null);
+                                                    setSelectedModel(selectedModel === 'default' ? 'travel' : 'default');
+                                                }}
+                                                activeOpacity={0.7}
                                             >
                                                 <LinearGradient
-                                                    colors={AppTheme.primaryGradient as any}
-                                                    style={styles.actionButtonGradient}
+                                                    colors={AppTheme.secondaryGradient as any}
+                                                    style={styles.newCaptionButtonGradient}
                                                     start={{ x: 0, y: 0 }}
                                                     end={{ x: 1, y: 1 }}
                                                 >
-                                                    <Ionicons name="refresh" size={24} color="#fff" />
-                                                    <Text style={styles.buttonTextCompact} numberOfLines={1}>Tạo lại</Text>
-                                                </LinearGradient>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity 
-                                                style={styles.actionButtonContainer} 
-                                                onPress={startEditingCaption}
-                                                activeOpacity={0.8}
-                                            >
-                                                <LinearGradient
-                                                    colors={[AppTheme.accent, '#8E44AD']}
-                                                    style={styles.actionButtonGradient}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                >
-                                                    <Ionicons name="pencil" size={24} color="#fff" />
-                                                    <Text style={styles.buttonTextCompact} numberOfLines={1}>Sửa</Text>
-                                                </LinearGradient>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity 
-                                                style={styles.actionButtonContainer} 
-                                                onPress={resetImage}
-                                                activeOpacity={0.8}
-                                            >
-                                                <LinearGradient
-                                                    colors={[AppTheme.success, '#27AE60']}
-                                                    style={styles.actionButtonGradient}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                >
-                                                    <Ionicons name="add-circle" size={24} color="#fff" />
-                                                    <Text style={styles.buttonTextCompact} numberOfLines={1}>Mới</Text>
+                                                    <MaterialCommunityIcons name="text-box-plus" size={20} color="#fff" />
+                                                    <Text style={styles.newCaptionButtonText}>Tạo mô tả mới với {selectedModel === 'default' ? 'mô hình du lịch' : 'mô hình mặc định'}</Text>
                                                 </LinearGradient>
                                             </TouchableOpacity>
                                         </View>
@@ -462,38 +570,81 @@ const CaptioningScreen = () => {
                                 <Animatable.View 
                                     animation="fadeInUp" 
                                     duration={800}
-                                    style={styles.actionContainer}
+                                    style={styles.generateContainer}
                                 >
+                                    <View style={styles.modelSelectionContainer}>
+                                        <Text style={styles.modelSelectionTitle}>Chọn mô hình mô tả:</Text>
+                                        <View style={styles.modelOptions}>
+                                            <TouchableOpacity 
+                                                style={[styles.modelOption, selectedModel === 'default' && styles.selectedModelOption]}
+                                                onPress={() => setSelectedModel('default')}
+                                            >
+                                                <LinearGradient
+                                                    colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : ['#f5f5f5', '#e0e0e0']}
+                                                    style={styles.modelOptionGradient}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <MaterialCommunityIcons 
+                                                        name="robot" 
+                                                        size={24} 
+                                                        color={selectedModel === 'default' ? '#fff' : AppTheme.primary} 
+                                                    />
+                                                    <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>Mô hình mặc định</Text>
+                                                </LinearGradient>
+                                            </TouchableOpacity>
+                                            
+                                            <TouchableOpacity 
+                                                style={[styles.modelOption, selectedModel === 'travel' && styles.selectedModelOption]}
+                                                onPress={() => setSelectedModel('travel')}
+                                            >
+                                                <LinearGradient
+                                                    colors={selectedModel === 'travel' ? AppTheme.secondaryGradient as any : ['#f5f5f5', '#e0e0e0']}
+                                                    style={styles.modelOptionGradient}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <MaterialCommunityIcons 
+                                                        name="airplane" 
+                                                        size={24} 
+                                                        color={selectedModel === 'travel' ? '#fff' : AppTheme.secondary} 
+                                                    />
+                                                    <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>Mô hình du lịch</Text>
+                                                </LinearGradient>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                    
                                     <TouchableOpacity 
                                         style={styles.generateButton} 
                                         onPress={generateCaption}
-                                        activeOpacity={0.8}
+                                        activeOpacity={0.7}
                                     >
                                         <LinearGradient
                                             colors={AppTheme.primaryGradient as any}
-                                            style={styles.generateGradient}
+                                            style={styles.generateButtonGradient}
                                             start={{ x: 0, y: 0 }}
                                             end={{ x: 1, y: 1 }}
                                         >
-                                            <Feather name="cpu" size={18} color="#fff" />
+                                            <MaterialCommunityIcons name="text-recognition" size={24} color="#fff" />
                                             <Text style={styles.generateButtonText}>Tạo mô tả</Text>
                                         </LinearGradient>
                                     </TouchableOpacity>
-
+                                    
                                     <TouchableOpacity 
-                                        style={styles.cancelButton} 
+                                        style={styles.resetButton} 
                                         onPress={resetImage}
-                                        activeOpacity={0.7}
                                     >
-                                        <Text style={styles.cancelButtonText}>Hủy</Text>
+                                        <Text style={styles.resetButtonText}>Chọn ảnh khác</Text>
                                     </TouchableOpacity>
                                 </Animatable.View>
                             )}
                         </Animatable.View>
                     )}
-                </ScrollView>
-            </LinearGradient>
-        </SafeAreaView>
+                    </ScrollView>
+                </LinearGradient>
+            </SafeAreaView>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -502,80 +653,21 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: AppTheme.background,
     },
-    editContainer: {
-        marginVertical: 10,
-        width: '100%',
-    },
-    editInput: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        color: '#333',
-        backgroundColor: '#f9f9f9',
-        minHeight: 100,
-        textAlignVertical: 'top',
-        marginBottom: 10,
-    },
-    editButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
-    },
-    editButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 20,
-        borderRadius: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        marginHorizontal: 5,
-    },
-    cancelButton: {
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-    },
-    saveButton: {
-        backgroundColor: AppTheme.primary,
-    },
-    editButtonText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14,
-        textDecorationLine: 'underline',
-    },
-    buttonTextCompact: {
-        color: '#fff',
-        fontWeight: '500',
-        fontSize: 12,
-    },
     background: {
         flex: 1,
         width: '100%',
-        height: '100%',
     },
     scrollContainer: {
         flexGrow: 1,
         padding: 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 + 20 : 20,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         color: AppTheme.primary,
         textAlign: 'center',
-        marginBottom: 8,
+        marginTop: 10,
     },
     subtitle: {
         fontSize: 16,
@@ -583,90 +675,156 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 30,
     },
-    uploadContainer: {
+    modelSelectionContainer: {
+        marginTop: 15,
+        marginBottom: 10,
+        width: '100%',
+    },
+    modelSelectionTitle: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: AppTheme.textLight,
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    modelOptions: {
+        flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        padding: 40,
+        width: '100%',
+    },
+    modelOptionContainer: {
+        flex: 0,
+        marginHorizontal: 5,
+    },
+    modelOption: {
+        minWidth: 100,
         borderRadius: 20,
-        marginTop: 20,
-        elevation: 5,
+        overflow: 'hidden',
+        elevation: 2,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
-        shadowRadius: 5,
+        shadowRadius: 2,
+    },
+    selectedModelOption: {
+        elevation: 3,
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+    },
+    modelOptionGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    modelOptionText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: AppTheme.textLight,
+        marginLeft: 5,
+    },
+    selectedModelOptionText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    uploadContainer: {
+        backgroundColor: AppTheme.card,
+        borderRadius: 20,
+        padding: 20,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
     },
     iconWrapper: {
         width: 150,
         height: 150,
-        borderRadius: 75,
-        backgroundColor: 'rgba(74, 0, 224, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgba(74, 0, 224, 0.05)',
+        borderRadius: 75,
         marginBottom: 20,
     },
     uploadText: {
         fontSize: 18,
         color: AppTheme.text,
-        marginTop: 15,
-        marginBottom: 30,
         textAlign: 'center',
+        marginBottom: 30,
     },
     buttonRow: {
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         width: '100%',
-        marginBottom: 20,
         marginTop: 20,
     },
     pickButton: {
-        width: 140,
-        height: 50,
-        borderRadius: 25,
+        flex: 1,
+        marginHorizontal: 5,
+        borderRadius: 12,
         overflow: 'hidden',
-        elevation: 4,
+        elevation: 3,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.1,
         shadowRadius: 3,
-        marginHorizontal: 10,
     },
     buttonGradient: {
-        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 20,
+        paddingVertical: 12,
     },
     buttonText: {
         color: '#fff',
+        fontWeight: '600',
         fontSize: 16,
-        fontWeight: 'bold',
         marginLeft: 8,
     },
     myImagesButton: {
-        marginTop: 30,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        marginTop: 20,
+        padding: 10,
     },
     myImagesText: {
         color: AppTheme.primary,
         fontSize: 16,
-        fontWeight: '600',
-        textDecorationLine: 'underline',
+        fontWeight: '500',
+        textAlign: 'center',
     },
     previewContainer: {
-        marginTop: 20,
+        width: '100%',
     },
     imageContainer: {
+        width: '100%',
         borderRadius: 15,
         overflow: 'hidden',
+        position: 'relative',
         elevation: 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 5,
-        position: 'relative',
+    },
+    modelBadge: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        zIndex: 10,
+    },
+    modelBadgeGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+    },
+    modelBadgeText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+        marginLeft: 5,
     },
     imageOverlay: {
         position: 'absolute',
@@ -762,6 +920,139 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
+    captionText: {
+        fontSize: 16,
+        color: AppTheme.text,
+        lineHeight: 24,
+        fontStyle: 'italic',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: 15,
+        borderRadius: 8,
+        borderLeftWidth: 4,
+        borderLeftColor: AppTheme.primary,
+        marginVertical: 10,
+    },
+    captionActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 15,
+    },
+    captionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 15,
+        padding: 8,
+    },
+    captionButtonText: {
+        color: AppTheme.primary,
+        fontSize: 14,
+        fontWeight: '500',
+        marginLeft: 5,
+    },
+    editContainer: {
+        width: '100%',
+    },
+    editInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        color: AppTheme.text,
+        backgroundColor: '#fff',
+        minHeight: 100,
+        textAlignVertical: 'top',
+    },
+    editButtons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 10,
+    },
+    editButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+        marginLeft: 10,
+    },
+    saveButton: {
+        backgroundColor: AppTheme.primary,
+    },
+    cancelButton: {
+        backgroundColor: '#ddd',
+    },
+    editButtonText: {
+        color: '#fff',
+        fontWeight: '500',
+        fontSize: 14,
+    },
+    generateContainer: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        padding: 20,
+        borderRadius: 15,
+        marginTop: 20,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    generateButton: {
+        width: '100%',
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        marginTop: 15,
+    },
+    generateButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+    },
+    generateButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 16,
+        marginLeft: 8,
+    },
+    resetButton: {
+        marginTop: 15,
+        padding: 10,
+        alignItems: 'center',
+    },
+    resetButtonText: {
+        color: AppTheme.textLight,
+        fontSize: 14,
+    },
+    newCaptionButton: {
+        width: '100%',
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        marginTop: 15,
+    },
+    newCaptionButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+    },
+    newCaptionButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+        marginLeft: 8,
+        textAlign: 'center',
+    },
     actionContainer: {
         marginTop: 20,
     },
@@ -792,11 +1083,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    generateButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+
     cancelButtonText: {
         color: AppTheme.textLight,
         fontSize: 16,

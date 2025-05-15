@@ -168,8 +168,10 @@ export const imageService = {
     return response.data;
   },
 
-  regenerateCaption: async (imageId: string) => {
-    const response = await api.post(`/image-caption/${imageId}/regenerate`);
+  regenerateCaption: async (imageId: string, modelType: string = 'default') => {
+    const response = await api.post(`/image-caption/${imageId}/regenerate`, {
+      model_type: modelType
+    });
     return response.data;
   },
 
