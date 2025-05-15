@@ -17,8 +17,8 @@ def register():
             username=data['username'],
             password=data['password'],
             email=data['email'],
-            full_name=data.get('full_name', ''),  # Thêm full_name, mặc định là chuỗi rỗng
-            is_active=data.get('is_active', True)  # Thêm is_active, mặc định là True
+            full_name=data.get('full_name', ''), 
+            is_active=data.get('is_active', True) 
         )
         
         return jsonify({'message': 'Đăng ký người dùng thành công'}), 201

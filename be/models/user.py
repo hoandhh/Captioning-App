@@ -13,7 +13,6 @@ class User(Document):
     is_active = BooleanField(default=True)
     reset_password_token = StringField()
     reset_password_expires = DateTimeField()
-    # Thêm trường mới để lưu mã đơn giản cho đặt lại mật khẩu
     reset_code = StringField()
     
     meta = {

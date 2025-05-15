@@ -15,13 +15,11 @@ def initialize_db(app):
     # Thiết lập tự động migration
     setup_migrations(app)
     # Seed dữ liệu nếu cần
-    seed_data(app)
+    # seed_data(app)
 
 def setup_migrations(app):
     """
     Thiết lập tự động migration cho MongoDB.
-    Vì MongoDB không có schema cứng, chúng ta sẽ triển khai một hệ thống kiểm soát phiên bản đơn giản
-    để theo dõi và áp dụng các thay đổi đối với cấu trúc tài liệu.
     """
     mongo_uri = app.config['MONGODB_SETTINGS']['host']
     client = MongoClient(mongo_uri)
