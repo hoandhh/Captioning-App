@@ -8,6 +8,8 @@ from gtts import gTTS
 import tempfile
 import playsound
 import io
+import time
+from datetime import datetime
 
 class ImageCaptionService:
     """
@@ -130,16 +132,21 @@ class ImageCaptionService:
         print("Đã giải phóng tất cả mô hình khỏi bộ nhớ")
 
     @classmethod
-    def speak_caption(cls, text_en):
+    def speak_caption(cls, text, lang="vi"):
         """
-        Dịch văn bản tiếng Anh sang tiếng Việt và phát âm.
+        Phát âm văn bản với ngôn ngữ được chỉ định.
+        Phát âm trực tiếp theo ngôn ngữ đã chọn (tiếng Anh hoặc tiếng Việt).
+        
+        Tham số:
+            text: Văn bản cần phát âm
+            lang: Ngôn ngữ của văn bản ('en' hoặc 'vi')
         """
         try:
-            translation = cls._translator.translate(text_en, src='en', dest='vi')
-            caption_vi = translation.text
-            print(" Dịch sang tiếng Việt:", caption_vi)
-
-            tts = gTTS(caption_vi, lang='vi')
+            # Sử dụng đúng ngôn ngữ của văn bản để phát âm
+            speech_lang = "en" if lang == "en" else "vi"
+            print(f" Phát âm bằng tiếng {speech_lang.upper()}")
+            
+            tts = gTTS(text, lang=speech_lang)
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
                 temp_path = fp.name
                 tts.save(temp_path)
@@ -152,35 +159,65 @@ class ImageCaptionService:
                 os.remove(temp_path)
         except Exception as e:
             print(f" Lỗi khi đọc caption: {e}")
+            
+    @classmethod
+    def translate_text(cls, text, src_lang="en", dest_lang="vi"):
+        """
+        Dịch văn bản từ ngôn ngữ nguồn sang ngôn ngữ đích.
+        
+        Tham số:
+            text: Văn bản cần dịch
+            src_lang: Ngôn ngữ nguồn ('en' hoặc 'vi')
+            dest_lang: Ngôn ngữ đích ('en' hoặc 'vi')
+        """
+        try:
+            if src_lang == dest_lang:
+                return text
+                
+            translation = cls._translator.translate(text, src=src_lang, dest=dest_lang)
+            return translation.text
+        except Exception as e:
+            print(f"Lỗi khi dịch văn bản: {e}")
+            return text
 
     @classmethod
-    def generate_caption_from_binary(cls, image_data, max_length=30, num_beams=5, speak=False, model_type="default"):
+    def generate_caption_from_binary(cls, image_data, max_length=30, num_beams=5, speak=False, model_type="default", language="en"):
         """
         Tạo caption cho ảnh từ dữ liệu nhị phân.
-        Nếu speak=True, sẽ dịch caption sang tiếng Việt và phát tiếng.
+        Nếu speak=True, sẽ phát âm caption.
 
         Tham số:
             model_type: Loại mô hình để sử dụng ("default" hoặc "travel")
+            language: Ngôn ngữ mô tả ("en" hoặc "vi")
         """
+        start_time = time.time()
+        start_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{start_datetime}] Bắt đầu tạo mô tả ảnh...")
+        
         try:
             # Chọn mô hình phù hợp
+            model_load_start = time.time()
             if model_type == "travel":
                 cls._load_travel_model_if_needed()
                 model = cls._travel_model
                 processor = cls._travel_processor
-                print("Sử dụng mô hình du lịch để tạo mô tả")
+                print(f"Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: {time.time() - model_load_start:.2f}s)")
             else:
                 cls._load_default_model_if_needed()
                 model = cls._default_model
                 processor = cls._default_processor
-                print("Sử dụng mô hình mặc định để tạo mô tả")
+                print(f"Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: {time.time() - model_load_start:.2f}s)")
 
             # Chuyển dữ liệu nhị phân thành đối tượng PIL Image
+            image_process_start = time.time()
             image = Image.open(io.BytesIO(image_data)).convert("RGB")
             inputs = processor(image, return_tensors="pt")
             for k, v in inputs.items():
                 inputs[k] = v.to(cls._device)
+            print(f"Xử lý ảnh: {time.time() - image_process_start:.2f}s")
 
+            # Tạo mô tả
+            caption_start = time.time()
             with torch.no_grad():
                 output_ids = model.generate(
                     **inputs,
@@ -190,24 +227,43 @@ class ImageCaptionService:
                 )
 
             caption_en = processor.decode(output_ids[0], skip_special_tokens=True)
+            print(f"Tạo mô tả: {time.time() - caption_start:.2f}s")
             print(f" Caption tiếng Anh ({model_type}):", caption_en)
+            
+            # Nếu người dùng chọn tiếng Việt, dịch caption sang tiếng Việt
+            if language == "vi":
+                translation_start = time.time()
+                caption_vi = cls.translate_text(caption_en, src_lang="en", dest_lang="vi")
+                print(f"Dịch sang tiếng Việt: {time.time() - translation_start:.2f}s")
+                print(f" Caption tiếng Việt ({model_type}):", caption_vi)
+                caption = caption_vi
+            else:
+                caption = caption_en
 
             if speak:
-                cls.speak_caption(caption_en)
+                speech_start = time.time()
+                cls.speak_caption(caption, lang=language)
+                print(f"Phát âm: {time.time() - speech_start:.2f}s")
+            
+            total_time = time.time() - start_time
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Tổng thời gian tạo mô tả: {total_time:.2f}s")
 
-            return caption_en
+            return caption
 
         except Exception as e:
+            end_time = time.time()
             print(f"Lỗi khi tạo caption: {e}")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Tổng thời gian (có lỗi): {end_time - start_time:.2f}s")
             raise
 
     @classmethod
-    def generate_caption_from_image_id(cls, image_id, max_length=30, num_beams=5, speak=False, model_type="default"):
+    def generate_caption_from_image_id(cls, image_id, max_length=30, num_beams=5, speak=False, model_type="default", language="en"):
         """
         Tạo caption cho ảnh từ ID của ảnh trong MongoDB.
 
         Tham số:
             model_type: Loại mô hình để sử dụng ("default" hoặc "travel")
+            language: Ngôn ngữ mô tả ("en" hoặc "vi")
         """
         from models.image import Image
 
@@ -215,4 +271,4 @@ class ImageCaptionService:
         if not image_doc:
             raise ValueError("Không tìm thấy ảnh với ID cung cấp")
 
-        return cls.generate_caption_from_binary(image_doc.image_data, max_length, num_beams, speak, model_type)
+        return cls.generate_caption_from_binary(image_doc.image_data, max_length, num_beams, speak, model_type, language)

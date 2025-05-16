@@ -4,6 +4,7 @@ from services.image_service import ImageService
 from services.image_caption_service import ImageCaptionService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import json
+import threading
 
 @jwt_required()
 def upload_with_caption():
@@ -46,9 +47,25 @@ def upload_with_caption():
         model_type = request.form.get('model_type', 'default')
         if model_type not in ['default', 'travel']:
             model_type = 'default'
+        
+        # Lấy ngôn ngữ từ form data (tiếng Anh hoặc tiếng Việt)
+        language = request.form.get('language', 'en')
+        if language not in ['en', 'vi']:
+            language = 'en'
             
-        # 2. Tạo caption từ dữ liệu nhị phân với mô hình đã chọn
-        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=True, model_type=model_type)
+        # 2. Tạo caption từ dữ liệu nhị phân với mô hình đã chọn và ngôn ngữ được chọn
+        # Không phát âm ngay, chỉ tạo mô tả
+        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=False, model_type=model_type, language=language)
+        
+        # Tạo thread riêng để phát âm mô tả ở background
+        def speak_in_background():
+            try:
+                ImageCaptionService.speak_caption(caption, lang=language)
+            except Exception as e:
+                print(f"Lỗi khi phát âm ở background: {e}")
+                
+        # Khởi chạy thread phát âm ở background
+        threading.Thread(target=speak_in_background, daemon=True).start()
         
         # 3. Cập nhật mô tả của ảnh với caption vừa tạo
         ImageService.update_image(str(image.id), user_id, caption)
@@ -124,14 +141,29 @@ def regenerate_caption(image_id):
         if str(image.uploaded_by.id) != user_id and not hasattr(image.uploaded_by, 'role') or image.uploaded_by.role != 'admin':
             return jsonify({"error": "Không có quyền truy cập ảnh này"}), 403
         
-        # Lấy loại mô hình từ request JSON
+        # Lấy loại mô hình và ngôn ngữ từ request JSON
         data = request.get_json() or {}
         model_type = data.get('model_type', 'default')
         if model_type not in ['default', 'travel']:
             model_type = 'default'
             
-        # Tạo caption mới từ dữ liệu nhị phân trong MongoDB với mô hình đã chọn
-        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, model_type=model_type)
+        # Lấy ngôn ngữ từ request JSON (tiếng Anh hoặc tiếng Việt)
+        language = data.get('language', 'en')
+        if language not in ['en', 'vi']:
+            language = 'en'
+            
+        # Tạo caption mới từ dữ liệu nhị phân trong MongoDB với mô hình đã chọn và ngôn ngữ được chọn
+        caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=False, model_type=model_type, language=language)
+        
+        # Tạo thread riêng để phát âm mô tả ở background
+        def speak_in_background():
+            try:
+                ImageCaptionService.speak_caption(caption, lang=language)
+            except Exception as e:
+                print(f"Lỗi khi phát âm ở background: {e}")
+                
+        # Khởi chạy thread phát âm ở background
+        threading.Thread(target=speak_in_background, daemon=True).start()
         
         # Cập nhật mô tả với caption mới
         ImageService.update_image(image_id, user_id, caption)

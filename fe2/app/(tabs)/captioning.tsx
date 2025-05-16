@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useImageUpdate } from '../../context/ImageUpdateContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     View,
     Text,
@@ -54,6 +55,34 @@ const CaptioningScreen = () => {
     const [editedCaption, setEditedCaption] = useState<string>('');
     const [location, setLocation] = useState<string | null>(null);
     const [selectedModel, setSelectedModel] = useState<'default' | 'travel'>('default');
+    const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'vi'>('vi'); // Mặc định là tiếng Việt
+    
+    // Lấy ngôn ngữ đã lưu từ AsyncStorage khi component được mount
+    useEffect(() => {
+        const loadSavedLanguage = async () => {
+            try {
+                const savedLanguage = await AsyncStorage.getItem('preferredLanguage');
+                if (savedLanguage === 'en' || savedLanguage === 'vi') {
+                    setSelectedLanguage(savedLanguage);
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy ngôn ngữ đã lưu:', error);
+            }
+        };
+        
+        loadSavedLanguage();
+    }, []);
+    
+    // Lưu ngôn ngữ đã chọn vào AsyncStorage khi thay đổi
+    const toggleLanguage = async () => {
+        try {
+            const newLanguage = selectedLanguage === 'en' ? 'vi' : 'en';
+            setSelectedLanguage(newLanguage);
+            await AsyncStorage.setItem('preferredLanguage', newLanguage);
+        } catch (error) {
+            console.error('Lỗi khi lưu ngôn ngữ đã chọn:', error);
+        }
+    };
     const router = useRouter();
     const { updateImageTimestamp } = useImageUpdate();
 
@@ -183,6 +212,9 @@ const CaptioningScreen = () => {
             
             // Add selected model type
             formData.append('model_type', selectedModel);
+            
+            // Add selected language
+            formData.append('language', selectedLanguage);
 
             // Upload image and get caption
             try {
@@ -212,7 +244,7 @@ const CaptioningScreen = () => {
 
         try {
             setLoading(true);
-            const response = await imageService.regenerateCaption(imageId, selectedModel);
+            const response = await imageService.regenerateCaption(imageId, selectedModel, selectedLanguage);
             setCaption(response.image.description);
         } catch (error) {
             console.error('Error regenerating caption:', error);
@@ -310,6 +342,22 @@ const CaptioningScreen = () => {
                             delay={300}
                             style={styles.uploadContainer}
                         >
+                            <TouchableOpacity 
+                                style={styles.languageToggle}
+                                onPress={toggleLanguage}
+                                activeOpacity={0.7}
+                            >
+                                <LinearGradient
+                                    colors={AppTheme.primaryGradient as any}
+                                    style={styles.languageToggleGradient}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                >
+                                    <Text style={styles.languageToggleText}>
+                                        {selectedLanguage === 'en' ? 'EN' : 'VI'}
+                                    </Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
                             <Animatable.View 
                                 animation="pulse" 
                                 iterationCount="infinite" 
@@ -417,6 +465,8 @@ const CaptioningScreen = () => {
                                         </TouchableOpacity>
                                     </Animatable.View>
                                 </View>
+                                
+
                             </Animatable.View>
 
                             <TouchableOpacity 
@@ -433,6 +483,22 @@ const CaptioningScreen = () => {
                             duration={800}
                             style={styles.previewContainer}
                         >
+                            <TouchableOpacity 
+                                style={styles.languageToggle}
+                                onPress={toggleLanguage}
+                                activeOpacity={0.7}
+                            >
+                                <LinearGradient
+                                    colors={AppTheme.primaryGradient as any}
+                                    style={styles.languageToggleGradient}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                >
+                                    <Text style={styles.languageToggleText}>
+                                        {selectedLanguage === 'en' ? 'EN' : 'VI'}
+                                    </Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
                             <Animatable.View 
                                 animation="zoomIn" 
                                 duration={800} 
@@ -550,6 +616,7 @@ const CaptioningScreen = () => {
                                                 onPress={() => {
                                                     setCaption(null);
                                                     setSelectedModel(selectedModel === 'default' ? 'travel' : 'default');
+                                                    setSelectedLanguage(selectedLanguage === 'en' ? 'vi' : 'en');
                                                 }}
                                                 activeOpacity={0.7}
                                             >
@@ -613,6 +680,8 @@ const CaptioningScreen = () => {
                                                 </LinearGradient>
                                             </TouchableOpacity>
                                         </View>
+                                        
+
                                     </View>
                                     
                                     <TouchableOpacity 
@@ -649,6 +718,30 @@ const CaptioningScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    languageToggle: {
+        position: 'absolute',
+        top: 15,
+        right: 15,
+        zIndex: 10,
+        borderRadius: 20,
+        overflow: 'hidden',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    languageToggleGradient: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    languageToggleText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
     container: {
         flex: 1,
         backgroundColor: AppTheme.background,
@@ -1067,7 +1160,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 3,
     },
-    generateButton: {
+    generateButtonSecondary: {
         borderRadius: 10,
         overflow: 'hidden',
         elevation: 4,

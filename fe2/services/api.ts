@@ -168,9 +168,10 @@ export const imageService = {
     return response.data;
   },
 
-  regenerateCaption: async (imageId: string, modelType: string = 'default') => {
+  regenerateCaption: async (imageId: string, modelType: string = 'default', language: string = 'en') => {
     const response = await api.post(`/image-caption/${imageId}/regenerate`, {
-      model_type: modelType
+      model_type: modelType,
+      language: language
     });
     return response.data;
   },
