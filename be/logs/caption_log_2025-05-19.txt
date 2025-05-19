@@ -1,0 +1,108 @@
+[2025-05-19 15:51:47] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.49s)
+Xử lý ảnh: 0.03s
+Tạo mô tả: 13.22s
+ Caption tiếng Anh (travel): turtle tower an iconic symbol of hanoi stands prominently on a small island in hoan kiem lake
+Dịch sang tiếng Việt: 2.55s
+ Caption tiếng Việt (travel): Tháp rùa Một biểu tượng mang tính biểu tượng của Hà Nội nổi bật trên một hòn đảo nhỏ trong hồ Hoan Kiem
+[2025-05-19 15:52:03] Tổng thời gian tạo mô tả: 16.30s
+
+[2025-05-19 15:52:57] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.21s
+Tạo mô tả: 7.68s
+ Caption tiếng Anh (travel): thang long imperial citadel in the morning surrounded by trees in front of tourists
+Dịch sang tiếng Việt: 1.30s
+ Caption tiếng Việt (travel): Thát thủ dài của Thang vào buổi sáng được bao quanh bởi những cái cây trước mặt khách du lịch
+[2025-05-19 15:53:07] Tổng thời gian tạo mô tả: 9.19s
+
+[2025-05-19 15:56:28] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.47s)
+Xử lý ảnh: 0.02s
+Tạo mô tả: 9.40s
+ Caption tiếng Anh (travel): turtle tower located on a small island in hoan kiem lake is surrounded by vibrant red blossoms
+Dịch sang tiếng Việt: 1.19s
+ Caption tiếng Việt (travel): Tháp rùa nằm trên một hòn đảo nhỏ trong hồ Hoan Kiem được bao quanh bởi những bông hoa đỏ rực
+[2025-05-19 15:56:39] Tổng thời gian tạo mô tả: 11.07s
+
+[2025-05-19 15:57:32] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.23s
+Tạo mô tả: 9.27s
+ Caption tiếng Anh (travel): quan su pagoda stands with its striking yellow facade and elegant traditional rooflines amidst lush greenery
+Dịch sang tiếng Việt: 1.21s
+ Caption tiếng Việt (travel): Chùa Quan Su đứng với mặt tiền màu vàng nổi bật và mái nhà truyền thống thanh lịch giữa cây xanh tươi tốt
+[2025-05-19 15:57:42] Tổng thời gian tạo mô tả: 10.71s
+
+[2025-05-19 15:58:33] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.11s
+Tạo mô tả: 10.07s
+ Caption tiếng Anh (travel): the national museum of vietnamese history appears majestic in its luminous golden architecture
+Dịch sang tiếng Việt: 1.23s
+ Caption tiếng Việt (travel): Bảo tàng Lịch sử Quốc gia Việt Nam xuất hiện hùng vĩ trong kiến ​​trúc vàng sáng của nó
+[2025-05-19 15:58:45] Tổng thời gian tạo mô tả: 11.42s
+
+[2025-05-19 15:59:05] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 6.05s
+ Caption tiếng Anh (travel): the huc bridge with lights at night
+Dịch sang tiếng Việt: 0.81s
+ Caption tiếng Việt (travel): Cầu HUC với đèn vào ban đêm
+[2025-05-19 15:59:12] Tổng thời gian tạo mô tả: 6.86s
+
+[2025-05-19 15:59:38] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.02s
+Tạo mô tả: 7.45s
+ Caption tiếng Anh (travel): the hanoi museum ' s expansive grounds are beautifully landscaped
+Dịch sang tiếng Việt: 1.27s
+ Caption tiếng Việt (travel): Khu vực mở rộng của Bảo tàng Hà Nội được cảnh quan đẹp mắt
+[2025-05-19 15:59:47] Tổng thời gian tạo mô tả: 8.74s
+
+[2025-05-19 16:00:22] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 8.32s
+ Caption tiếng Anh (travel): the hanoi museum ' s striking inverted pyramid structure is captured from a low angle
+Dịch sang tiếng Việt: 1.15s
+ Caption tiếng Việt (travel): Cấu trúc kim tự tháp đảo ngược nổi bật của Bảo tàng Hà Nội được chụp từ một góc thấp
+[2025-05-19 16:00:32] Tổng thời gian tạo mô tả: 9.47s
+
+[2025-05-19 16:00:55] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 10.99s
+ Caption tiếng Anh (travel): the turtle tower stands gracefully among lush greenery and blue sky
+Dịch sang tiếng Việt: 0.95s
+ Caption tiếng Việt (travel): Tháp rùa đứng một cách duyên dáng giữa cây xanh tươi tốt và bầu trời xanh
+[2025-05-19 16:01:07] Tổng thời gian tạo mô tả: 11.95s
+
+[2025-05-19 16:01:35] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 11.83s
+ Caption tiếng Anh (travel): vietnam national fine arts museum features a well - maintained colonial - style building with a traditional vietnamese roof
+Dịch sang tiếng Việt: 0.78s
+ Caption tiếng Việt (travel): Bảo tàng Mỹ thuật quốc gia Việt Nam có một tòa nhà phong cách thuộc địa được duy trì tốt với mái nhà Việt Nam truyền thống
+[2025-05-19 16:01:48] Tổng thời gian tạo mô tả: 12.63s
+
+[2025-05-19 16:03:14] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 10.85s
+ Caption tiếng Anh (travel): the ancient turtle tower stands quietly on a small island in hoan kiem lake
+Dịch sang tiếng Việt: 1.10s
+ Caption tiếng Việt (travel): Tháp rùa cổ đại đứng yên trên một hòn đảo nhỏ trong hồ Hoan Kiem
+[2025-05-19 16:03:26] Tổng thời gian tạo mô tả: 11.96s
+
+[2025-05-19 16:04:30] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 9.94s
+ Caption tiếng Anh (travel): uncle ho ' s mausoleum is located on ba dinh square in the middle of the blue sky
+Dịch sang tiếng Việt: 0.85s
+ Caption tiếng Việt (travel): Lăng của chú Ho nằm trên Quảng trường BA Dinh ở giữa bầu trời xanh
+[2025-05-19 16:04:40] Tổng thời gian tạo mô tả: 10.80s
+
