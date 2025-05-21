@@ -1,0 +1,16 @@
+[2025-05-21 12:24:28] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.52s)
+Xử lý ảnh: 0.20s
+Tạo mô tả: 6.94s
+ Caption tiếng Anh (default): a group of people sitting at desks in an office
+Dịch sang tiếng Việt: 1.54s
+ Caption tiếng Việt (default): một nhóm người ngồi ở bàn trong văn phòng
+[2025-05-21 12:24:37] Tổng thời gian tạo mô tả: 9.21s
+
+[2025-05-21 12:25:23] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.18s
+Tạo mô tả: 5.27s
+ Caption tiếng Anh (default): a group of people sitting at desks in an office
+[2025-05-21 12:25:29] Tổng thời gian tạo mô tả: 5.45s
+

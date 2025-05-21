@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useImageUpdate } from '../../context/ImageUpdateContext';
+import { useLanguage } from '../../context/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     View,
@@ -55,34 +56,9 @@ const CaptioningScreen = () => {
     const [editedCaption, setEditedCaption] = useState<string>('');
     const [location, setLocation] = useState<string | null>(null);
     const [selectedModel, setSelectedModel] = useState<'default' | 'travel'>('default');
-    const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'vi'>('vi'); // Mặc định là tiếng Việt
     
-    // Lấy ngôn ngữ đã lưu từ AsyncStorage khi component được mount
-    useEffect(() => {
-        const loadSavedLanguage = async () => {
-            try {
-                const savedLanguage = await AsyncStorage.getItem('preferredLanguage');
-                if (savedLanguage === 'en' || savedLanguage === 'vi') {
-                    setSelectedLanguage(savedLanguage);
-                }
-            } catch (error) {
-                console.error('Lỗi khi lấy ngôn ngữ đã lưu:', error);
-            }
-        };
-        
-        loadSavedLanguage();
-    }, []);
-    
-    // Lưu ngôn ngữ đã chọn vào AsyncStorage khi thay đổi
-    const toggleLanguage = async () => {
-        try {
-            const newLanguage = selectedLanguage === 'en' ? 'vi' : 'en';
-            setSelectedLanguage(newLanguage);
-            await AsyncStorage.setItem('preferredLanguage', newLanguage);
-        } catch (error) {
-            console.error('Lỗi khi lưu ngôn ngữ đã chọn:', error);
-        }
-    };
+    // Sử dụng ngôn ngữ từ LanguageContext
+    const { language, t } = useLanguage();
     const router = useRouter();
     const { updateImageTimestamp } = useImageUpdate();
 
@@ -213,8 +189,8 @@ const CaptioningScreen = () => {
             // Add selected model type
             formData.append('model_type', selectedModel);
             
-            // Add selected language
-            formData.append('language', selectedLanguage);
+            // Add selected language from global context
+            formData.append('language', language);
 
             // Upload image and get caption
             try {
@@ -244,11 +220,11 @@ const CaptioningScreen = () => {
 
         try {
             setLoading(true);
-            const response = await imageService.regenerateCaption(imageId, selectedModel, selectedLanguage);
+            const response = await imageService.regenerateCaption(imageId, selectedModel, language);
             setCaption(response.image.description);
         } catch (error) {
             console.error('Error regenerating caption:', error);
-            Alert.alert('Lỗi', 'Không thể tạo lại mô tả. Vui lòng thử lại.');
+            Alert.alert(t('common.error'), t('captioning.regenerateError'));
         } finally {
             setLoading(false);
         }
@@ -343,18 +319,18 @@ const CaptioningScreen = () => {
                             style={styles.uploadContainer}
                         >
                             <TouchableOpacity 
-                                style={styles.languageToggle}
-                                onPress={toggleLanguage}
+                                style={styles.languageIndicator}
+                                onPress={() => {}}
                                 activeOpacity={0.7}
                             >
                                 <LinearGradient
                                     colors={AppTheme.primaryGradient as any}
-                                    style={styles.languageToggleGradient}
+                                    style={styles.languageIndicatorGradient}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
                                 >
-                                    <Text style={styles.languageToggleText}>
-                                        {selectedLanguage === 'en' ? 'EN' : 'VI'}
+                                    <Text style={styles.languageIndicatorText}>
+                                        {language === 'en' ? 'EN' : 'VI'}
                                     </Text>
                                 </LinearGradient>
                             </TouchableOpacity>
@@ -484,18 +460,18 @@ const CaptioningScreen = () => {
                             style={styles.previewContainer}
                         >
                             <TouchableOpacity 
-                                style={styles.languageToggle}
-                                onPress={toggleLanguage}
+                                style={styles.languageIndicator}
+                                onPress={() => {}}
                                 activeOpacity={0.7}
                             >
                                 <LinearGradient
                                     colors={AppTheme.primaryGradient as any}
-                                    style={styles.languageToggleGradient}
+                                    style={styles.languageIndicatorGradient}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
                                 >
-                                    <Text style={styles.languageToggleText}>
-                                        {selectedLanguage === 'en' ? 'EN' : 'VI'}
+                                    <Text style={styles.languageIndicatorText}>
+                                        {language === 'en' ? 'EN' : 'VI'}
                                     </Text>
                                 </LinearGradient>
                             </TouchableOpacity>
@@ -616,7 +592,6 @@ const CaptioningScreen = () => {
                                                 onPress={() => {
                                                     setCaption(null);
                                                     setSelectedModel(selectedModel === 'default' ? 'travel' : 'default');
-                                                    setSelectedLanguage(selectedLanguage === 'en' ? 'vi' : 'en');
                                                 }}
                                                 activeOpacity={0.7}
                                             >
@@ -718,7 +693,7 @@ const CaptioningScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    languageToggle: {
+    languageIndicator: {
         position: 'absolute',
         top: 15,
         right: 15,
@@ -731,13 +706,13 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
     },
-    languageToggleGradient: {
+    languageIndicatorGradient: {
         paddingVertical: 8,
         paddingHorizontal: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    languageToggleText: {
+    languageIndicatorText: {
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 14,

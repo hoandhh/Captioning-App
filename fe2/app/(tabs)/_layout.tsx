@@ -1,5 +1,6 @@
 import React from 'react';
 import { ImageUpdateProvider } from '../../context/ImageUpdateContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Tabs } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -79,6 +80,7 @@ const styles = StyleSheet.create({
 
 export default function TabLayout() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const isAdmin = user?.role === 'admin';
 
@@ -119,11 +121,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Trang chủ',
+          title: t('tabs.home'),
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="home" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>Trang chủ</Text>
+              <Text style={styles.headerTitleText}>{t('tabs.home')}</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
@@ -137,11 +139,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="captioning"
         options={{
-          title: 'Mô tả',
+          title: t('tabs.captioning'),
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <MaterialCommunityIcons name="image-text" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>Mô tả hình ảnh</Text>
+              <Text style={styles.headerTitleText}>{t('captioning.title')}</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
@@ -155,11 +157,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'Lịch sử',
+          title: t('tabs.history'),
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="images" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>Lịch sử của tôi</Text>
+              <Text style={styles.headerTitleText}>{t('tabs.history')}</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (
@@ -174,11 +176,11 @@ export default function TabLayout() {
         <Tabs.Screen
           name="admin"
           options={{
-            title: 'Admin',
+            title: t('admin.title'),
             headerTitle: () => (
               <View style={styles.headerTitleContainer}>
                 <Ionicons name="shield" size={24} color="#fff" />
-                <Text style={styles.headerTitleText}>Quản trị</Text>
+                <Text style={styles.headerTitleText}>{t('admin.title')}</Text>
               </View>
             ),
             tabBarIcon: ({ color, size, focused }) => (
@@ -193,11 +195,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Hồ sơ',
+          title: t('tabs.profile'),
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <Ionicons name="person" size={24} color="#fff" />
-              <Text style={styles.headerTitleText}>Thông tin cá nhân</Text>
+              <Text style={styles.headerTitleText}>{t('profile.title')}</Text>
             </View>
           ),
           tabBarIcon: ({ color, size, focused }) => (

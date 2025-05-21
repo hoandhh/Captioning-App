@@ -15,8 +15,9 @@ import {
     Platform,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { userService } from '../../services/api';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -39,6 +40,7 @@ const AppTheme = {
 
 const ProfileScreen = () => {
     const { user, logout, updateUser } = useAuth();
+    const { language, setLanguage, t } = useLanguage();
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -47,6 +49,7 @@ const ProfileScreen = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPasswordFields, setShowPasswordFields] = useState(false);
+    const [showLanguageSettings, setShowLanguageSettings] = useState(false);
     // Define proper types for activity stats
     interface DailyStat {
         date: string;
@@ -410,6 +413,79 @@ const ProfileScreen = () => {
                     )}
                 </View>
 
+                <View style={styles.profileSection}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>{t('profile.language')}</Text>
+                        {!showLanguageSettings ? (
+                            <TouchableOpacity onPress={() => setShowLanguageSettings(true)}>
+                                <FontAwesome name="language" size={22} color={AppTheme.primary} />
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity onPress={() => setShowLanguageSettings(false)}>
+                                <Feather name="x" size={22} color={AppTheme.primary} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {showLanguageSettings ? (
+                        <Animatable.View animation="fadeIn" duration={500} style={styles.languageSection}>
+                            <Text style={styles.languageTitle}>{t('profile.selectLanguage')}</Text>
+                            
+                            <View style={styles.languageOptions}>
+                                <TouchableOpacity 
+                                    style={[styles.languageOption, language === 'en' && styles.selectedLanguageOption]}
+                                    onPress={() => setLanguage('en')}
+                                    activeOpacity={0.7}
+                                >
+                                    <LinearGradient
+                                        colors={language === 'en' ? AppTheme.primaryGradient as any : ['#f5f5f5', '#e0e0e0']}
+                                        style={styles.languageOptionGradient}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                    >
+                                        <Text style={[styles.languageOptionText, language === 'en' && styles.selectedLanguageOptionText]}>{t('profile.english')}</Text>
+                                        {language === 'en' && (
+                                            <Ionicons name="checkmark-circle" size={16} color="#fff" style={{marginLeft: 5}} />
+                                        )}
+                                    </LinearGradient>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity 
+                                    style={[styles.languageOption, language === 'vi' && styles.selectedLanguageOption]}
+                                    onPress={() => setLanguage('vi')}
+                                    activeOpacity={0.7}
+                                >
+                                    <LinearGradient
+                                        colors={language === 'vi' ? AppTheme.primaryGradient as any : ['#f5f5f5', '#e0e0e0']}
+                                        style={styles.languageOptionGradient}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                    >
+                                        <Text style={[styles.languageOptionText, language === 'vi' && styles.selectedLanguageOptionText]}>{t('profile.vietnamese')}</Text>
+                                        {language === 'vi' && (
+                                            <Ionicons name="checkmark-circle" size={16} color="#fff" style={{marginLeft: 5}} />
+                                        )}
+                                    </LinearGradient>
+                                </TouchableOpacity>
+                            </View>
+                            
+                            <Text style={styles.languageInfo}>{t('profile.languageInfo')}</Text>
+                        </Animatable.View>
+                    ) : (
+                        <View style={styles.languageInfoContainer}>
+                            <Text style={styles.currentLanguage}>
+                                {language === 'en' ? t('profile.english') : t('profile.vietnamese')}
+                            </Text>
+                            <TouchableOpacity 
+                                onPress={() => setShowLanguageSettings(true)}
+                                style={styles.changeLanguageButton}
+                            >
+                                <Text style={styles.changeLanguageText}>{t('profile.languageSettings')}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+
                 <TouchableOpacity style={styles.logoutButtonContainer} onPress={handleLogout} activeOpacity={0.8}>
                     <LinearGradient
                         colors={['#FF416C', '#FF4B2B']}
@@ -418,7 +494,7 @@ const ProfileScreen = () => {
                         end={{ x: 1, y: 1 }}
                     >
                         <Feather name="log-out" size={20} color="#fff" />
-                        <Text style={styles.logoutText}>Đăng xuất</Text>
+                        <Text style={styles.logoutText}>{t('profile.logout')}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
             </ScrollView>
@@ -656,6 +732,74 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginLeft: 10,
+    },
+    languageSection: {
+        marginTop: 10,
+    },
+    languageTitle: {
+        fontSize: 16,
+        color: AppTheme.text,
+        marginBottom: 15,
+    },
+    languageOptions: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 15,
+    },
+    languageOption: {
+        width: '45%',
+        borderRadius: 10,
+        overflow: 'hidden',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    selectedLanguageOption: {
+        elevation: 4,
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    languageOptionGradient: {
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+    },
+    languageOptionText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: AppTheme.text,
+    },
+    selectedLanguageOptionText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    languageInfo: {
+        fontSize: 14,
+        color: AppTheme.textLight,
+        textAlign: 'center',
+        marginTop: 10,
+        fontStyle: 'italic',
+    },
+    languageInfoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+    },
+    currentLanguage: {
+        fontSize: 16,
+        color: AppTheme.text,
+    },
+    changeLanguageButton: {
+        padding: 5,
+    },
+    changeLanguageText: {
+        color: AppTheme.primary,
+        fontWeight: '500',
     },
     emptyContainer: {
         flex: 1,
