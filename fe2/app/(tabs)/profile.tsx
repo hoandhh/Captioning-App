@@ -263,21 +263,31 @@ const ProfileScreen = () => {
                     
                     {!statsLoading && activityStats.daily_stats && activityStats.daily_stats.length > 0 && (
                         <Animatable.View animation="fadeIn" delay={1200} duration={800} style={styles.dailyStatsContainer}>
-                            <Text style={styles.dailyStatsTitle}>Hoạt động 7 ngày qua</Text>
-                            <View style={styles.dailyStatsRow}>
-                                {activityStats.daily_stats.map((stat, index) => (
-                                    <View key={index} style={styles.dailyStatItem}>
-                                        <View style={[styles.dailyStatBar, { 
-                                            height: stat.count > 0 ? Math.max(20, stat.count * 15) : 5,
-                                            backgroundColor: stat.count > 0 ? AppTheme.primary : '#E0E0E0',
-                                            opacity: stat.count > 0 ? 1 : 0.5
-                                        }]} />
-                                        <Text style={[styles.dailyStatText, {
-                                            color: stat.count > 0 ? AppTheme.textLight : '#AAAAAA'
-                                        }]}>{stat.date}</Text>
-                                    </View>
-                                ))}
-                            </View>
+                            <Text style={styles.dailyStatsTitle}>{t('profile.activityLastDays')}</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dailyStatsScrollContent}>
+                                <View style={styles.dailyStatsRow}>
+                                    {activityStats.daily_stats.map((stat, index) => {
+                                        // Tính toán chiều cao tương đối cho thanh biểu đồ
+                                        const maxCount = Math.max(...activityStats.daily_stats.map(s => s.count), 1);
+                                        const heightPercentage = stat.count / maxCount;
+                                        const barHeight = Math.max(5, heightPercentage * 80);
+                                        
+                                        return (
+                                            <View key={index} style={styles.dailyStatItem}>
+                                                <View style={[styles.dailyStatBar, { 
+                                                    height: barHeight,
+                                                    backgroundColor: stat.count > 0 ? AppTheme.primary : '#E0E0E0',
+                                                    opacity: stat.count > 0 ? 1 : 0.5
+                                                }]} />
+                                                <Text style={[styles.dailyStatText, {
+                                                    color: stat.count > 0 ? AppTheme.textLight : '#AAAAAA'
+                                                }]}>{stat.date}</Text>
+                                                <Text style={styles.dailyStatCount}>{stat.count}</Text>
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+                            </ScrollView>
                         </Animatable.View>
                     )}
                 </Animatable.View>
@@ -574,6 +584,10 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: 'rgba(0,0,0,0.05)',
     },
+    dailyStatsScrollContent: {
+        paddingHorizontal: 5,
+        paddingBottom: 5,
+    },
     dailyStatsTitle: {
         fontSize: 16,
         fontWeight: '600',
@@ -582,24 +596,36 @@ const styles = StyleSheet.create({
     },
     dailyStatsRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'flex-end',
-        height: 100,
+        height: 120,
+        paddingBottom: 5,
     },
     dailyStatItem: {
         alignItems: 'center',
-        width: '12%',
+        width: 50,
+        marginHorizontal: 8,
     },
     dailyStatBar: {
-        width: 8,
+        width: 12,
         backgroundColor: AppTheme.primary,
-        borderRadius: 4,
-        minHeight: 20,
+        borderRadius: 6,
+        minHeight: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.5,
+        elevation: 2,
+    },
+    dailyStatCount: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: AppTheme.primary,
+        marginTop: 2,
     },
     dailyStatText: {
         fontSize: 10,
         color: AppTheme.textLight,
-        marginTop: 5,
+        marginTop: 4,
     },
     avatarContainer: {
         alignItems: 'center',
