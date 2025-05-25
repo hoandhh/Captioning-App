@@ -121,7 +121,7 @@ const ProfileScreen = () => {
         if (!user) return;
 
         if (!email.trim()) {
-            Alert.alert('Error', 'Email cannot be empty');
+            Alert.alert(t('profile.errorEmptyEmail'), t('profile.errorEmptyEmailMessage'));
             return;
         }
 
@@ -135,11 +135,11 @@ const ProfileScreen = () => {
             // Update the user in context
             updateUser(updatedUser.user);
             setIsEditing(false);
-            Alert.alert('Success', 'Profile updated successfully');
+            Alert.alert(t('profile.profileUpdateSuccess'), t('profile.profileUpdateSuccessMessage'));
         } catch (error: any) {
             Alert.alert(
-                'Error',
-                error.response?.data?.error || 'Failed to update profile. Please try again.'
+                t('profile.errorUpdateProfile'),
+                error.response?.data?.error || t('profile.errorUpdateProfileMessage')
             );
         } finally {
             setLoading(false);
@@ -148,17 +148,17 @@ const ProfileScreen = () => {
 
     const handleChangePassword = async () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
-            Alert.alert('Error', 'All password fields are required');
+            Alert.alert(t('profile.errorPasswordFields'), t('profile.errorPasswordFieldsMessage'));
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'New passwords do not match');
+            Alert.alert(t('profile.errorPasswordMatch'), t('profile.errorPasswordMatchMessage'));
             return;
         }
 
         if (newPassword.length < 6) {
-            Alert.alert('Error', 'New password must be at least 6 characters long');
+            Alert.alert(t('profile.errorPasswordLength'), t('profile.errorPasswordLengthMessage'));
             return;
         }
 
@@ -175,11 +175,11 @@ const ProfileScreen = () => {
             setConfirmPassword('');
             setShowPasswordFields(false);
 
-            Alert.alert('Success', 'Password changed successfully');
+            Alert.alert(t('profile.passwordChangeSuccess'), t('profile.passwordChangeSuccessMessage'));
         } catch (error: any) {
             Alert.alert(
-                'Error',
-                error.response?.data?.error || 'Failed to change password. Please try again.'
+                t('profile.errorPasswordChange'),
+                error.response?.data?.error || t('profile.errorPasswordChangeMessage')
             );
         } finally {
             setLoading(false);
@@ -190,7 +190,7 @@ const ProfileScreen = () => {
         try {
             await logout();
         } catch (error) {
-            console.error('Logout failed:', error);
+            console.error(t('profile.logoutFailed'), error);
         }
     };
 
@@ -198,7 +198,7 @@ const ProfileScreen = () => {
         return (
             <View style={styles.emptyContainer}>
                 <ActivityIndicator size="large" color="#2E86C1" />
-                <Text style={styles.loadingText}>Loading profile...</Text>
+                <Text style={styles.loadingText}>{t('profile.loadingProfile')}</Text>
             </View>
         );
     }
@@ -228,7 +228,7 @@ const ProfileScreen = () => {
                 </Animatable.View>
                 
                 <Animatable.View animation="fadeInUp" duration={800} delay={400} style={styles.activityStatsContainer}>
-                    <Text style={styles.activityStatsTitle}>Hoạt động của bạn</Text>
+                    <Text style={styles.activityStatsTitle}>{t('profile.activity')}</Text>
                     {statsLoading ? (
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color={AppTheme.primary} />
@@ -244,7 +244,7 @@ const ProfileScreen = () => {
                                 >
                                     <Text style={styles.statNumber}>{activityStats.total_images}</Text>
                                 </LinearGradient>
-                                <Text style={styles.statTitle}>Hình ảnh</Text>
+                                <Text style={styles.statTitle}>{t('profile.images')}</Text>
                             </Animatable.View>
                             
                             <Animatable.View animation="fadeInLeft" delay={800} duration={800} style={styles.statItem}>
@@ -256,7 +256,7 @@ const ProfileScreen = () => {
                                 >
                                     <Text style={styles.statNumber}>{activityStats.images_today}</Text>
                                 </LinearGradient>
-                                <Text style={styles.statTitle}>Hôm nay</Text>
+                                <Text style={styles.statTitle}>{t('profile.today')}</Text>
                             </Animatable.View>
                         </View>
                     )}
@@ -294,7 +294,7 @@ const ProfileScreen = () => {
 
                 <View style={styles.profileSection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
+                        <Text style={styles.sectionTitle}>{t('profile.personalInfo')}</Text>
                         {!isEditing ? (
                             <TouchableOpacity onPress={() => setIsEditing(true)}>
                                 <Feather name="edit-2" size={22} color={AppTheme.primary} />
@@ -307,27 +307,27 @@ const ProfileScreen = () => {
                     </View>
 
                     <View style={styles.infoContainer}>
-                        <Text style={styles.label}>Họ và tên</Text>
+                        <Text style={styles.label}>{t('profile.fullName')}</Text>
                         {isEditing ? (
                             <TextInput
                                 style={styles.input}
                                 value={fullName}
                                 onChangeText={setFullName}
-                                placeholder="Nhập họ và tên của bạn"
+                                placeholder={t('profile.enterFullName')}
                             />
                         ) : (
-                            <Text style={styles.infoText}>{fullName || 'Chưa cung cấp'}</Text>
+                            <Text style={styles.infoText}>{fullName || t('profile.notProvided')}</Text>
                         )}
                     </View>
 
                     <View style={styles.infoContainer}>
-                        <Text style={styles.label}>Email</Text>
+                        <Text style={styles.label}>{t('profile.email')}</Text>
                         {isEditing ? (
                             <TextInput
                                 style={styles.input}
                                 value={email}
                                 onChangeText={setEmail}
-                                placeholder="Nhập email của bạn"
+                                placeholder={t('profile.enterEmail')}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                             />
@@ -345,7 +345,7 @@ const ProfileScreen = () => {
                             {loading ? (
                                 <ActivityIndicator color="#fff" size="small" />
                             ) : (
-                                <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
+                                <Text style={styles.saveButtonText}>{t('profile.saveChanges')}</Text>
                             )}
                         </TouchableOpacity>
                     )}
@@ -353,7 +353,7 @@ const ProfileScreen = () => {
 
                 <View style={styles.profileSection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Bảo mật</Text>
+                        <Text style={styles.sectionTitle}>{t('profile.security')}</Text>
                         {!showPasswordFields ? (
                             <TouchableOpacity onPress={() => setShowPasswordFields(true)}>
                                 <Feather name="key" size={22} color={AppTheme.primary} />
@@ -368,34 +368,34 @@ const ProfileScreen = () => {
                     {showPasswordFields ? (
                         <View style={styles.passwordSection}>
                             <View style={styles.infoContainer}>
-                                <Text style={styles.label}>Mật khẩu hiện tại</Text>
+                                <Text style={styles.label}>{t('profile.currentPassword')}</Text>
                                 <TextInput
                                     style={styles.input}
                                     value={currentPassword}
                                     onChangeText={setCurrentPassword}
-                                    placeholder="Nhập mật khẩu hiện tại"
+                                    placeholder={t('profile.enterCurrentPassword')}
                                     secureTextEntry
                                 />
                             </View>
 
                             <View style={styles.infoContainer}>
-                                <Text style={styles.label}>Mật khẩu mới</Text>
+                                <Text style={styles.label}>{t('profile.newPassword')}</Text>
                                 <TextInput
                                     style={styles.input}
                                     value={newPassword}
                                     onChangeText={setNewPassword}
-                                    placeholder="Nhập mật khẩu mới"
+                                    placeholder={t('profile.enterNewPassword')}
                                     secureTextEntry
                                 />
                             </View>
 
                             <View style={styles.infoContainer}>
-                                <Text style={styles.label}>Xác nhận mật khẩu mới</Text>
+                                <Text style={styles.label}>{t('profile.confirmNewPassword')}</Text>
                                 <TextInput
                                     style={styles.input}
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    placeholder="Xác nhận mật khẩu mới"
+                                    placeholder={t('profile.confirmNewPasswordPlaceholder')}
                                     secureTextEntry
                                 />
                             </View>
@@ -408,7 +408,7 @@ const ProfileScreen = () => {
                                 {loading ? (
                                     <ActivityIndicator color="#fff" size="small" />
                                 ) : (
-                                    <Text style={styles.saveButtonText}>Đổi mật khẩu</Text>
+                                    <Text style={styles.saveButtonText}>{t('profile.changePassword')}</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -418,7 +418,7 @@ const ProfileScreen = () => {
                             onPress={() => setShowPasswordFields(true)}
                         >
                             <Ionicons name="lock-closed-outline" size={20} color="#333" />
-                            <Text style={styles.passwordButtonText}>Đổi mật khẩu</Text>
+                            <Text style={styles.passwordButtonText}>{t('profile.changePassword')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>

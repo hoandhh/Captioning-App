@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, SafeAreaView, Dimensions, Modal, Platform, Share, Alert } from 'react-native';
 import { createGroupCaption } from '../services/groupCaptionService';
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
@@ -23,6 +24,7 @@ interface GroupCaptionViewProps {
 }
 
 export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onClose }) => {
+  const { t } = useLanguage();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [groupCaption, setGroupCaption] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -58,7 +60,8 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
       // Hiển thị modal kết quả sau khi tạo mô tả thành công
       setShowResultModal(true);
     } catch (error) {
-      console.error('Lỗi khi tạo mô tả nhóm:', error);
+      console.error(t('group.errorCreatingCaption'), error);
+      Alert.alert(t('group.errorCreatingCaption'), t('group.errorCreatingCaptionMessage'));
     } finally {
       setLoading(false);
     }
@@ -89,7 +92,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
       if (!hasMediaPermission) {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Quyền truy cập', 'Cần quyền truy cập vào thư viện ảnh để chia sẻ');
+          Alert.alert(t('group.permissionNeeded'), t('group.mediaPermissionMessage'));
           setSharingLoading(false);
           return;
         }
@@ -98,7 +101,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
       
       // Chụp ảnh màn hình kết quả
       if (!viewShotRef.current) {
-        throw new Error('ViewShot ref không khả dụng');
+        throw new Error('ViewShot ref not available');
       }
       const uri = await viewShotRef.current.capture();
       
@@ -112,14 +115,14 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
       await Share.share({
         message: groupCaption,
         url: Platform.OS === 'ios' ? assetInfo.uri : uri,
-        title: 'Mô tả nhóm từ Captioning App'
+        title: t('group.shareTitle')
       });
       
       console.log('Đã chia sẻ thành công');
       
     } catch (error) {
       console.error('Lỗi khi chia sẻ:', error);
-      Alert.alert('Lỗi', 'Không thể chia sẻ nội dung. Vui lòng thử lại sau.');
+      Alert.alert(t('group.errorSharing'), t('group.errorSharingMessage'));
     } finally {
       setSharingLoading(false);
     }
@@ -146,7 +149,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
                 <Ionicons name="close-circle" size={32} color="#4A00E0" />
               </TouchableOpacity>
               
-              <Text style={styles.modalTitle}>Mô tả nhóm</Text>
+              <Text style={styles.modalTitle}>{t('group.title')}</Text>
               
               <ViewShot ref={viewShotRef} style={styles.viewShot} options={{quality: 1, format: 'jpg'}}>
                 <View style={styles.resultImagesContainer}>
@@ -183,7 +186,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
                   
                   <View style={styles.viewShotCaptionContainer}>
                     <Text style={styles.viewShotCaptionText}>{groupCaption}</Text>
-                    <Text style={styles.viewShotAppName}>Captioning App</Text>
+                    <Text style={styles.viewShotAppName}>{t('captioning.title')}</Text>
                   </View>
                 </View>
               </ViewShot>
@@ -206,7 +209,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
                     ) : (
                       <>
                         <Feather name="share-2" size={20} color="#fff" style={styles.buttonIcon} />
-                        <Text style={styles.modalButtonText}>Chia sẻ</Text>
+                        <Text style={styles.modalButtonText}>{t('group.shareResult')}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -223,7 +226,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                   >
-                    <Text style={styles.modalButtonText}>Đóng</Text>
+                    <Text style={styles.modalButtonText}>{t('common.close')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -243,7 +246,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Tạo mô tả nhóm</Text>
+        <Text style={styles.title}>{t('group.title')}</Text>
       </LinearGradient>
 
       <ScrollView 
@@ -252,7 +255,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
         contentContainerStyle={styles.contentContainer}
       >
         <Animatable.Text animation="fadeIn" style={styles.instruction}>
-          Chọn tối đa 4 hình ảnh để tạo mô tả nhóm
+          {t('group.selectUpTo4')}
         </Animatable.Text>
         
         <View style={[styles.imageGrid, getGridLayout()]}>
@@ -286,7 +289,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
           <Animatable.View animation="fadeInUp" style={styles.captionContainer}>
             <View style={styles.captionHeader}>
               <Feather name="file-text" size={20} color="#4A00E0" />
-              <Text style={styles.captionHeaderText}>Mô tả nhóm</Text>
+              <Text style={styles.captionHeaderText}>{t('group.title')}</Text>
             </View>
             <Text style={styles.captionText}>{groupCaption}</Text>
           </Animatable.View>
@@ -312,7 +315,7 @@ export const GroupCaptionView: React.FC<GroupCaptionViewProps> = ({ images, onCl
               ) : (
                 <>
                   <Feather name="cpu" size={20} color="#fff" style={styles.buttonIcon} />
-                  <Text style={styles.createButtonText}>Tạo mô tả nhóm</Text>
+                  <Text style={styles.createButtonText}>{t('group.generateGroupCaption')}</Text>
                 </>
               )}
             </LinearGradient>

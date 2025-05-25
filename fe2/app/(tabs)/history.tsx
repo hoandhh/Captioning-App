@@ -28,6 +28,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LocationFilter } from '../../components/LocationFilter';
 import { GroupCaptionView } from '../../components/GroupCaptionView';
@@ -85,6 +86,7 @@ const HistoryScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const perPage = 8; // Số lượng ảnh mỗi trang
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const { lastImageUpdate } = useImageUpdate();
 
@@ -215,7 +217,7 @@ const HistoryScreen = () => {
       }
     } catch (error) {
       console.error('Failed to fetch user images:', error);
-      Alert.alert('Error', 'Failed to load your images. Please try again later.');
+      Alert.alert(t('common.error'), t('history.failedToLoadImages'));
     } finally {
       if (isMountedRef.current) {
         setLoading(false);
@@ -302,7 +304,7 @@ const HistoryScreen = () => {
           </View>
           <View style={styles.captionContainer}>
             <Text style={styles.caption} numberOfLines={2}>
-              {item.description || 'Chưa có mô tả'}
+              {item.description || t('history.noDescription')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -331,7 +333,7 @@ const HistoryScreen = () => {
   // Xử lý tải xuống hình ảnh
   const handleDownloadImage = async (image: ImageItem) => {
     if (!image || !image.url) {
-      Alert.alert('Lỗi', 'Không thể tải xuống hình ảnh này');
+      Alert.alert(t('history.downloadError'), t('history.downloadErrorMessage'));
       return;
     }
 
@@ -344,7 +346,7 @@ const HistoryScreen = () => {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       
       if (status !== 'granted') {
-        Alert.alert('Quyền truy cập', 'Cần quyền truy cập vào thư viện ảnh để lưu hình ảnh');
+        Alert.alert(t('history.permissionNeeded'), t('history.storagePermissionNeeded'));
         return;
       }
       
@@ -380,18 +382,18 @@ const HistoryScreen = () => {
         }
         
         Alert.alert(
-          'Thành công', 
-          'Đã lưu hình ảnh vào thư viện ảnh', 
+          t('history.downloadSuccess'), 
+          t('history.downloadSuccessMessage'), 
           [
             { 
-              text: 'OK', 
+              text: t('common.ok'), 
               onPress: () => console.log('Đã lưu ảnh thành công') 
             },
             Platform.OS === 'ios' ? {
-              text: 'Chia sẻ',
+              text: t('history.share'),
               onPress: () => Share.share({
                 url: downloadResult.uri,
-                message: `Ảnh từ Captioning App: ${image.description || ''}`,
+                message: `${t('captioning.title')}: ${image.description || ''}`,
               })
             } : undefined,
           ].filter(Boolean) as any
@@ -401,7 +403,7 @@ const HistoryScreen = () => {
       }
     } catch (error) {
       console.error('Lỗi khi tải xuống ảnh:', error);
-      Alert.alert('Lỗi', 'Không thể tải xuống hình ảnh. Vui lòng thử lại sau.');
+      Alert.alert(t('history.downloadError'), t('history.downloadErrorMessage'));
     } finally {
       setDownloadLoading(false);
     }
@@ -426,11 +428,11 @@ const HistoryScreen = () => {
       setFilteredImages(filteredImages.filter(img => img.id !== imageId));
       
       // Thông báo thành công
-      Alert.alert('Thành công', 'Đã xóa hình ảnh thành công');
+      Alert.alert(t('history.deleteSuccess'), t('history.deleteSuccessMessage'));
       
     } catch (error) {
       console.error('Error deleting image:', error);
-      Alert.alert('Lỗi', 'Không thể xóa hình ảnh. Vui lòng thử lại sau.');
+      Alert.alert(t('common.error'), t('history.failedToDelete'));
     } finally {
       setDeleteLoading(false);
     }
@@ -473,11 +475,11 @@ const HistoryScreen = () => {
       setIsEditing(false);
       
       // Thông báo thành công
-      Alert.alert('Thành công', 'Cập nhật mô tả thành công');
+      Alert.alert(t('history.updateSuccess'), t('history.updateSuccessMessage'));
       
     } catch (error) {
       console.error('Error updating caption:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật mô tả. Vui lòng thử lại sau.');
+      Alert.alert(t('history.updateError'), t('history.updateErrorMessage'));
     } finally {
       setUpdateLoading(false);
     }
@@ -538,7 +540,7 @@ const HistoryScreen = () => {
                         style={styles.editInput}
                         value={editedCaption}
                         onChangeText={setEditedCaption}
-                        placeholder="Nhập mô tả mới..."
+                        placeholder={t('history.enterNewDescription')}
                         multiline
                         autoFocus
                         onBlur={Keyboard.dismiss}
@@ -548,7 +550,7 @@ const HistoryScreen = () => {
                           style={[styles.editButton, styles.cancelEditButton]}
                           onPress={cancelEditing}
                         >
-                          <Text style={styles.cancelButtonText}>Hủy</Text>
+                          <Text style={styles.cancelButtonText}>{t('history.cancel')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
@@ -562,7 +564,7 @@ const HistoryScreen = () => {
                           {updateLoading ? (
                             <ActivityIndicator size="small" color="#fff" />
                           ) : (
-                            <Text style={styles.editButtonText}>Lưu</Text>
+                            <Text style={styles.editButtonText}>{t('history.save')}</Text>
                           )}
                         </TouchableOpacity>
                       </View>
@@ -571,7 +573,7 @@ const HistoryScreen = () => {
                 ) : (
                   <View style={styles.modalCaptionContainer}>
                     <View style={styles.captionHeader}>
-                      <Text style={styles.captionTitle}>Mô tả</Text>
+                      <Text style={styles.captionTitle}>{t('history.description')}</Text>
                       <TouchableOpacity 
                         style={styles.editIconButton}
                         onPress={startEditing}
@@ -580,7 +582,7 @@ const HistoryScreen = () => {
                       </TouchableOpacity>
                     </View>
                     <Text style={styles.modalCaption}>
-                      {selectedImage.description || 'Chưa có mô tả'}
+                      {selectedImage.description || t('history.noDescription')}
                     </Text>
                     
                     <View style={styles.modalInfoContainer}>
@@ -609,7 +611,7 @@ const HistoryScreen = () => {
                         <View style={styles.infoRow}>
                             <Feather name="map-pin" size={16} color={AppTheme.textLight} />
                             <Text style={styles.infoText}>
-                                Không rõ
+                                {t('history.unknown')}
                             </Text>
                         </View>
                       )}
@@ -632,7 +634,7 @@ const HistoryScreen = () => {
                           ) : (
                             <>
                               <Feather name="download" size={18} color="#fff" />
-                              <Text style={styles.actionButtonText}>Tải xuống</Text>
+                              <Text style={styles.actionButtonText}>{t('history.download')}</Text>
                             </>
                           )}
                         </LinearGradient>
@@ -642,12 +644,12 @@ const HistoryScreen = () => {
                         style={styles.actionButton}
                         onPress={() => {
                           Alert.alert(
-                            'Xác nhận xóa',
-                            'Bạn có chắc chắn muốn xóa hình ảnh này không?',
+                            t('history.confirmDeleteImage'),
+                            t('history.confirmDeleteImageMessage'),
                             [
-                              { text: 'Hủy', style: 'cancel' },
+                              { text: t('common.cancel'), style: 'cancel' },
                               { 
-                                text: 'Xóa', 
+                                text: t('common.delete'), 
                                 style: 'destructive',
                                 onPress: () => handleDeleteImage(selectedImage.id)
                               }
@@ -662,7 +664,7 @@ const HistoryScreen = () => {
                           end={{ x: 1, y: 1 }}
                         >
                           <Feather name="trash-2" size={18} color="#fff" />
-                          <Text style={styles.actionButtonText}>Xóa</Text>
+                          <Text style={styles.actionButtonText}>{t('common.delete')}</Text>
                         </LinearGradient>
                       </TouchableOpacity>
                     </View>
@@ -682,7 +684,7 @@ const HistoryScreen = () => {
         <Animatable.View animation="fadeIn" duration={800} style={styles.loadingContainer}>
           <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color={AppTheme.primary} />
-            <Text style={styles.loadingText}>Đang tải hình ảnh...</Text>
+            <Text style={styles.loadingText}>{t('history.loading')}</Text>
           </View>
         </Animatable.View>
       );
@@ -693,8 +695,8 @@ const HistoryScreen = () => {
         <Animatable.View animation="pulse" iterationCount="infinite" duration={2000} style={styles.emptyIconContainer}>
           <MaterialCommunityIcons name="image-multiple-outline" size={100} color={AppTheme.primary} />
         </Animatable.View>
-        <Animatable.Text animation="fadeInUp" delay={300} style={styles.emptyText}>Chưa có ảnh nào</Animatable.Text>
-        <Animatable.Text animation="fadeInUp" delay={500} style={styles.emptySubtext}>Bắt đầu bằng cách tải lên ảnh đầu tiên</Animatable.Text>
+        <Animatable.Text animation="fadeInUp" delay={300} style={styles.emptyText}>{t('history.noImagesYet')}</Animatable.Text>
+        <Animatable.Text animation="fadeInUp" delay={500} style={styles.emptySubtext}>{t('history.startByUploading')}</Animatable.Text>
         <Animatable.View animation="fadeInUp" delay={700}>
           <TouchableOpacity
             style={styles.uploadButton}
@@ -708,7 +710,7 @@ const HistoryScreen = () => {
               end={{ x: 1, y: 1 }}
             >
               <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-              <Text style={styles.uploadButtonText}>Tải ảnh lên</Text>
+              <Text style={styles.uploadButtonText}>{t('history.uploadImage')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animatable.View>
@@ -726,7 +728,7 @@ const HistoryScreen = () => {
           <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm kiếm mô tả..."
+            placeholder={t('history.searchImages')}
             placeholderTextColor="#666666"
             value={searchQuery}
             onChangeText={handleSearch}
@@ -759,7 +761,7 @@ const HistoryScreen = () => {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.filterButtonText}>Bỏ lọc</Text>
+                  <Text style={styles.filterButtonText}>{t('history.clearFilter')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </Animatable.View>

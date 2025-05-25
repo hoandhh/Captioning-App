@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +22,7 @@ const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const navigateToCaptioning = () => {
@@ -53,7 +55,7 @@ const HomeScreen = () => {
           >
             <Animatable.View animation="fadeIn" duration={1000} style={styles.headerContent}>
               <Animatable.Text animation="fadeInDown" duration={1000} style={styles.welcomeText}>
-                Xin chào, {user?.full_name || user?.username || 'Người dùng'}!
+                {t('home.welcome').replace('{name}', user?.full_name || user?.username || t('common.user'))}
               </Animatable.Text>
               <Animatable.View animation="fadeInUp" duration={1200} style={styles.headerIcons}>
                 <Animatable.View animation="pulse" iterationCount="infinite" duration={3000}>
@@ -82,10 +84,9 @@ const HomeScreen = () => {
             >
               <MaterialCommunityIcons name="image-text" size={90} color="#4A00E0" />
             </Animatable.View>
-            <Text style={styles.heroTitle}>Mô tả hình ảnh bằng trí tuệ nhân tạo</Text>
+            <Text style={styles.heroTitle}>{t('home.title')}</Text>
             <Text style={styles.heroText}>
-              Chuyển đổi hình ảnh của bạn thành văn bản mô tả với công nghệ trí tuệ nhân tạo tiên tiến.
-              Hoàn hảo cho việc tiếp cận, tạo nội dung và tổ chức hình ảnh.
+              {t('home.subtitle')}
             </Text>
             
             <TouchableOpacity 
@@ -100,7 +101,7 @@ const HomeScreen = () => {
                 end={{ x: 1, y: 1 }}
               >
                 <Ionicons name="camera" size={24} color="#fff" />
-                <Text style={styles.buttonText}>Bắt đầu mô tả</Text>
+                <Text style={styles.buttonText}>{t('home.startCaptioning')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </Animatable.View>
@@ -111,7 +112,7 @@ const HomeScreen = () => {
             delay={600}
             style={styles.featuresContainer}
           >
-            <Text style={styles.featuresTitle}>Tính năng chính</Text>
+            <Text style={styles.featuresTitle}>{t('home.features')}</Text>
             
             <Animatable.View 
               animation="fadeInLeft" 
@@ -123,8 +124,8 @@ const HomeScreen = () => {
                 <FontAwesome5 name="brain" size={22} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
-                <Text style={styles.featureTitle}>Mô tả AI thông minh</Text>
-                <Text style={styles.featureDescription}>Mô tả chính xác được tạo bởi các mô hình AI tiên tiến</Text>
+                <Text style={styles.featureTitle}>{t('home.feature1Title')}</Text>
+                <Text style={styles.featureDescription}>{t('home.feature1Description')}</Text>
               </View>
             </Animatable.View>
             
@@ -138,8 +139,8 @@ const HomeScreen = () => {
                 <Ionicons name="refresh" size={24} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
-                <Text style={styles.featureTitle}>Tạo lại mô tả</Text>
-                <Text style={styles.featureDescription}>Không hài lòng? Tạo lại mô tả chỉ với một cú chạm</Text>
+                <Text style={styles.featureTitle}>{t('home.feature2Title')}</Text>
+                <Text style={styles.featureDescription}>{t('home.feature2Description')}</Text>
               </View>
             </Animatable.View>
             
@@ -153,8 +154,8 @@ const HomeScreen = () => {
                 <Ionicons name="cloud-done" size={24} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
-                <Text style={styles.featureTitle}>Lưu trữ đám mây</Text>
-                <Text style={styles.featureDescription}>Truy cập hình ảnh đã mô tả từ bất kỳ đâu, bất kỳ lúc nào</Text>
+                <Text style={styles.featureTitle}>{t('home.feature3Title')}</Text>
+                <Text style={styles.featureDescription}>{t('home.feature3Description')}</Text>
               </View>
             </Animatable.View>
 
@@ -168,8 +169,8 @@ const HomeScreen = () => {
                 <Ionicons name="share-social" size={24} color="#fff" />
               </View>
               <View style={styles.featureTextContainer}>
-                <Text style={styles.featureTitle}>Chia sẻ dễ dàng</Text>
-                <Text style={styles.featureDescription}>Chia sẻ hình ảnh đã mô tả với bạn bè và mạng xã hội</Text>
+                <Text style={styles.featureTitle}>{t('home.feature4Title')}</Text>
+                <Text style={styles.featureDescription}>{t('home.feature4Description')}</Text>
               </View>
             </Animatable.View>
           </Animatable.View>
@@ -182,7 +183,7 @@ const HomeScreen = () => {
             delay={900}
             style={styles.animationContainer}
           >
-            <Text style={styles.animationTitle}>Quy trình xử lý</Text>
+            <Text style={styles.animationTitle}>{t('home.process')}</Text>
             
             <View style={styles.processFlow}>
               <Animatable.View 
@@ -199,7 +200,7 @@ const HomeScreen = () => {
                 >
                   <Ionicons name="cloud-upload" size={28} color="#fff" />
                 </LinearGradient>
-                <Text style={styles.processText}>Tải lên</Text>
+                <Text style={styles.processText}>{t('home.step1')}</Text>
               </Animatable.View>
               
               <Animatable.View 
@@ -225,7 +226,7 @@ const HomeScreen = () => {
                 >
                   <FontAwesome5 name="brain" size={24} color="#fff" />
                 </LinearGradient>
-                <Text style={styles.processText}>Phân tích</Text>
+                <Text style={styles.processText}>{t('home.step2')}</Text>
               </Animatable.View>
               
               <Animatable.View 
@@ -251,7 +252,7 @@ const HomeScreen = () => {
                 >
                   <MaterialCommunityIcons name="text-box" size={28} color="#fff" />
                 </LinearGradient>
-                <Text style={styles.processText}>Kết quả</Text>
+                <Text style={styles.processText}>{t('home.step3')}</Text>
               </Animatable.View>
             </View>
             
@@ -261,7 +262,7 @@ const HomeScreen = () => {
               delay={2100} 
               style={styles.animationNote}
             >
-              <Text style={styles.noteText}>Công nghệ AI tiên tiến giúp tạo ra mô tả chi tiết và chính xác</Text>
+              <Text style={styles.noteText}>{t('captioning.subtitle')}</Text>
             </Animatable.View>
           </Animatable.View>
 

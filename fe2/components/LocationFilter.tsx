@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
@@ -21,6 +22,7 @@ export const LocationFilter: React.FC<LocationFilterProps> = ({
   selectedLocation,
   onSelectLocation,
 }) => {
+  const { t } = useLanguage();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,7 +74,7 @@ export const LocationFilter: React.FC<LocationFilterProps> = ({
             style={styles.modalContent}
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Lọc theo địa điểm</Text>
+              <Text style={styles.modalTitle}>{t('history.filterByLocation')}</Text>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={styles.closeButton}
@@ -90,7 +92,7 @@ export const LocationFilter: React.FC<LocationFilterProps> = ({
 
             <TextInput
               style={styles.searchInput}
-              placeholder="Tìm kiếm địa điểm..."
+              placeholder={t('history.searchLocations')}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -98,12 +100,12 @@ export const LocationFilter: React.FC<LocationFilterProps> = ({
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4A00E0" />
-                <Text style={styles.loadingText}>Đang tải địa điểm...</Text>
+                <Text style={styles.loadingText}>{t('common.loading')}</Text>
               </View>
             ) : !hasLocations ? (
               <View style={styles.emptyContainer}>
                 <Feather name="map-pin" size={50} color="#4A00E0" style={styles.emptyIcon} />
-                <Text style={styles.emptyText}>Không có địa điểm nào</Text>
+                <Text style={styles.emptyText}>{t('history.noLocations')}</Text>
               </View>
             ) : (
               <FlatList
@@ -140,7 +142,7 @@ export const LocationFilter: React.FC<LocationFilterProps> = ({
                 )}
                 ListEmptyComponent={searchQuery.length > 0 ? (
                   <View style={styles.noResultsContainer}>
-                    <Text style={styles.noResultsText}>Không tìm thấy địa điểm phù hợp</Text>
+                    <Text style={styles.noResultsText}>{t('history.noLocations')}</Text>
                   </View>
                 ) : null}
               />

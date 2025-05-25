@@ -67,7 +67,7 @@ const CaptioningScreen = () => {
             // Request permission
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (status !== 'granted') {
-                Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào thư viện ảnh!');
+                Alert.alert(t('captioning.galleryPermissionDenied'), t('captioning.galleryPermissionNeeded'));
                 return;
             }
 
@@ -87,7 +87,7 @@ const CaptioningScreen = () => {
             }
         } catch (error) {
             console.error('Error picking image:', error);
-            Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.');
+            Alert.alert(t('captioning.errorPickingImage'), t('captioning.errorPickingImageMessage'));
         }
     };
 
@@ -96,14 +96,14 @@ const CaptioningScreen = () => {
             // Request camera permission
             const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
             if (cameraStatus !== 'granted') {
-                Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào camera!');
+                Alert.alert(t('captioning.cameraPermissionDenied'), t('captioning.cameraPermissionNeeded'));
                 return;
             }
 
             // Request location permission
             const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
             if (locationStatus !== 'granted') {
-                Alert.alert('Từ chối quyền truy cập', 'Cần có quyền truy cập vào vị trí để lưu thông tin địa điểm!');
+                Alert.alert(t('captioning.locationPermissionDenied'), t('captioning.locationPermissionNeeded'));
                 return;
             }
 
@@ -158,7 +158,7 @@ const CaptioningScreen = () => {
             }
         } catch (error) {
             console.error('Error taking picture:', error);
-            Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.');
+            Alert.alert(t('captioning.errorTakingPicture'), t('captioning.errorTakingPictureMessage'));
         }
     };
 
@@ -202,14 +202,14 @@ const CaptioningScreen = () => {
             } catch (error: any) {
                 console.error('Error details:', error.response?.data || error.message);
                 Alert.alert(
-                    'Lỗi khi tạo caption',
-                    'Không thể kết nối với máy chủ. Vui lòng kiểm tra cài đặt mạng và URL API trong services/api.ts'
+                    t('captioning.errorGeneratingCaption'),
+                    t('captioning.errorGeneratingCaptionMessage')
                 );
             }
 
         } catch (error) {
             console.error('Error generating caption:', error);
-            Alert.alert('Lỗi', 'Không thể tạo caption. Vui lòng thử lại.');
+            Alert.alert(t('common.error'), t('captioning.errorRegeneratingCaption'));
         } finally {
             setLoading(false);
         }
@@ -224,7 +224,7 @@ const CaptioningScreen = () => {
             setCaption(response.image.description);
         } catch (error) {
             console.error('Error regenerating caption:', error);
-            Alert.alert(t('common.error'), t('captioning.regenerateError'));
+            Alert.alert(t('common.error'), t('captioning.errorRegeneratingCaption'));
         } finally {
             setLoading(false);
         }
@@ -252,7 +252,7 @@ const CaptioningScreen = () => {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating caption:', error);
-            Alert.alert('Lỗi', 'Không thể cập nhật mô tả. Vui lòng thử lại.');
+            Alert.alert(t('captioning.errorUpdatingCaption'), t('captioning.errorUpdatingCaptionMessage'));
         } finally {
             setLoading(false);
         }
@@ -338,7 +338,7 @@ const CaptioningScreen = () => {
                             >
                                 <MaterialCommunityIcons name="image-text" size={90} color={AppTheme.primary} />
                             </Animatable.View>
-                            <Text style={styles.uploadText}>Chọn một hình ảnh để tạo mô tả</Text>
+                            <Text style={styles.uploadText}>{t('captioning.uploadText')}</Text>
                         
                             <View style={styles.buttonRow}>
                                 <TouchableOpacity 
@@ -353,7 +353,7 @@ const CaptioningScreen = () => {
                                         end={{ x: 1, y: 1 }}
                                     >
                                         <Ionicons name="images" size={24} color="#fff" />
-                                        <Text style={styles.buttonText}>Thư viện</Text>
+                                        <Text style={styles.buttonText}>{t('captioning.gallery')}</Text>
                                     </LinearGradient>
                                 </TouchableOpacity>
 
@@ -369,13 +369,13 @@ const CaptioningScreen = () => {
                                         end={{ x: 1, y: 1 }}
                                     >
                                         <Ionicons name="camera" size={24} color="#fff" />
-                                        <Text style={styles.buttonText}>Máy ảnh</Text>
+                                        <Text style={styles.buttonText}>{t('captioning.camera')}</Text>
                                     </LinearGradient>
                                 </TouchableOpacity>
                             </View>
 
                             <Animatable.View animation="fadeIn" duration={800} style={styles.modelSelectionContainer}>
-                                <Text style={styles.modelSelectionTitle}>Chọn mô hình mô tả:</Text>
+                                <Text style={styles.modelSelectionTitle}>{t('captioning.selectModel')}</Text>
                                 <View style={styles.modelOptions}>
                                     <Animatable.View 
                                         animation="fadeIn" 
@@ -399,7 +399,7 @@ const CaptioningScreen = () => {
                                                     size={20} 
                                                     color={selectedModel === 'default' ? '#fff' : AppTheme.primary} 
                                                 />
-                                                <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>Mặc định</Text>
+                                                <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>{t('captioning.defaultModel')}</Text>
                                                 {selectedModel === 'default' && (
                                                     <Ionicons name="checkmark-circle" size={16} color="#fff" style={{marginLeft: 5}} />
                                                 )}
@@ -429,7 +429,7 @@ const CaptioningScreen = () => {
                                                     size={20} 
                                                     color={selectedModel === 'travel' ? '#fff' : AppTheme.secondary} 
                                                 />
-                                                <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>Du lịch</Text>
+                                                <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>{t('captioning.travelModel')}</Text>
                                                 {selectedModel === 'travel' && (
                                                     <Ionicons name="checkmark-circle" size={16} color="#fff" style={{marginLeft: 5}} />
                                                 )}
@@ -446,7 +446,7 @@ const CaptioningScreen = () => {
                                 onPress={viewMyImages}
                                 activeOpacity={0.7}
                             >
-                                <Text style={styles.myImagesText}>Xem bộ sưu tập của tôi</Text>
+                                <Text style={styles.myImagesText}>{t('captioning.viewMyImages')}</Text>
                             </TouchableOpacity>
                         </Animatable.View>
                     ) : (
@@ -490,7 +490,7 @@ const CaptioningScreen = () => {
                                             color="#fff" 
                                         />
                                         <Text style={styles.modelBadgeText}>
-                                            {selectedModel === 'default' ? 'Mô hình mặc định' : 'Mô hình du lịch'}
+                                            {selectedModel === 'default' ? t('captioning.defaultModelFull') : t('captioning.travelModelFull')}
                                         </Text>
                                     </LinearGradient>
                                 </View>
@@ -505,7 +505,7 @@ const CaptioningScreen = () => {
                                         onPress={pickImage}
                                     >
                                         <Ionicons name="refresh" size={20} color="#fff" />
-                                        <Text style={styles.changeImageText}>Đổi ảnh</Text>
+                                        <Text style={styles.changeImageText}>{t('captioning.changeImage')}</Text>
                                     </TouchableOpacity>
                                 </LinearGradient>
                             </Animatable.View>
@@ -517,7 +517,7 @@ const CaptioningScreen = () => {
                                     style={styles.loadingContainer}
                                 >
                                     <ActivityIndicator size="large" color={AppTheme.primary} />
-                                    <Text style={styles.loadingText}>Đang tạo mô tả...</Text>
+                                    <Text style={styles.loadingText}>{t('captioning.generatingCaption')}</Text>
                                 </Animatable.View>
                             ) : caption ? (
                                 <Animatable.View 
@@ -527,7 +527,7 @@ const CaptioningScreen = () => {
                                 >
                                     <View style={styles.captionHeader}>
                                         <MaterialCommunityIcons name="text-box" size={24} color={AppTheme.primary} />
-                                        <Text style={styles.captionTitle}>Mô tả đã tạo</Text>
+                                        <Text style={styles.captionTitle}>{t('captioning.generatedCaption')}</Text>
                                     </View>
                                     
                                     {isEditing ? (
@@ -537,7 +537,7 @@ const CaptioningScreen = () => {
                                                 value={editedCaption}
                                                 onChangeText={setEditedCaption}
                                                 multiline
-                                                placeholder="Nhập mô tả của bạn ở đây..."
+                                                placeholder={t('captioning.enterCaptionHere')}
                                                 placeholderTextColor="#888"
                                                 autoFocus={true}
                                                 onFocus={() => {
@@ -552,13 +552,13 @@ const CaptioningScreen = () => {
                                                     style={[styles.editButton, styles.saveButton]} 
                                                     onPress={saveEditedCaption}
                                                 >
-                                                    <Text style={styles.editButtonText}>Lưu</Text>
+                                                    <Text style={styles.editButtonText}>{t('captioning.saveButton')}</Text>
                                                 </TouchableOpacity>
                                                 <TouchableOpacity 
                                                     style={[styles.editButton, styles.cancelButton]} 
                                                     onPress={cancelEditingCaption}
                                                 >
-                                                    <Text style={styles.editButtonText}>Hủy</Text>
+                                                    <Text style={styles.editButtonText}>{t('captioning.cancelButton')}</Text>
                                                 </TouchableOpacity>
                                             </View>
                                         </View>
@@ -571,7 +571,7 @@ const CaptioningScreen = () => {
                                                     onPress={startEditingCaption}
                                                 >
                                                     <Feather name="edit-2" size={18} color={AppTheme.primary} />
-                                                    <Text style={styles.captionButtonText}>Chỉnh sửa</Text>
+                                                    <Text style={styles.captionButtonText}>{t('captioning.editButton')}</Text>
                                                 </TouchableOpacity>
                                                 
                                                 <TouchableOpacity 
@@ -579,7 +579,7 @@ const CaptioningScreen = () => {
                                                     onPress={regenerateCaption}
                                                 >
                                                     <Feather name="refresh-cw" size={18} color={AppTheme.primary} />
-                                                    <Text style={styles.captionButtonText}>Tạo lại</Text>
+                                                    <Text style={styles.captionButtonText}>{t('captioning.regenerateButton')}</Text>
                                                 </TouchableOpacity>
                                             </View>
                                             
@@ -598,7 +598,7 @@ const CaptioningScreen = () => {
                                                     end={{ x: 1, y: 1 }}
                                                 >
                                                     <MaterialCommunityIcons name="text-box-plus" size={20} color="#fff" />
-                                                    <Text style={styles.newCaptionButtonText}>Tạo mô tả mới với {selectedModel === 'default' ? 'mô hình du lịch' : 'mô hình mặc định'}</Text>
+                                                    <Text style={styles.newCaptionButtonText}>{t('captioning.newCaptionWithModel').replace('{model}', selectedModel === 'default' ? t('captioning.travelModelFull') : t('captioning.defaultModelFull'))}</Text>
                                                 </LinearGradient>
                                             </TouchableOpacity>
                                         </View>
@@ -611,7 +611,7 @@ const CaptioningScreen = () => {
                                     style={styles.generateContainer}
                                 >
                                     <View style={styles.modelSelectionContainer}>
-                                        <Text style={styles.modelSelectionTitle}>Chọn mô hình mô tả:</Text>
+                                        <Text style={styles.modelSelectionTitle}>{t('captioning.selectModel')}</Text>
                                         <View style={styles.modelOptions}>
                                             <TouchableOpacity 
                                                 style={[styles.modelOption, selectedModel === 'default' && styles.selectedModelOption]}
@@ -628,7 +628,7 @@ const CaptioningScreen = () => {
                                                         size={24} 
                                                         color={selectedModel === 'default' ? '#fff' : AppTheme.primary} 
                                                     />
-                                                    <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>Mô hình mặc định</Text>
+                                                    <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>{t('captioning.defaultModelFull')}</Text>
                                                 </LinearGradient>
                                             </TouchableOpacity>
                                             
@@ -647,7 +647,7 @@ const CaptioningScreen = () => {
                                                         size={24} 
                                                         color={selectedModel === 'travel' ? '#fff' : AppTheme.secondary} 
                                                     />
-                                                    <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>Mô hình du lịch</Text>
+                                                    <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>{t('captioning.travelModelFull')}</Text>
                                                 </LinearGradient>
                                             </TouchableOpacity>
                                         </View>
@@ -667,7 +667,7 @@ const CaptioningScreen = () => {
                                             end={{ x: 1, y: 1 }}
                                         >
                                             <MaterialCommunityIcons name="text-recognition" size={24} color="#fff" />
-                                            <Text style={styles.generateButtonText}>Tạo mô tả</Text>
+                                            <Text style={styles.generateButtonText}>{t('captioning.generateButton')}</Text>
                                         </LinearGradient>
                                     </TouchableOpacity>
                                     
@@ -675,7 +675,7 @@ const CaptioningScreen = () => {
                                         style={styles.resetButton} 
                                         onPress={resetImage}
                                     >
-                                        <Text style={styles.resetButtonText}>Chọn ảnh khác</Text>
+                                        <Text style={styles.resetButtonText}>{t('captioning.chooseAnotherImage')}</Text>
                                     </TouchableOpacity>
                                 </Animatable.View>
                             )}
