@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'expo-router';
 import { adminService, imageService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
@@ -86,6 +87,7 @@ const AdminScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState<Stats | null>(null);
+    const { language } = useLanguage();
     
     // Thống kê phân bố hình ảnh
     const [imageDistribution, setImageDistribution] = useState({
@@ -122,7 +124,10 @@ const AdminScreen = () => {
 
     useEffect(() => {
         if (user?.role !== 'admin') {
-            Alert.alert('Từ chối truy cập', 'Bạn không có quyền quản trị.');
+            Alert.alert(
+                language === 'en' ? 'Access Denied' : 'Từ chối truy cập', 
+                language === 'en' ? 'You do not have administrator privileges.' : 'Bạn không có quyền quản trị.'
+            );
             router.replace('/(tabs)');
         } else {
             fetchDashboardData();
@@ -181,7 +186,10 @@ const AdminScreen = () => {
             }
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
-            Alert.alert('Lỗi', 'Không thể tải dữ liệu bảng điều khiển. Vui lòng thử lại.');
+            Alert.alert(
+                language === 'en' ? 'Error' : 'Lỗi', 
+                language === 'en' ? 'Unable to load dashboard data. Please try again.' : 'Không thể tải dữ liệu bảng điều khiển. Vui lòng thử lại.'
+            );
         } finally {
             setLoading(false);
         }
@@ -226,7 +234,10 @@ const AdminScreen = () => {
             
         } catch (error) {
             console.error('Failed to fetch users:', error);
-            Alert.alert('Lỗi', 'Không thể tải danh sách người dùng. Vui lòng thử lại.');
+            Alert.alert(
+                language === 'en' ? 'Error' : 'Lỗi', 
+                language === 'en' ? 'Unable to load user list. Please try again.' : 'Không thể tải danh sách người dùng. Vui lòng thử lại.'
+            );
         } finally {
             setLoading(false);
             setUserLoadingMore(false);
@@ -341,7 +352,10 @@ const AdminScreen = () => {
             
         } catch (error) {
             console.error('Failed to fetch images:', error);
-            Alert.alert('Lỗi', 'Không thể tải danh sách hình ảnh. Vui lòng thử lại.');
+            Alert.alert(
+                language === 'en' ? 'Error' : 'Lỗi', 
+                language === 'en' ? 'Unable to load image list. Please try again.' : 'Không thể tải danh sách hình ảnh. Vui lòng thử lại.'
+            );
         } finally {
             setLoading(false);
             setImageLoadingMore(false);
@@ -426,10 +440,16 @@ const AdminScreen = () => {
             }
             
             // Thông báo thành công
-            Alert.alert('Thành công', 'Đã xóa hình ảnh thành công');
+            Alert.alert(
+                language === 'en' ? 'Success' : 'Thành công', 
+                language === 'en' ? 'Image deleted successfully' : 'Đã xóa hình ảnh thành công'
+            );
         } catch (error) {
             console.error('Failed to delete image:', error);
-            Alert.alert('Lỗi', 'Không thể xóa hình ảnh. Vui lòng thử lại.');
+            Alert.alert(
+                language === 'en' ? 'Error' : 'Lỗi', 
+                language === 'en' ? 'Unable to delete image. Please try again.' : 'Không thể xóa hình ảnh. Vui lòng thử lại.'
+            );
         } finally {
             setLoading(false);
         }
@@ -454,10 +474,18 @@ const AdminScreen = () => {
                 user.id === userId ? { ...user, is_active: !isActive } : user
             ));
             
-            Alert.alert('Thành công', `Người dùng đã ${!isActive ? 'kích hoạt' : 'vô hiệu hóa'} thành công.`);
+            Alert.alert(
+                language === 'en' ? 'Success' : 'Thành công', 
+                language === 'en' 
+                    ? `User has been ${!isActive ? 'activated' : 'deactivated'} successfully.` 
+                    : `Người dùng đã ${!isActive ? 'kích hoạt' : 'vô hiệu hóa'} thành công.`
+            );
         } catch (error) {
             console.error('Failed to toggle user status:', error);
-            Alert.alert('Lỗi', 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.');
+            Alert.alert(
+                language === 'en' ? 'Error' : 'Lỗi', 
+                language === 'en' ? 'Unable to update user status. Please try again.' : 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.'
+            );
         }
     };
 
@@ -480,10 +508,18 @@ const AdminScreen = () => {
                 user.id === userId ? { ...user, role: newRole } : user
             ));
             
-            Alert.alert('Thành công', `Vai trò người dùng đã được thay đổi thành ${newRole === 'admin' ? 'Quản trị viên' : 'Người dùng'} thành công.`);
+            Alert.alert(
+                language === 'en' ? 'Success' : 'Thành công', 
+                language === 'en' 
+                    ? `User role has been changed to ${newRole === 'admin' ? 'Administrator' : 'User'} successfully.` 
+                    : `Vai trò người dùng đã được thay đổi thành ${newRole === 'admin' ? 'Quản trị viên' : 'Người dùng'} thành công.`
+            );
         } catch (error) {
             console.error('Failed to change user role:', error);
-            Alert.alert('Lỗi', 'Không thể cập nhật vai trò người dùng. Vui lòng thử lại.');
+            Alert.alert(
+                language === 'en' ? 'Error' : 'Lỗi', 
+                language === 'en' ? 'Unable to update user role. Please try again.' : 'Không thể cập nhật vai trò người dùng. Vui lòng thử lại.'
+            );
         }
     };
 
@@ -513,13 +549,16 @@ const AdminScreen = () => {
                         <View style={styles.userMetaItem}>
                             <Ionicons name="person-outline" size={14} color={AppTheme.textLight} />
                             <Text style={styles.userMetaText}>
-                                {item.full_name || 'Chưa cung cấp'}
+                                {item.full_name || (language === 'en' ? 'Not provided' : 'Chưa cung cấp')}
                             </Text>
                         </View>
                         <View style={styles.userMetaItem}>
                             <Ionicons name="shield-outline" size={14} color={AppTheme.textLight} />
                             <Text style={[styles.userMetaText, item.role === 'admin' ? styles.adminRoleText : {}]}>
-                                {item.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
+                                {item.role === 'admin' 
+                                    ? (language === 'en' ? 'Administrator' : 'Quản trị viên') 
+                                    : (language === 'en' ? 'User' : 'Người dùng')
+                                }
                             </Text>
                         </View>
                     </View>
@@ -527,10 +566,13 @@ const AdminScreen = () => {
             </View>
             <View style={styles.userActions}>
                 <View style={styles.switchContainer}>
-                    <Text style={styles.switchLabel}>Trạng thái:</Text>
+                    <Text style={styles.switchLabel}>{language === 'en' ? 'Status:' : 'Trạng thái:'}</Text>
                     <View style={styles.switchWrapper}>
                         <Text style={[styles.switchStateText, item.is_active ? styles.activeStateText : styles.inactiveStateText]}>
-                            {item.is_active ? 'Hoạt động' : 'Không hoạt động'}
+                            {item.is_active 
+                                ? (language === 'en' ? 'Active' : 'Hoạt động') 
+                                : (language === 'en' ? 'Inactive' : 'Không hoạt động')
+                            }
                         </Text>
                         <Switch
                             trackColor={{ false: AppTheme.danger, true: AppTheme.success }}
@@ -560,7 +602,10 @@ const AdminScreen = () => {
                             style={{marginRight: 8}}
                         />
                         <Text style={styles.actionButtonText}>
-                            Đổi thành {item.role === 'admin' ? 'Người dùng' : 'Quản trị viên'}
+                            {language === 'en' 
+                                ? `Change to ${item.role === 'admin' ? 'User' : 'Administrator'}` 
+                                : `Đổi thành ${item.role === 'admin' ? 'Người dùng' : 'Quản trị viên'}`
+                            }
                         </Text>
                     </LinearGradient>
                 </TouchableOpacity>
@@ -579,7 +624,7 @@ const AdminScreen = () => {
                         duration={800} 
                         style={styles.sectionTitle}
                     >
-                        Thống kê hệ thống
+                        {language === 'en' ? 'System Statistics' : 'Thống kê hệ thống'}
                     </Animatable.Text>
                     
                     <Animatable.View 
@@ -598,7 +643,7 @@ const AdminScreen = () => {
                                 <FontAwesome5 name="users" size={30} color="#fff" />
                             </View>
                             <Text style={styles.statValue}>{stats?.users || 0}</Text>
-                            <Text style={styles.statLabel}>Người dùng</Text>
+                            <Text style={styles.statLabel}>{language === 'en' ? 'Users' : 'Người dùng'}</Text>
                         </LinearGradient>
                         
                         <LinearGradient
@@ -611,7 +656,7 @@ const AdminScreen = () => {
                                 <MaterialCommunityIcons name="image-multiple" size={30} color="#fff" />
                             </View>
                             <Text style={styles.statValue}>{stats?.images || 0}</Text>
-                            <Text style={styles.statLabel}>Hình ảnh</Text>
+                            <Text style={styles.statLabel}>{language === 'en' ? 'Images' : 'Hình ảnh'}</Text>
                         </LinearGradient>
                         
                         <LinearGradient
@@ -624,7 +669,7 @@ const AdminScreen = () => {
                                 <Ionicons name="warning" size={30} color="#fff" />
                             </View>
                             <Text style={styles.statValue}>{stats?.pending_reports || 0}</Text>
-                            <Text style={styles.statLabel}>Báo cáo chờ xử lý</Text>
+                            <Text style={styles.statLabel}>{language === 'en' ? 'Pending Reports' : 'Báo cáo chờ xử lý'}</Text>
                         </LinearGradient>
                     </Animatable.View>
                     
@@ -640,7 +685,9 @@ const AdminScreen = () => {
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                         >
-                            <Text style={[styles.statLabel, { marginBottom: 15, color: '#4A00E0', fontSize: 16, fontWeight: 'bold' }]}>Phân bố hình ảnh theo người dùng</Text>
+                            <Text style={[styles.statLabel, { marginBottom: 15, color: '#4A00E0', fontSize: 16, fontWeight: 'bold' }]}>
+                                {language === 'en' ? 'Image Distribution by User Type' : 'Phân bố hình ảnh theo người dùng'}
+                            </Text>
                             
                             <Animatable.View 
                                 animation="fadeIn"
@@ -684,9 +731,11 @@ const AdminScreen = () => {
                                         <View style={styles.legendItem}>
                                             <View style={[styles.legendColor, { backgroundColor: '#4A00E0' }]} />
                                             <View style={styles.legendTextContainer}>
-                                                <Text style={styles.legendTitle}>Quản trị viên</Text>
+                                                <Text style={styles.legendTitle}>{language === 'en' ? 'Administrator' : 'Quản trị viên'}</Text>
                                                 <View style={styles.legendStatsRow}>
-                                                    <Text style={styles.legendCount}>{imageDistribution.adminCount} ảnh</Text>
+                                                    <Text style={styles.legendCount}>
+                                                        {imageDistribution.adminCount} {language === 'en' ? 'images' : 'ảnh'}
+                                                    </Text>
                                                     <Text style={styles.legendPercentage}>({imageDistribution.adminPercentage}%)</Text>
                                                 </View>
                                             </View>
@@ -694,9 +743,11 @@ const AdminScreen = () => {
                                         <View style={styles.legendItem}>
                                             <View style={[styles.legendColor, { backgroundColor: '#00C9FF' }]} />
                                             <View style={styles.legendTextContainer}>
-                                                <Text style={styles.legendTitle}>Người dùng thường</Text>
+                                                <Text style={styles.legendTitle}>{language === 'en' ? 'Regular Users' : 'Người dùng thường'}</Text>
                                                 <View style={styles.legendStatsRow}>
-                                                    <Text style={styles.legendCount}>{imageDistribution.userCount} ảnh</Text>
+                                                    <Text style={styles.legendCount}>
+                                                        {imageDistribution.userCount} {language === 'en' ? 'images' : 'ảnh'}
+                                                    </Text>
                                                     <Text style={styles.legendPercentage}>({imageDistribution.userPercentage}%)</Text>
                                                 </View>
                                             </View>
@@ -724,7 +775,7 @@ const AdminScreen = () => {
                                 end={{ x: 1, y: 0 }}
                             >
                                 <Ionicons name="people" size={24} color="#fff" />
-                                <Text style={styles.adminActionText}>Quản lý người dùng</Text>
+                                <Text style={styles.adminActionText}>{language === 'en' ? 'User Management' : 'Quản lý người dùng'}</Text>
                             </LinearGradient>
                         </TouchableOpacity>
                         
@@ -739,14 +790,17 @@ const AdminScreen = () => {
                                 end={{ x: 1, y: 0 }}
                             >
                                 <Ionicons name="images" size={24} color="#fff" />
-                                <Text style={styles.adminActionText}>Quản lý hình ảnh</Text>
+                                <Text style={styles.adminActionText}>{language === 'en' ? 'Image Management' : 'Quản lý hình ảnh'}</Text>
                             </LinearGradient>
                         </TouchableOpacity>
                         
                         <TouchableOpacity
                             style={styles.adminActionButtonContainer}
                             onPress={() => {
-                                Alert.alert('Sắp ra mắt', 'Tính năng này đang được phát triển.');
+                                Alert.alert(
+                                    language === 'en' ? 'Coming Soon' : 'Sắp ra mắt', 
+                                    language === 'en' ? 'This feature is under development.' : 'Tính năng này đang được phát triển.'
+                                );
                             }}
                         >
                             <LinearGradient
@@ -756,7 +810,7 @@ const AdminScreen = () => {
                                 end={{ x: 1, y: 0 }}
                             >
                                 <Ionicons name="alert-circle" size={24} color="#fff" />
-                                <Text style={styles.adminActionText}>Xử lý báo cáo</Text>
+                                <Text style={styles.adminActionText}>{language === 'en' ? 'Process Reports' : 'Xử lý báo cáo'}</Text>
                             </LinearGradient>
                         </TouchableOpacity>
                     </Animatable.View>
@@ -796,14 +850,14 @@ const AdminScreen = () => {
                         >
                             <Ionicons name="person" size={12} color="#fff" style={{marginRight: 4}} />
                             <Text style={styles.userBadgeText} numberOfLines={1}>
-                                {item.uploaded_by?.username || item.user_name || 'Người dùng'}
+                                {item.uploaded_by?.username || item.user_name || (language === 'en' ? 'User' : 'Người dùng')}
                             </Text>
                         </LinearGradient>
                     </View>
                 </View>
                 <View style={styles.imageCaptionContainer}>
                     <Text style={styles.imageCaption} numberOfLines={2}>
-                        {item.description || 'Không có mô tả'}
+                        {item.description || (language === 'en' ? 'No description' : 'Không có mô tả')}
                     </Text>
                     <Text style={styles.imageDate}>
                         {new Date(item.created_at).toLocaleDateString()}
@@ -842,7 +896,7 @@ const AdminScreen = () => {
                         
                         <View style={styles.modalCaptionContainer}>
                             <Text style={styles.modalCaption}>
-                                {selectedImage.description || 'Không có mô tả'}
+                                {selectedImage.description || (language === 'en' ? 'No description' : 'Không có mô tả')}
                             </Text>
                             
                             <View style={styles.modalInfoContainer}>
@@ -856,7 +910,7 @@ const AdminScreen = () => {
                                 <View style={styles.infoRow}>
                                     <Ionicons name="person-outline" size={16} color={AppTheme.textLight} />
                                     <Text style={styles.infoText}>
-                                        {selectedImage.uploaded_by?.full_name || selectedImage.user_name || 'Người dùng'}
+                                        {selectedImage.uploaded_by?.full_name || selectedImage.user_name || (language === 'en' ? 'User' : 'Người dùng')}
                                     </Text>
                                 </View>
                                 
@@ -888,7 +942,7 @@ const AdminScreen = () => {
                                     >
                                         <Ionicons name="location-outline" size={16} color={AppTheme.textLight} />
                                         <Text style={styles.infoText}>
-                                            Không rõ
+                                            {language === 'en' ? 'Unknown' : 'Không rõ'}
                                         </Text>
                                     </Animatable.View>
                                 )}
@@ -899,12 +953,12 @@ const AdminScreen = () => {
                                     style={[styles.actionButton, styles.deleteButton]}
                                     onPress={() => {
                                         Alert.alert(
-                                            'Xác nhận xóa',
-                                            'Bạn có chắc chắn muốn xóa hình ảnh này không?',
+                                            language === 'en' ? 'Confirm Deletion' : 'Xác nhận xóa',
+                                            language === 'en' ? 'Are you sure you want to delete this image?' : 'Bạn có chắc chắn muốn xóa hình ảnh này không?',
                                             [
-                                                { text: 'Hủy', style: 'cancel' },
+                                                { text: language === 'en' ? 'Cancel' : 'Hủy', style: 'cancel' },
                                                 { 
-                                                    text: 'Xóa', 
+                                                    text: language === 'en' ? 'Delete' : 'Xóa', 
                                                     style: 'destructive',
                                                     onPress: () => deleteImage(selectedImage.id)
                                                 }
@@ -913,7 +967,7 @@ const AdminScreen = () => {
                                     }}
                                 >
                                     <Ionicons name="trash-outline" size={20} color="#fff" style={{marginRight: 8}} />
-                                    <Text style={styles.actionButtonText}>Xóa hình ảnh</Text>
+                                    <Text style={styles.actionButtonText}>{language === 'en' ? 'Delete Image' : 'Xóa hình ảnh'}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -930,7 +984,7 @@ const AdminScreen = () => {
                     <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Tìm kiếm hình ảnh..."
+                        placeholder={language === 'en' ? 'Search images...' : 'Tìm kiếm hình ảnh...'}
                         placeholderTextColor="#666666"
                         value={imageSearchQuery}
                         onChangeText={handleImageSearch}
@@ -969,7 +1023,10 @@ const AdminScreen = () => {
                             <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
                                 <Ionicons name="images-outline" size={60} color={AppTheme.textLight} style={{opacity: 0.5}} />
                                 <Text style={styles.emptyText}>
-                                    {imageSearchQuery ? 'Không tìm thấy hình ảnh nào' : 'Không có hình ảnh nào'}
+                                    {imageSearchQuery 
+                                        ? (language === 'en' ? 'No images found' : 'Không tìm thấy hình ảnh nào') 
+                                        : (language === 'en' ? 'No images available' : 'Không có hình ảnh nào')
+                                    }
                                 </Text>
                             </Animatable.View>
                         }
@@ -985,11 +1042,11 @@ const AdminScreen = () => {
                                     onPress={loadMoreImages}
                                     activeOpacity={0.7}
                                 >
-                                    <Text style={styles.loadMoreButtonText}>Tải thêm ảnh</Text>
+                                    <Text style={styles.loadMoreButtonText}>{language === 'en' ? 'Load more images' : 'Tải thêm ảnh'}</Text>
                                     <Feather name="chevron-down" size={16} color={AppTheme.primary} />
                                 </TouchableOpacity>
                             ) : filteredImages.length > 0 ? (
-                                <Text style={styles.endOfListText}>Đã hiển thị tất cả ảnh</Text>
+                                <Text style={styles.endOfListText}>{language === 'en' ? 'All images displayed' : 'Đã hiển thị tất cả ảnh'}</Text>
                             ) : null
                         }
                     />
@@ -1006,7 +1063,7 @@ const AdminScreen = () => {
                     <Ionicons name="search" size={20} color={AppTheme.textLight} style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Tìm kiếm người dùng..."
+                        placeholder={language === 'en' ? 'Search users...' : 'Tìm kiếm người dùng...'}
                         placeholderTextColor="#666666"
                         value={userSearchQuery}
                         onChangeText={handleUserSearch}
@@ -1043,7 +1100,10 @@ const AdminScreen = () => {
                             <Animatable.View animation="fadeIn" style={styles.emptyContainer}>
                                 <Ionicons name="people" size={60} color={AppTheme.textLight} style={{opacity: 0.5}} />
                                 <Text style={styles.emptyText}>
-                                    {userSearchQuery ? 'Không tìm thấy người dùng nào' : 'Không có người dùng'}
+                                    {userSearchQuery 
+                                        ? (language === 'en' ? 'No users found' : 'Không tìm thấy người dùng nào') 
+                                        : (language === 'en' ? 'No users available' : 'Không có người dùng')
+                                    }
                                 </Text>
                             </Animatable.View>
                         }
@@ -1059,11 +1119,11 @@ const AdminScreen = () => {
                                     onPress={loadMoreUsers}
                                     activeOpacity={0.7}
                                 >
-                                    <Text style={styles.loadMoreButtonText}>Tải thêm người dùng</Text>
+                                    <Text style={styles.loadMoreButtonText}>{language === 'en' ? 'Load more users' : 'Tải thêm người dùng'}</Text>
                                     <Feather name="chevron-down" size={16} color={AppTheme.primary} />
                                 </TouchableOpacity>
                             ) : filteredUsers.length > 0 ? (
-                                <Text style={styles.endOfListText}>Đã hiển thị tất cả người dùng</Text>
+                                <Text style={styles.endOfListText}>{language === 'en' ? 'All users displayed' : 'Đã hiển thị tất cả người dùng'}</Text>
                             ) : null
                         }
                     />
@@ -1099,7 +1159,7 @@ const AdminScreen = () => {
                             activeTab === 'dashboard' && styles.activeTabText,
                         ]}
                     >
-                        Tổng quan
+                        {language === 'en' ? 'Overview' : 'Tổng quan'}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1118,7 +1178,7 @@ const AdminScreen = () => {
                             activeTab === 'users' && styles.activeTabText,
                         ]}
                     >
-                        Người dùng
+                        {language === 'en' ? 'Users' : 'Người dùng'}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1137,7 +1197,7 @@ const AdminScreen = () => {
                             activeTab === 'images' && styles.activeTabText,
                         ]}
                     >
-                        Hình ảnh
+                        {language === 'en' ? 'Images' : 'Hình ảnh'}
                     </Text>
                 </TouchableOpacity>
             </Animatable.View>

@@ -7,3 +7,19 @@ Dịch sang tiếng Việt: 1.06s
  Caption tiếng Việt (default): Một cái nhìn của một thành phố với các tòa nhà và một chuyến tàu
 [2025-05-25 16:34:15] Tổng thời gian tạo mô tả: 9.90s
 
+[2025-05-25 22:59:59] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.62s)
+Xử lý ảnh: 0.15s
+Tạo mô tả: 11.13s
+ Caption tiếng Anh (default): a group of people standing in front of a sign
+[2025-05-25 23:00:10] Tổng thời gian tạo mô tả: 11.91s
+
+[2025-05-25 23:05:22] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.19s
+Tạo mô tả: 10.78s
+ Caption tiếng Anh (default): a little girl sitting in the back of a car
+Dịch sang tiếng Việt: 0.91s
+ Caption tiếng Việt (default): Một cô bé ngồi sau xe
+[2025-05-25 23:05:34] Tổng thời gian tạo mô tả: 11.89s
+
