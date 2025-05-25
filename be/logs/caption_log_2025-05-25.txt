@@ -1,0 +1,9 @@
+[2025-05-25 16:34:05] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.63s)
+Xử lý ảnh: 0.31s
+Tạo mô tả: 7.89s
+ Caption tiếng Anh (default): a view of a city with buildings and a train
+Dịch sang tiếng Việt: 1.06s
+ Caption tiếng Việt (default): Một cái nhìn của một thành phố với các tòa nhà và một chuyến tàu
+[2025-05-25 16:34:15] Tổng thời gian tạo mô tả: 9.90s
+

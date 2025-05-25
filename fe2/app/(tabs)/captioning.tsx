@@ -306,10 +306,6 @@ const CaptioningScreen = () => {
                         contentContainerStyle={styles.scrollContainer} 
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled">
-                    <Animatable.View animation="fadeIn" duration={800}>
-                        <Text style={styles.title}>Mô tả ảnh bằng AI</Text>
-                        <Text style={styles.subtitle}>Chuyển đổi hình ảnh thành văn bản mô tả</Text>
-                    </Animatable.View>
 
                     {!image ? (
                         <Animatable.View 
@@ -728,7 +724,7 @@ const styles = StyleSheet.create({
     scrollContainer: {
         flexGrow: 1,
         padding: 20,
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 + 20 : 20,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 + 60 : 60,
     },
     title: {
         fontSize: 28,
