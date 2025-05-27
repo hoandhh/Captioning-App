@@ -68,8 +68,9 @@ def upload_with_caption():
         # 2. Tạo caption từ dữ liệu nhị phân với mô hình đã chọn và ngôn ngữ được chọn
         caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=False, model_type=model_type, language=language)
         
-        # Luôn log tên ảnh vào file caption log
-        ImageCaptionService.log_to_file(f"Tên ảnh: {img_name}")
+        # Bỏ log hash ảnh vào file caption log
+        # img_hash = image.image_hash
+        # ImageCaptionService.log_to_file(f"Hash ảnh: {img_hash}")
         # --- BLEU LOGIC ---
         try:
             test_path = os.path.join(os.path.dirname(__file__), '../test.xlsx')
@@ -79,8 +80,8 @@ def upload_with_caption():
                 gt_dict = {}
                 for row in ws.iter_rows(min_row=2, values_only=True):
                     gt_dict[str(row[0]).strip()] = str(row[1]).strip()
-                if img_name in gt_dict:
-                    ref = gt_dict[img_name]
+                if image.image_hash in gt_dict:
+                    ref = gt_dict[image.image_hash]
                     ref_tokens = nltk.word_tokenize(ref)
                     hyp_tokens = nltk.word_tokenize(caption)
                     bleu1 = sentence_bleu([ref_tokens], hyp_tokens, weights=(1, 0, 0, 0), smoothing_function=SmoothingFunction().method1)

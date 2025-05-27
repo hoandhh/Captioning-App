@@ -244,10 +244,57 @@ Dịch sang tiếng Việt: 0.81s
  Caption tiếng Việt (travel): Nhìn toàn cảnh cung điện tổng thống với cây ở cả hai bên
 [2025-05-27 15:41:53] Tổng thời gian tạo mô tả: 8.19s
 
+[2025-05-27 16:40:32] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.36s)
+Xử lý ảnh: 0.13s
+Tạo mô tả: 5.92s
+ Caption tiếng Anh (default): a large yellow building with a fountain in front of it
+Dịch sang tiếng Việt: 0.30s
+ Caption tiếng Việt (default): một tòa nhà màu vàng lớn với một đài phun nước phía trước nó
+[2025-05-27 16:40:38] Tổng thời gian tạo mô tả: 6.71s
 
-Tạo mô tả: 7.70s
-Caption tiếng Anh: a large yellow building with a fountain in front of it
-Caption tiếng Việt: một tòa nhà màu vàng lớn với một đài phun nước phía trước nó
+[2025-05-27 16:40:39] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 7.68s
+ Caption tiếng Anh (default): the entrance to the forbidden garden
+Dịch sang tiếng Việt: 0.67s
+ Caption tiếng Việt (default): lối vào khu vườn bị cấm
+[2025-05-27 16:40:48] Tổng thời gian tạo mô tả: 8.36s
 
-Tên ảnh: 96F7043E-9B95-49E3-8A99-4FDCA7B7B4A3.jpg
+[2025-05-27 16:41:18] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.17s
+Tạo mô tả: 5.48s
+ Caption tiếng Anh (default): two men standing in front of a laptop computer
+Dịch sang tiếng Việt: 0.99s
+ Caption tiếng Việt (default): Hai người đàn ông đứng trước máy tính xách tay
+[2025-05-27 16:41:25] Tổng thời gian tạo mô tả: 6.64s
+
+[2025-05-27 16:43:42] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.53s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 12.55s
+ Caption tiếng Anh (travel): the hanoi museum ' s striking inverted pyramid structure is captured from a low angle
+Dịch sang tiếng Việt: 2.18s
+ Caption tiếng Việt (travel): Cấu trúc kim tự tháp đảo ngược nổi bật của Bảo tàng Hà Nội được chụp từ một góc thấp
+[2025-05-27 16:43:57] Tổng thời gian tạo mô tả: 15.27s
+
+[2025-05-27 16:43:58] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.09s
+Tạo mô tả: 10.73s
+ Caption tiếng Anh (travel): the national museum of vietnamese history appears majestic in its luminous golden architecture
+Dịch sang tiếng Việt: 2.15s
+ Caption tiếng Việt (travel): Bảo tàng Lịch sử Quốc gia Việt Nam xuất hiện hùng vĩ trong kiến ​​trúc vàng sáng của nó
+[2025-05-27 16:44:11] Tổng thời gian tạo mô tả: 12.97s
+
+[2025-05-27 16:44:12] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.02s
+Tạo mô tả: 12.86s
+ Caption tiếng Anh (travel): vietnam national fine arts museum features a well - maintained colonial - style building with a traditional vietnamese roof
+Dịch sang tiếng Việt: 0.84s
+ Caption tiếng Việt (travel): Bảo tàng Mỹ thuật quốc gia Việt Nam có một tòa nhà phong cách thuộc địa được duy trì tốt với mái nhà Việt Nam truyền thống
+[2025-05-27 16:44:26] Tổng thời gian tạo mô tả: 13.72s
 
