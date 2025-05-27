@@ -16,3 +16,238 @@ Dịch sang tiếng Việt: 1.30s
  Caption tiếng Việt (travel): Bảo tàng Lịch sử Quốc gia Việt Nam xuất hiện hùng vĩ trong kiến ​​trúc vàng sáng của nó
 [2025-05-27 14:26:52] Tổng thời gian tạo mô tả: 12.15s
 
+[2025-05-27 14:40:46] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.46s)
+Xử lý ảnh: 0.03s
+Tạo mô tả: 5.81s
+ Caption tiếng Anh (default): a large body of water surrounded by trees
+Dịch sang tiếng Việt: 1.59s
+ Caption tiếng Việt (default): Một thân xe lớn được bao quanh bởi cây
+[2025-05-27 14:40:54] Tổng thời gian tạo mô tả: 7.88s
+
+[2025-05-27 14:40:54] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 6.96s
+ Caption tiếng Anh (default): a large building with a green lawn in front of it
+Dịch sang tiếng Việt: 1.78s
+ Caption tiếng Việt (default): một tòa nhà lớn với một bãi cỏ xanh phía trước nó
+[2025-05-27 14:41:03] Tổng thời gian tạo mô tả: 8.76s
+
+[2025-05-27 14:44:03] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 5.01s
+ Caption tiếng Anh (default): a bridge over a body of water
+Dịch sang tiếng Việt: 1.96s
+ Caption tiếng Việt (default): một cây cầu trên một vùng nước
+[2025-05-27 14:44:10] Tổng thời gian tạo mô tả: 6.97s
+
+[2025-05-27 14:44:36] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 5.80s
+ Caption tiếng Anh (default): a red bridge over a body of water
+Dịch sang tiếng Việt: 0.45s
+ Caption tiếng Việt (default): một cây cầu màu đỏ trên một vùng nước
+[2025-05-27 14:44:42] Tổng thời gian tạo mô tả: 6.26s
+
+[2025-05-27 14:44:43] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.09s
+Tạo mô tả: 4.75s
+ Caption tiếng Anh (default): a large yellow building
+Dịch sang tiếng Việt: 0.60s
+ Caption tiếng Việt (default): Một tòa nhà màu vàng lớn
+[2025-05-27 14:44:48] Tổng thời gian tạo mô tả: 5.45s
+
+[2025-05-27 14:44:49] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 6.63s
+ Caption tiếng Anh (default): a large building with a lot of trees in front of it
+Dịch sang tiếng Việt: 0.98s
+ Caption tiếng Việt (default): một tòa nhà lớn với rất nhiều cây trước mặt nó
+[2025-05-27 14:44:57] Tổng thời gian tạo mô tả: 7.62s
+
+[2025-05-27 15:00:07] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 5.44s
+ Caption tiếng Anh (default): a large body of water surrounded by trees
+Dịch sang tiếng Việt: 1.03s
+ Caption tiếng Việt (default): Một thân xe lớn được bao quanh bởi cây
+[2025-05-27 15:00:13] Tổng thời gian tạo mô tả: 6.49s
+
+[2025-05-27 15:00:25] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 5.77s
+ Caption tiếng Anh (default): a large body of water surrounded by trees
+Dịch sang tiếng Việt: 1.26s
+ Caption tiếng Việt (default): Một thân xe lớn được bao quanh bởi cây
+[2025-05-27 15:00:32] Tổng thời gian tạo mô tả: 7.05s
+
+[2025-05-27 15:00:33] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 6.56s
+ Caption tiếng Anh (default): people walking down the street in front of a yellow building
+Dịch sang tiếng Việt: 0.43s
+ Caption tiếng Việt (default): Mọi người đi bộ xuống đường trước một tòa nhà màu vàng
+[2025-05-27 15:00:40] Tổng thời gian tạo mô tả: 6.99s
+
+[2025-05-27 15:04:51] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 4.84s
+ Caption tiếng Anh (default): a small pond in the middle of a park
+Dịch sang tiếng Việt: 0.97s
+ Caption tiếng Việt (default): một cái ao nhỏ ở giữa công viên
+[2025-05-27 15:04:56] Tổng thời gian tạo mô tả: 5.81s
+
+[2025-05-27 15:04:57] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 6.00s
+ Caption tiếng Anh (default): a lake with red flowers in the middle of it
+Dịch sang tiếng Việt: 0.69s
+ Caption tiếng Việt (default): một hồ nước với những bông hoa màu đỏ ở giữa nó
+[2025-05-27 15:05:03] Tổng thời gian tạo mô tả: 6.69s
+
+[2025-05-27 15:07:52] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 5.75s
+ Caption tiếng Anh (default): a man sitting on a chair looking out at the ocean
+Dịch sang tiếng Việt: 2.25s
+ Caption tiếng Việt (default): Một người đàn ông ngồi trên ghế nhìn ra đại dương
+[2025-05-27 15:08:00] Tổng thời gian tạo mô tả: 8.00s
+
+[2025-05-27 15:08:12] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 5.66s
+ Caption tiếng Anh (default): a group of people walking in front of a gate
+Dịch sang tiếng Việt: 1.76s
+ Caption tiếng Việt (default): một nhóm người đi trước cổng
+[2025-05-27 15:08:19] Tổng thời gian tạo mô tả: 7.42s
+
+[2025-05-27 15:08:20] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.02s
+Tạo mô tả: 5.54s
+ Caption tiếng Anh (default): an old building lit up at night
+Dịch sang tiếng Việt: 1.64s
+ Caption tiếng Việt (default): Một tòa nhà cũ sáng lên vào ban đêm
+[2025-05-27 15:08:27] Tổng thời gian tạo mô tả: 7.21s
+
+[2025-05-27 15:10:20] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 5.53s
+ Caption tiếng Anh (default): a man sitting on a chair looking out at the ocean
+Dịch sang tiếng Việt: 1.05s
+ Caption tiếng Việt (default): Một người đàn ông ngồi trên ghế nhìn ra đại dương
+[2025-05-27 15:10:27] Tổng thời gian tạo mô tả: 6.59s
+
+[2025-05-27 15:12:05] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 5.84s
+ Caption tiếng Anh (default): a man sitting on a chair looking out at the ocean
+Dịch sang tiếng Việt: 0.89s
+ Caption tiếng Việt (default): Một người đàn ông ngồi trên ghế nhìn ra đại dương
+[2025-05-27 15:12:11] Tổng thời gian tạo mô tả: 6.73s
+
+[2025-05-27 15:12:28] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.02s
+Tạo mô tả: 5.41s
+ Caption tiếng Anh (default): an old building lit up at night
+Dịch sang tiếng Việt: 1.01s
+ Caption tiếng Việt (default): Một tòa nhà cũ sáng lên vào ban đêm
+[2025-05-27 15:12:34] Tổng thời gian tạo mô tả: 6.44s
+
+[2025-05-27 15:12:34] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 6.00s
+ Caption tiếng Anh (default): a lake with red flowers in the middle of it
+Dịch sang tiếng Việt: 1.61s
+ Caption tiếng Việt (default): một hồ nước với những bông hoa màu đỏ ở giữa nó
+[2025-05-27 15:12:42] Tổng thời gian tạo mô tả: 7.61s
+
+[2025-05-27 15:16:48] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 7.24s
+ Caption tiếng Anh (default): a large building with a green lawn in front of it
+Dịch sang tiếng Việt: 1.00s
+ Caption tiếng Việt (default): một tòa nhà lớn với một bãi cỏ xanh phía trước nó
+[2025-05-27 15:16:56] Tổng thời gian tạo mô tả: 8.25s
+
+[2025-05-27 15:17:30] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.48s)
+Xử lý ảnh: 0.08s
+Tạo mô tả: 11.59s
+ Caption tiếng Anh (travel): the national museum of vietnamese history appears majestic in its luminous golden architecture
+Dịch sang tiếng Việt: 0.73s
+ Caption tiếng Việt (travel): Bảo tàng Lịch sử Quốc gia Việt Nam xuất hiện hùng vĩ trong kiến ​​trúc vàng sáng của nó
+[2025-05-27 15:17:43] Tổng thời gian tạo mô tả: 12.88s
+
+[2025-05-27 15:17:44] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.01s
+Tạo mô tả: 8.95s
+ Caption tiếng Anh (travel): the hanoi museum ' s expansive grounds are beautifully landscaped
+Dịch sang tiếng Việt: 1.20s
+ Caption tiếng Việt (travel): Khu vực mở rộng của Bảo tàng Hà Nội được cảnh quan đẹp mắt
+[2025-05-27 15:17:54] Tổng thời gian tạo mô tả: 10.16s
+
+[2025-05-27 15:22:20] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 10.05s
+ Caption tiếng Anh (travel): two people are silhouetted against the sunset sky at west lake
+[2025-05-27 15:22:30] Tổng thời gian tạo mô tả: 10.05s
+
+[2025-05-27 15:23:08] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 6.11s
+ Caption tiếng Anh (default): a man sitting on a chair looking out at the ocean
+[2025-05-27 15:23:14] Tổng thời gian tạo mô tả: 6.12s
+
+[2025-05-27 15:35:08] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: 0.46s)
+Xử lý ảnh: 0.03s
+Tạo mô tả: 7.44s
+ Caption tiếng Anh (default): an old building lit up at night
+[2025-05-27 15:35:16] Tổng thời gian tạo mô tả: 7.93s
+
+[2025-05-27 15:37:22] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.49s)
+Xử lý ảnh: 0.00s
+Tạo mô tả: 10.65s
+ Caption tiếng Anh (travel): the national museum of vietnamese history stands elegantly behind a lush courtyard adorned with carefully landscaped greenery
+Dịch sang tiếng Việt: 1.55s
+ Caption tiếng Việt (travel): Bảo tàng Lịch sử Quốc gia Việt Nam đứng một cách thanh lịch phía sau một sân trong tươi tốt được trang trí với cây xanh cảnh quan cẩn thận
+[2025-05-27 15:37:34] Tổng thời gian tạo mô tả: 12.69s
+
+[2025-05-27 15:41:45] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.14s
+Tạo mô tả: 7.24s
+ Caption tiếng Anh (travel): panoramic view of the presidential palace with trees on both sides
+Dịch sang tiếng Việt: 0.81s
+ Caption tiếng Việt (travel): Nhìn toàn cảnh cung điện tổng thống với cây ở cả hai bên
+[2025-05-27 15:41:53] Tổng thời gian tạo mô tả: 8.19s
+
+
+Tạo mô tả: 7.70s
+Caption tiếng Anh: a large yellow building with a fountain in front of it
+Caption tiếng Việt: một tòa nhà màu vàng lớn với một đài phun nước phía trước nó
+
+Tên ảnh: 96F7043E-9B95-49E3-8A99-4FDCA7B7B4A3.jpg
+

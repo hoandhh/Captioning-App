@@ -5,6 +5,11 @@ from services.image_caption_service import ImageCaptionService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import json
 import threading
+import os
+import openpyxl
+import nltk
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+nltk.download('punkt', quiet=True)
 
 @jwt_required()
 def upload_with_caption():
@@ -35,6 +40,13 @@ def upload_with_caption():
         if not location:
             location = 'Không rõ'
         
+        # Lấy tên file gốc nếu client gửi lên, nếu không thì lấy tên file upload
+        original_filename = request.form.get('original_filename')
+        if original_filename:
+            img_name = os.path.basename(original_filename)
+        else:
+            img_name = os.path.basename(image_file.filename)
+        
         # 1. Upload ảnh vào MongoDB (không có mô tả ban đầu)
         image = ImageService.upload_image(
             file=image_file,
@@ -54,8 +66,31 @@ def upload_with_caption():
             language = 'en'
             
         # 2. Tạo caption từ dữ liệu nhị phân với mô hình đã chọn và ngôn ngữ được chọn
-        # Không phát âm ngay, chỉ tạo mô tả
         caption = ImageCaptionService.generate_caption_from_binary(image.image_data, speak=False, model_type=model_type, language=language)
+        
+        # Luôn log tên ảnh vào file caption log
+        ImageCaptionService.log_to_file(f"Tên ảnh: {img_name}")
+        # --- BLEU LOGIC ---
+        try:
+            test_path = os.path.join(os.path.dirname(__file__), '../test.xlsx')
+            if os.path.exists(test_path):
+                wb = openpyxl.load_workbook(test_path)
+                ws = wb.active
+                gt_dict = {}
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    gt_dict[str(row[0]).strip()] = str(row[1]).strip()
+                if img_name in gt_dict:
+                    ref = gt_dict[img_name]
+                    ref_tokens = nltk.word_tokenize(ref)
+                    hyp_tokens = nltk.word_tokenize(caption)
+                    bleu1 = sentence_bleu([ref_tokens], hyp_tokens, weights=(1, 0, 0, 0), smoothing_function=SmoothingFunction().method1)
+                    bleu2 = sentence_bleu([ref_tokens], hyp_tokens, weights=(0.5, 0.5, 0, 0), smoothing_function=SmoothingFunction().method1)
+                    log_str = f"BLEU-1: {bleu1:.4f} | BLEU-2: {bleu2:.4f}\nRef: {ref}\nHyp: {caption}"
+                    print(log_str)
+                    ImageCaptionService.log_to_file(log_str)
+        except Exception as e:
+            print(f"[BLEU] Error: {e}")
+        # --- END BLEU LOGIC ---
         
         # Tạo thread riêng để phát âm mô tả ở background
         def speak_in_background():

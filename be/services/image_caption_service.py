@@ -212,46 +212,23 @@ class ImageCaptionService:
     
     @classmethod
     def generate_caption_from_binary(cls, image_data, max_length=30, num_beams=5, speak=False, model_type="default", language="en"):
-        """
-        Tạo caption cho ảnh từ dữ liệu nhị phân.
-        Nếu speak=True, sẽ phát âm caption.
-
-        Tham số:
-            model_type: Loại mô hình để sử dụng ("default" hoặc "travel")
-            language: Ngôn ngữ mô tả ("en" hoặc "vi")
-        """
         start_time = time.time()
-        start_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_messages = []
-        log_messages.append(f"[{start_datetime}] Bắt đầu tạo mô tả ảnh...")
-        print(log_messages[-1])
-        
+        caption_en = None
+        caption_vi = None
         try:
-            # Chọn mô hình phù hợp
-            model_load_start = time.time()
             if model_type == "travel":
                 cls._load_travel_model_if_needed()
                 model = cls._travel_model
                 processor = cls._travel_processor
-                log_messages.append(f"Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: {time.time() - model_load_start:.2f}s)")
             else:
                 cls._load_default_model_if_needed()
                 model = cls._default_model
                 processor = cls._default_processor
-                log_messages.append(f"Sử dụng mô hình mặc định để tạo mô tả (tải mô hình: {time.time() - model_load_start:.2f}s)")
-            print(log_messages[-1])
-
-            # Chuyển dữ liệu nhị phân thành đối tượng PIL Image
-            image_process_start = time.time()
             image = Image.open(io.BytesIO(image_data)).convert("RGB")
             inputs = processor(image, return_tensors="pt")
             for k, v in inputs.items():
                 inputs[k] = v.to(cls._device)
-            log_messages.append(f"Xử lý ảnh: {time.time() - image_process_start:.2f}s")
-            print(log_messages[-1])
-
-            # Tạo mô tả
-            caption_start = time.time()
             with torch.no_grad():
                 output_ids = model.generate(
                     **inputs,
@@ -259,50 +236,21 @@ class ImageCaptionService:
                     num_beams=num_beams,
                     min_length=5
                 )
-
             caption_en = processor.decode(output_ids[0], skip_special_tokens=True)
-            log_messages.append(f"Tạo mô tả: {time.time() - caption_start:.2f}s")
-            log_messages.append(f" Caption tiếng Anh ({model_type}): {caption_en}")
-            print(log_messages[-2])
-            print(log_messages[-1])
-            
-            # Nếu người dùng chọn tiếng Việt, dịch caption sang tiếng Việt
+            log_messages.append(f"Caption tiếng Anh: {caption_en}")
             if language == "vi":
-                translation_start = time.time()
                 caption_vi = cls.translate_text(caption_en, src_lang="en", dest_lang="vi")
-                log_messages.append(f"Dịch sang tiếng Việt: {time.time() - translation_start:.2f}s")
-                log_messages.append(f" Caption tiếng Việt ({model_type}): {caption_vi}")
-                print(log_messages[-2])
-                print(log_messages[-1])
+                log_messages.append(f"Caption tiếng Việt: {caption_vi}")
                 caption = caption_vi
             else:
                 caption = caption_en
-
-            if speak:
-                speech_start = time.time()
-                cls.speak_caption(caption, lang=language)
-                log_messages.append(f"Phát âm: {time.time() - speech_start:.2f}s")
-                print(log_messages[-1])
-            
             total_time = time.time() - start_time
-            log_messages.append(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Tổng thời gian tạo mô tả: {total_time:.2f}s")
-            print(log_messages[-1])
-            
-            # Lưu tất cả log vào file
+            log_messages.insert(0, f"Tạo mô tả: {total_time:.2f}s")
             cls.log_to_file("\n".join(log_messages))
-
             return caption
-
         except Exception as e:
-            end_time = time.time()
             error_message = f"Lỗi khi tạo caption: {e}"
-            time_message = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Tổng thời gian (có lỗi): {end_time - start_time:.2f}s"
             log_messages.append(error_message)
-            log_messages.append(time_message)
-            print(error_message)
-            print(time_message)
-            
-            # Lưu log lỗi vào file
             cls.log_to_file("\n".join(log_messages))
             raise
 

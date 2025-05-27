@@ -4,7 +4,8 @@ import datetime
 
 class Image(db.Document):
     description = db.StringField()
-    file_name = db.StringField(required=True)  # Giữ tên file gốc
+    file_name = db.StringField(required=True)  # Tên file hệ thống đặt
+    original_file_name = db.StringField()  # Tên file gốc khi upload
     content_type = db.StringField(required=True)  # Loại MIME của file
     image_data = db.BinaryField(required=True)  # Dữ liệu nhị phân của ảnh
     uploaded_by = db.ReferenceField('User')

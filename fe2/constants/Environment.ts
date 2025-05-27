@@ -2,7 +2,7 @@
 // Centralized environment configuration for the application
 
 // Base host configuration
-export const API_HOST = '192.168.88.183';
+export const API_HOST = '192.168.31.143';
 export const API_PORT = '5000';
 export const API_PROTOCOL = 'http';
 

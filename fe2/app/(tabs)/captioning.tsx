@@ -47,6 +47,8 @@ const AppTheme = {
 
 const { width, height } = Dimensions.get('window');
 
+const screenWidth = Dimensions.get('window').width;
+
 const CaptioningScreen = () => {
     // Thay đổi state để hỗ trợ nhiều ảnh
     const [images, setImages] = useState<Array<{
@@ -191,61 +193,53 @@ const CaptioningScreen = () => {
     const generateCaptions = async () => {
         if (images.length === 0) return;
 
-        try {
-            setLoading(true);
-            const updatedImages = [...images];
-            
-            for (let i = 0; i < updatedImages.length; i++) {
-                if (!updatedImages[i].caption) {
-                    updatedImages[i].loading = true;
-                    setImages(updatedImages);
-
-                    try {
-                        const formData = new FormData();
-                        const filename = updatedImages[i].uri.split('/').pop() || 'image.jpg';
-                        const match = /\.(\w+)$/.exec(filename);
-                        const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-                        // @ts-ignore - FormData type definition issue
-                        formData.append('image', {
-                            uri: Platform.OS === 'android' ? updatedImages[i].uri : updatedImages[i].uri.replace('file://', ''),
-                            name: filename,
-                            type,
-                        });
-
-                        if (updatedImages[i].location) {
-                            // @ts-ignore - FormData type definition issue
-                            formData.append('location', updatedImages[i].location);
-                        }
-                        
-                        formData.append('model_type', selectedModel);
-                        formData.append('language', language);
-
-                        const response = await imageService.uploadImage(formData);
-                        
-                        updatedImages[i] = {
-                            ...updatedImages[i],
+        for (let i = 0; i < images.length; i++) {
+            if (!images[i].caption) {
+                setImages(prevImages => {
+                    const updated = [...prevImages];
+                    updated[i] = { ...updated[i], loading: true };
+                    return updated;
+                });
+                try {
+                    const formData = new FormData();
+                    const filename = images[i].uri.split('/').pop() || 'image.jpg';
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : 'image/jpeg';
+                    // @ts-ignore
+                    formData.append('image', {
+                        uri: Platform.OS === 'android' ? images[i].uri : images[i].uri.replace('file://', ''),
+                        name: filename,
+                        type,
+                    });
+                    formData.append('original_filename', filename);
+                    if (images[i].location) {
+                        // @ts-ignore
+                        formData.append('location', images[i].location);
+                    }
+                    formData.append('model_type', selectedModel);
+                    formData.append('language', language);
+                    const response = await imageService.uploadImage(formData);
+                    setImages(prevImages => {
+                        const updated = [...prevImages];
+                        updated[i] = {
+                            ...updated[i],
                             caption: response.description,
                             imageId: response.id,
                             loading: false
                         };
-                        
-                        setImages([...updatedImages]);
-                    } catch (error) {
-                        console.error(`Error generating caption for image ${i}:`, error);
-                        updatedImages[i].loading = false;
-                        setImages([...updatedImages]);
-                    }
+                        return updated;
+                    });
+                } catch (error) {
+                    setImages(prevImages => {
+                        const updated = [...prevImages];
+                        updated[i] = { ...updated[i], loading: false };
+                        return updated;
+                    });
+                    console.error(`Error generating caption for image ${i}:`, error);
                 }
             }
-
-            updateImageTimestamp();
-        } catch (error) {
-            console.error('Error generating captions:', error);
-            Alert.alert(t('common.error'), t('captioning.errorGeneratingCaption'));
-        } finally {
-            setLoading(false);
         }
+        updateImageTimestamp();
     };
 
     const regenerateCaption = async (index: number) => {
@@ -384,22 +378,6 @@ const CaptioningScreen = () => {
                             delay={300}
                             style={styles.uploadContainer}
                         >
-                            <TouchableOpacity 
-                                style={styles.languageIndicator}
-                                onPress={() => {}}
-                                activeOpacity={0.7}
-                            >
-                                <LinearGradient
-                                    colors={AppTheme.primaryGradient as any}
-                                    style={styles.languageIndicatorGradient}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                >
-                                    <Text style={styles.languageIndicatorText}>
-                                        {language === 'en' ? 'EN' : 'VI'}
-                                    </Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
                             <Animatable.View 
                                 animation="pulse" 
                                 iterationCount="infinite" 
@@ -525,89 +503,78 @@ const CaptioningScreen = () => {
                             duration={800}
                             style={styles.previewContainer}
                         >
-                            <TouchableOpacity 
-                                style={styles.languageIndicator}
-                                onPress={() => {}}
-                                activeOpacity={0.7}
-                            >
-                                <LinearGradient
-                                    colors={AppTheme.primaryGradient as any}
-                                    style={styles.languageIndicatorGradient}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                >
-                                    <Text style={styles.languageIndicatorText}>
-                                        {language === 'en' ? 'EN' : 'VI'}
-                                    </Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
-
                             {/* Image Grid */}
                             <View style={styles.imageGrid}>
-                                {images.map((img, index) => (
-                                    <Animatable.View 
-                                        key={index}
-                                        animation="fadeInUp"
-                                        duration={800}
-                                        delay={index * 100}
-                                        style={styles.imageGridItem}
-                                    >
-                                        <View style={styles.imageContainer}>
-                                            <Image source={{ uri: img.uri }} style={styles.gridImage} />
-                                            <View style={styles.modelBadge}>
-                                                <LinearGradient
-                                                    colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : AppTheme.secondaryGradient as any}
-                                                    style={styles.modelBadgeGradient}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                >
-                                                    <MaterialCommunityIcons 
-                                                        name={selectedModel === 'default' ? "robot" : "airplane"} 
-                                                        size={16} 
-                                                        color="#fff" 
-                                                    />
-                                                    <Text style={styles.modelBadgeText}>
-                                                        {selectedModel === 'default' ? t('captioning.defaultModelFull') : t('captioning.travelModelFull')}
-                                                    </Text>
-                                                </LinearGradient>
-                                            </View>
-                                            <TouchableOpacity 
-                                                style={styles.removeImageButton}
-                                                onPress={() => removeImage(index)}
-                                            >
-                                                <Ionicons name="close-circle" size={24} color="#fff" />
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        {img.loading ? (
-                                            <View style={styles.loadingContainer}>
-                                                <ActivityIndicator size="small" color={AppTheme.primary} />
-                                                <Text style={styles.loadingText}>{t('captioning.generatingCaption')}</Text>
-                                            </View>
-                                        ) : img.caption ? (
-                                            <View style={styles.captionContainer}>
-                                                <Text style={styles.captionText} numberOfLines={3}>{img.caption}</Text>
-                                                <View style={styles.captionActions}>
-                                                    <TouchableOpacity 
-                                                        style={styles.captionButton} 
-                                                        onPress={() => startEditingCaption(index)}
+                                {images.map((img, index) => {
+                                    let dynamicStyle = { width: screenWidth * 0.95, marginBottom: 18, marginHorizontal: 0 };
+                                    let extraStyle = { alignSelf: 'center' };
+                                    let imageDynamicStyle = { height: 150 };
+                                    if (images.length === 1) {
+                                        imageDynamicStyle = { height: 220 };
+                                    }
+                                    return (
+                                        <Animatable.View
+                                            key={index}
+                                            animation="fadeInUp"
+                                            duration={800}
+                                            delay={index * 100}
+                                            style={[dynamicStyle, { alignSelf: 'center' }]}
+                                        >
+                                            <View style={styles.imageContainer}>
+                                                <Image source={{ uri: img.uri }} style={[styles.gridImage, imageDynamicStyle]} />
+                                                <View style={styles.modelBadge}>
+                                                    <LinearGradient
+                                                        colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : AppTheme.secondaryGradient as any}
+                                                        style={styles.modelBadgeGradient}
+                                                        start={{ x: 0, y: 0 }}
+                                                        end={{ x: 1, y: 1 }}
                                                     >
-                                                        <Feather name="edit-2" size={18} color={AppTheme.primary} />
-                                                        <Text style={styles.captionButtonText}>{t('captioning.editButton')}</Text>
-                                                    </TouchableOpacity>
-                                                    
-                                                    <TouchableOpacity 
-                                                        style={styles.captionButton} 
-                                                        onPress={() => regenerateCaption(index)}
-                                                    >
-                                                        <Feather name="refresh-cw" size={18} color={AppTheme.primary} />
-                                                        <Text style={styles.captionButtonText}>{t('captioning.regenerateButton')}</Text>
-                                                    </TouchableOpacity>
+                                                        <MaterialCommunityIcons
+                                                            name={selectedModel === 'default' ? "robot" : "airplane"}
+                                                            size={16}
+                                                            color="#fff"
+                                                        />
+                                                        <Text style={styles.modelBadgeText}>
+                                                            {selectedModel === 'default' ? t('captioning.defaultModelFull') : t('captioning.travelModelFull')}
+                                                        </Text>
+                                                    </LinearGradient>
                                                 </View>
+                                                <TouchableOpacity
+                                                    style={styles.removeImageButton}
+                                                    onPress={() => removeImage(index)}
+                                                >
+                                                    <Ionicons name="close-circle" size={24} color="#fff" />
+                                                </TouchableOpacity>
                                             </View>
-                                        ) : null}
-                                    </Animatable.View>
-                                ))}
+                                            {img.loading ? (
+                                                <View style={styles.loadingContainer}>
+                                                    <ActivityIndicator size="small" color={AppTheme.primary} />
+                                                    <Text style={styles.loadingText}>{t('captioning.generatingCaption')}</Text>
+                                                </View>
+                                            ) : img.caption ? (
+                                                <View style={styles.captionContainer}>
+                                                    <Text style={styles.captionText} numberOfLines={3}>{img.caption}</Text>
+                                                    <View style={styles.captionActions}>
+                                                        <TouchableOpacity
+                                                            style={styles.captionButton}
+                                                            onPress={() => startEditingCaption(index)}
+                                                        >
+                                                            <Feather name="edit-2" size={18} color={AppTheme.primary} />
+                                                            <Text style={styles.captionButtonText}>{t('captioning.editButton')}</Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
+                                                            style={styles.captionButton}
+                                                            onPress={() => regenerateCaption(index)}
+                                                        >
+                                                            <Feather name="refresh-cw" size={18} color={AppTheme.primary} />
+                                                            <Text style={styles.captionButtonText}>{t('captioning.regenerateButton')}</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            ) : null}
+                                        </Animatable.View>
+                                    );
+                                })}
                             </View>
 
                             {!images.some(img => img.caption) && (
@@ -686,30 +653,6 @@ const CaptioningScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    languageIndicator: {
-        position: 'absolute',
-        top: 15,
-        right: 15,
-        zIndex: 10,
-        borderRadius: 20,
-        overflow: 'hidden',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-    },
-    languageIndicatorGradient: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    languageIndicatorText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
     container: {
         flex: 1,
         backgroundColor: AppTheme.background,
@@ -1189,12 +1132,13 @@ const styles = StyleSheet.create({
     imageGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         marginTop: 10,
     },
     imageGridItem: {
-        width: '48%',
-        marginBottom: 15,
+        width: '47%',
+        marginBottom: 18,
+        marginHorizontal: '1.5%',
     },
     gridImage: {
         width: '100%',
