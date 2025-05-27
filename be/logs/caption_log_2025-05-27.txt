@@ -1,0 +1,18 @@
+[2025-05-27 14:26:28] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.53s)
+Xử lý ảnh: 0.08s
+Tạo mô tả: 8.22s
+ Caption tiếng Anh (travel): the hanoi museum ' s expansive grounds are beautifully landscaped
+Dịch sang tiếng Việt: 1.32s
+ Caption tiếng Việt (travel): Khu vực mở rộng của Bảo tàng Hà Nội được cảnh quan đẹp mắt
+[2025-05-27 14:26:39] Tổng thời gian tạo mô tả: 10.16s
+
+[2025-05-27 14:26:39] Bắt đầu tạo mô tả ảnh...
+Sử dụng mô hình du lịch để tạo mô tả (tải mô hình: 0.00s)
+Xử lý ảnh: 0.08s
+Tạo mô tả: 10.76s
+ Caption tiếng Anh (travel): the national museum of vietnamese history appears majestic in its luminous golden architecture
+Dịch sang tiếng Việt: 1.30s
+ Caption tiếng Việt (travel): Bảo tàng Lịch sử Quốc gia Việt Nam xuất hiện hùng vĩ trong kiến ​​trúc vàng sáng của nó
+[2025-05-27 14:26:52] Tổng thời gian tạo mô tả: 12.15s
+

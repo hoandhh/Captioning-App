@@ -48,13 +48,18 @@ const AppTheme = {
 const { width, height } = Dimensions.get('window');
 
 const CaptioningScreen = () => {
-    const [image, setImage] = useState<string | null>(null);
+    // Thay đổi state để hỗ trợ nhiều ảnh
+    const [images, setImages] = useState<Array<{
+        uri: string;
+        caption: string | null;
+        imageId: string | null;
+        location: string | null;
+        loading: boolean;
+    }>>([]);
     const [loading, setLoading] = useState(false);
-    const [caption, setCaption] = useState<string | null>(null);
-    const [imageId, setImageId] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
     const [editedCaption, setEditedCaption] = useState<string>('');
-    const [location, setLocation] = useState<string | null>(null);
     const [selectedModel, setSelectedModel] = useState<'default' | 'travel'>('default');
     
     // Sử dụng ngôn ngữ từ LanguageContext
@@ -62,52 +67,73 @@ const CaptioningScreen = () => {
     const router = useRouter();
     const { updateImageTimestamp } = useImageUpdate();
 
-    const pickImage = async () => {
+    const pickImages = async () => {
         try {
-            // Request permission
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert(t('captioning.galleryPermissionDenied'), t('captioning.galleryPermissionNeeded'));
                 return;
             }
 
-            // No permissions request is necessary for launching the image library
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [4, 3],
+                allowsEditing: false,
+                allowsMultipleSelection: true,
+                selectionLimit: 3,
                 quality: 1,
             });
 
             if (!result.canceled) {
-                setImage(result.assets[0].uri);
-                setCaption(null); // Reset caption when new image is selected
-                setImageId(null); // Reset imageId when new image is selected
-                setLocation(null); // Reset location when picking from gallery
+                // Kiểm tra số lượng ảnh có thể thêm
+                const remainingSlots = 3 - images.length;
+                if (remainingSlots <= 0) {
+                    Alert.alert(
+                        t('captioning.maxImagesReached'),
+                        t('captioning.maxImagesReachedMessage')
+                    );
+                    return;
+                }
+
+                // Thêm các ảnh mới vào mảng images
+                const newImages = result.assets.slice(0, remainingSlots).map(asset => ({
+                    uri: asset.uri,
+                    caption: null,
+                    imageId: null,
+                    location: null,
+                    loading: false
+                }));
+
+                setImages(prevImages => [...prevImages, ...newImages]);
             }
         } catch (error) {
-            console.error('Error picking image:', error);
+            console.error('Error picking images:', error);
             Alert.alert(t('captioning.errorPickingImage'), t('captioning.errorPickingImageMessage'));
         }
     };
 
     const takePicture = async () => {
         try {
-            // Request camera permission
             const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
             if (cameraStatus !== 'granted') {
                 Alert.alert(t('captioning.cameraPermissionDenied'), t('captioning.cameraPermissionNeeded'));
                 return;
             }
 
-            // Request location permission
+            // Kiểm tra số lượng ảnh
+            if (images.length >= 3) {
+                Alert.alert(
+                    t('captioning.maxImagesReached'),
+                    t('captioning.maxImagesReachedMessage')
+                );
+                return;
+            }
+
             const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
             if (locationStatus !== 'granted') {
                 Alert.alert(t('captioning.locationPermissionDenied'), t('captioning.locationPermissionNeeded'));
                 return;
             }
 
-            // Get current location with timeout
             let locationName: string | null = null;
             try {
                 const locationResult = await Promise.race([
@@ -121,14 +147,12 @@ const CaptioningScreen = () => {
                 ]) as Location.LocationObject;
                 
                 if (locationResult) {
-                    // Lấy tên địa điểm từ tọa độ
                     const [address] = await Location.reverseGeocodeAsync({
                         latitude: locationResult.coords.latitude,
                         longitude: locationResult.coords.longitude
                     });
                     
                     if (address) {
-                        // Tạo tên địa điểm từ thông tin địa chỉ
                         const parts = [];
                         if (address.name) parts.push(address.name);
                         if (address.street) parts.push(address.street);
@@ -141,7 +165,6 @@ const CaptioningScreen = () => {
                 }
             } catch (locationError) {
                 console.warn('Không thể lấy vị trí:', locationError);
-                // Vẫn tiếp tục chụp ảnh nếu không lấy được vị trí
             }
 
             const result = await ImagePicker.launchCameraAsync({
@@ -151,10 +174,13 @@ const CaptioningScreen = () => {
             });
 
             if (!result.canceled) {
-                setImage(result.assets[0].uri);
-                setCaption(null);
-                setImageId(null);
-                setLocation(locationName);
+                setImages(prevImages => [...prevImages, {
+                    uri: result.assets[0].uri,
+                    caption: null,
+                    imageId: null,
+                    location: locationName,
+                    loading: false
+                }]);
             }
         } catch (error) {
             console.error('Error taking picture:', error);
@@ -162,107 +188,151 @@ const CaptioningScreen = () => {
         }
     };
 
-    const generateCaption = async () => {
-        if (!image) return;
+    const generateCaptions = async () => {
+        if (images.length === 0) return;
 
         try {
             setLoading(true);
-
-            // Create form data
-            const formData = new FormData();
-            const filename = image.split('/').pop() || 'image.jpg';
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-            // @ts-ignore
-            formData.append('image', {
-                uri: Platform.OS === 'android' ? image : image.replace('file://', ''),
-                name: filename,
-                type,
-            });
-
-            // Add location if available
-            if (location) {
-                formData.append('location', location);
-            }
+            const updatedImages = [...images];
             
-            // Add selected model type
-            formData.append('model_type', selectedModel);
-            
-            // Add selected language from global context
-            formData.append('language', language);
+            for (let i = 0; i < updatedImages.length; i++) {
+                if (!updatedImages[i].caption) {
+                    updatedImages[i].loading = true;
+                    setImages(updatedImages);
 
-            // Upload image and get caption
-            try {
-                const response = await imageService.uploadImage(formData);
-                setCaption(response.description);
-                setImageId(response.id);
-                // Cập nhật timestamp khi thêm ảnh mới thành công
-                updateImageTimestamp();
-            } catch (error: any) {
-                console.error('Error details:', error.response?.data || error.message);
-                Alert.alert(
-                    t('captioning.errorGeneratingCaption'),
-                    t('captioning.errorGeneratingCaptionMessage')
-                );
+                    try {
+                        const formData = new FormData();
+                        const filename = updatedImages[i].uri.split('/').pop() || 'image.jpg';
+                        const match = /\.(\w+)$/.exec(filename);
+                        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+                        // @ts-ignore - FormData type definition issue
+                        formData.append('image', {
+                            uri: Platform.OS === 'android' ? updatedImages[i].uri : updatedImages[i].uri.replace('file://', ''),
+                            name: filename,
+                            type,
+                        });
+
+                        if (updatedImages[i].location) {
+                            // @ts-ignore - FormData type definition issue
+                            formData.append('location', updatedImages[i].location);
+                        }
+                        
+                        formData.append('model_type', selectedModel);
+                        formData.append('language', language);
+
+                        const response = await imageService.uploadImage(formData);
+                        
+                        updatedImages[i] = {
+                            ...updatedImages[i],
+                            caption: response.description,
+                            imageId: response.id,
+                            loading: false
+                        };
+                        
+                        setImages([...updatedImages]);
+                    } catch (error) {
+                        console.error(`Error generating caption for image ${i}:`, error);
+                        updatedImages[i].loading = false;
+                        setImages([...updatedImages]);
+                    }
+                }
             }
 
+            updateImageTimestamp();
         } catch (error) {
-            console.error('Error generating caption:', error);
-            Alert.alert(t('common.error'), t('captioning.errorRegeneratingCaption'));
+            console.error('Error generating captions:', error);
+            Alert.alert(t('common.error'), t('captioning.errorGeneratingCaption'));
         } finally {
             setLoading(false);
         }
     };
 
-    const regenerateCaption = async () => {
-        if (!imageId) return;
+    const regenerateCaption = async (index: number) => {
+        if (!images[index].imageId) return;
 
         try {
-            setLoading(true);
-            const response = await imageService.regenerateCaption(imageId, selectedModel, language);
-            setCaption(response.image.description);
+            const updatedImages = [...images];
+            updatedImages[index].loading = true;
+            setImages(updatedImages);
+
+            const response = await imageService.regenerateCaption(
+                images[index].imageId!,
+                selectedModel,
+                language
+            );
+
+            updatedImages[index] = {
+                ...updatedImages[index],
+                caption: response.image.description,
+                loading: false
+            };
+            
+            setImages(updatedImages);
         } catch (error) {
             console.error('Error regenerating caption:', error);
             Alert.alert(t('common.error'), t('captioning.errorRegeneratingCaption'));
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    const startEditingCaption = () => {
-        if (caption) {
-            setEditedCaption(caption);
-            setIsEditing(true);
-        }
-    };
-    
-    const cancelEditingCaption = () => {
-        setIsEditing(false);
-        setEditedCaption('');
-    };
-    
-    const saveEditedCaption = async () => {
-        if (!imageId || !editedCaption.trim()) return;
-        
-        try {
-            setLoading(true);
-            const response = await imageService.updateCaption(imageId, editedCaption.trim());
-            setCaption(response.image.description);
-            setIsEditing(false);
-        } catch (error) {
-            console.error('Error updating caption:', error);
-            Alert.alert(t('captioning.errorUpdatingCaption'), t('captioning.errorUpdatingCaptionMessage'));
-        } finally {
-            setLoading(false);
+            
+            const updatedImages = [...images];
+            updatedImages[index].loading = false;
+            setImages(updatedImages);
         }
     };
 
-    const resetImage = () => {
-        setImage(null);
-        setCaption(null);
-        setImageId(null);
-        setLocation(null);
+    const startEditingCaption = (index: number) => {
+        if (images[index].caption) {
+            setEditingImageIndex(index);
+            setEditedCaption(images[index].caption!);
+            setIsEditing(true);
+        }
+    };
+
+    const cancelEditingCaption = () => {
+        setIsEditing(false);
+        setEditingImageIndex(null);
+        setEditedCaption('');
+    };
+
+    const saveEditedCaption = async () => {
+        if (editingImageIndex === null || !images[editingImageIndex].imageId || !editedCaption.trim()) return;
+        
+        try {
+            const updatedImages = [...images];
+            updatedImages[editingImageIndex].loading = true;
+            setImages(updatedImages);
+
+            const response = await imageService.updateCaption(
+                images[editingImageIndex].imageId!,
+                editedCaption.trim()
+            );
+
+            updatedImages[editingImageIndex] = {
+                ...updatedImages[editingImageIndex],
+                caption: response.image.description,
+                loading: false
+            };
+            
+            setImages(updatedImages);
+            setIsEditing(false);
+            setEditingImageIndex(null);
+        } catch (error) {
+            console.error('Error updating caption:', error);
+            Alert.alert(t('captioning.errorUpdatingCaption'), t('captioning.errorUpdatingCaptionMessage'));
+            
+            const updatedImages = [...images];
+            updatedImages[editingImageIndex].loading = false;
+            setImages(updatedImages);
+        }
+    };
+
+    const removeImage = (index: number) => {
+        const updatedImages = [...images];
+        updatedImages.splice(index, 1);
+        setImages(updatedImages);
+    };
+
+    const resetImages = () => {
+        setImages([]);
     };
 
     const viewMyImages = () => {
@@ -307,7 +377,7 @@ const CaptioningScreen = () => {
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled">
 
-                    {!image ? (
+                    {!images.length ? (
                         <Animatable.View 
                             animation="fadeInUp" 
                             duration={800} 
@@ -343,7 +413,7 @@ const CaptioningScreen = () => {
                             <View style={styles.buttonRow}>
                                 <TouchableOpacity 
                                     style={styles.pickButton} 
-                                    onPress={pickImage}
+                                    onPress={pickImages}
                                     activeOpacity={0.7}
                                 >
                                     <LinearGradient
@@ -471,66 +541,106 @@ const CaptioningScreen = () => {
                                     </Text>
                                 </LinearGradient>
                             </TouchableOpacity>
-                            <Animatable.View 
-                                animation="zoomIn" 
-                                duration={800} 
-                                style={styles.imageContainer}
-                            >
-                                <Image source={{ uri: image }} style={styles.previewImage} />
-                                <View style={styles.modelBadge}>
-                                    <LinearGradient
-                                        colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : AppTheme.secondaryGradient as any}
-                                        style={styles.modelBadgeGradient}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 1 }}
-                                    >
-                                        <MaterialCommunityIcons 
-                                            name={selectedModel === 'default' ? "robot" : "airplane"} 
-                                            size={16} 
-                                            color="#fff" 
-                                        />
-                                        <Text style={styles.modelBadgeText}>
-                                            {selectedModel === 'default' ? t('captioning.defaultModelFull') : t('captioning.travelModelFull')}
-                                        </Text>
-                                    </LinearGradient>
-                                </View>
-                                <LinearGradient
-                                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']}
-                                    style={styles.imageOverlay}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 0, y: 1 }}
-                                >
-                                    <TouchableOpacity 
-                                        style={styles.changeImageButton}
-                                        onPress={pickImage}
-                                    >
-                                        <Ionicons name="refresh" size={20} color="#fff" />
-                                        <Text style={styles.changeImageText}>{t('captioning.changeImage')}</Text>
-                                    </TouchableOpacity>
-                                </LinearGradient>
-                            </Animatable.View>
 
-                            {loading ? (
-                                <Animatable.View 
-                                    animation="fadeIn" 
-                                    duration={500}
-                                    style={styles.loadingContainer}
-                                >
-                                    <ActivityIndicator size="large" color={AppTheme.primary} />
-                                    <Text style={styles.loadingText}>{t('captioning.generatingCaption')}</Text>
-                                </Animatable.View>
-                            ) : caption ? (
+                            {/* Image Grid */}
+                            <View style={styles.imageGrid}>
+                                {images.map((img, index) => (
+                                    <Animatable.View 
+                                        key={index}
+                                        animation="fadeInUp"
+                                        duration={800}
+                                        delay={index * 100}
+                                        style={styles.imageGridItem}
+                                    >
+                                        <View style={styles.imageContainer}>
+                                            <Image source={{ uri: img.uri }} style={styles.gridImage} />
+                                            <View style={styles.modelBadge}>
+                                                <LinearGradient
+                                                    colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : AppTheme.secondaryGradient as any}
+                                                    style={styles.modelBadgeGradient}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <MaterialCommunityIcons 
+                                                        name={selectedModel === 'default' ? "robot" : "airplane"} 
+                                                        size={16} 
+                                                        color="#fff" 
+                                                    />
+                                                    <Text style={styles.modelBadgeText}>
+                                                        {selectedModel === 'default' ? t('captioning.defaultModelFull') : t('captioning.travelModelFull')}
+                                                    </Text>
+                                                </LinearGradient>
+                                            </View>
+                                            <TouchableOpacity 
+                                                style={styles.removeImageButton}
+                                                onPress={() => removeImage(index)}
+                                            >
+                                                <Ionicons name="close-circle" size={24} color="#fff" />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        {img.loading ? (
+                                            <View style={styles.loadingContainer}>
+                                                <ActivityIndicator size="small" color={AppTheme.primary} />
+                                                <Text style={styles.loadingText}>{t('captioning.generatingCaption')}</Text>
+                                            </View>
+                                        ) : img.caption ? (
+                                            <View style={styles.captionContainer}>
+                                                <Text style={styles.captionText} numberOfLines={3}>{img.caption}</Text>
+                                                <View style={styles.captionActions}>
+                                                    <TouchableOpacity 
+                                                        style={styles.captionButton} 
+                                                        onPress={() => startEditingCaption(index)}
+                                                    >
+                                                        <Feather name="edit-2" size={18} color={AppTheme.primary} />
+                                                        <Text style={styles.captionButtonText}>{t('captioning.editButton')}</Text>
+                                                    </TouchableOpacity>
+                                                    
+                                                    <TouchableOpacity 
+                                                        style={styles.captionButton} 
+                                                        onPress={() => regenerateCaption(index)}
+                                                    >
+                                                        <Feather name="refresh-cw" size={18} color={AppTheme.primary} />
+                                                        <Text style={styles.captionButtonText}>{t('captioning.regenerateButton')}</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                        ) : null}
+                                    </Animatable.View>
+                                ))}
+                            </View>
+
+                            {!images.some(img => img.caption) && (
                                 <Animatable.View 
                                     animation="fadeInUp" 
                                     duration={800}
-                                    style={styles.captionContainer}
+                                    style={styles.generateContainer}
                                 >
-                                    <View style={styles.captionHeader}>
-                                        <MaterialCommunityIcons name="text-box" size={24} color={AppTheme.primary} />
-                                        <Text style={styles.captionTitle}>{t('captioning.generatedCaption')}</Text>
-                                    </View>
-                                    
-                                    {isEditing ? (
+                                    <TouchableOpacity 
+                                        style={styles.generateButton} 
+                                        onPress={generateCaptions}
+                                        activeOpacity={0.7}
+                                    >
+                                        <LinearGradient
+                                            colors={AppTheme.primaryGradient as any}
+                                            style={styles.generateButtonGradient}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                        >
+                                            <MaterialCommunityIcons name="text-recognition" size={24} color="#fff" />
+                                            <Text style={styles.generateButtonText}>{t('captioning.generateButton')}</Text>
+                                        </LinearGradient>
+                                    </TouchableOpacity>
+                                </Animatable.View>
+                            )}
+
+                            {isEditing && editingImageIndex !== null && (
+                                <Animatable.View 
+                                    animation="fadeInUp" 
+                                    duration={800}
+                                    style={styles.editModal}
+                                >
+                                    <BlurView intensity={90} style={styles.editModalContent}>
                                         <View style={styles.editContainer}>
                                             <TextInput
                                                 style={styles.editInput}
@@ -540,12 +650,6 @@ const CaptioningScreen = () => {
                                                 placeholder={t('captioning.enterCaptionHere')}
                                                 placeholderTextColor="#888"
                                                 autoFocus={true}
-                                                onFocus={() => {
-                                                    // Đảm bảo cuộn đến vùng chỉnh sửa khi focus vào TextInput
-                                                    setTimeout(() => {
-                                                        scrollViewRef.current?.scrollToEnd({ animated: true });
-                                                    }, 200);
-                                                }}
                                             />
                                             <View style={styles.editButtons}>
                                                 <TouchableOpacity 
@@ -562,123 +666,16 @@ const CaptioningScreen = () => {
                                                 </TouchableOpacity>
                                             </View>
                                         </View>
-                                    ) : (
-                                        <View>
-                                            <Text style={styles.captionText}>{caption}</Text>
-                                            <View style={styles.captionActions}>
-                                                <TouchableOpacity 
-                                                    style={styles.captionButton} 
-                                                    onPress={startEditingCaption}
-                                                >
-                                                    <Feather name="edit-2" size={18} color={AppTheme.primary} />
-                                                    <Text style={styles.captionButtonText}>{t('captioning.editButton')}</Text>
-                                                </TouchableOpacity>
-                                                
-                                                <TouchableOpacity 
-                                                    style={styles.captionButton} 
-                                                    onPress={regenerateCaption}
-                                                >
-                                                    <Feather name="refresh-cw" size={18} color={AppTheme.primary} />
-                                                    <Text style={styles.captionButtonText}>{t('captioning.regenerateButton')}</Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                            
-                                            <TouchableOpacity 
-                                                style={styles.newCaptionButton} 
-                                                onPress={() => {
-                                                    setCaption(null);
-                                                    setSelectedModel(selectedModel === 'default' ? 'travel' : 'default');
-                                                }}
-                                                activeOpacity={0.7}
-                                            >
-                                                <LinearGradient
-                                                    colors={AppTheme.secondaryGradient as any}
-                                                    style={styles.newCaptionButtonGradient}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                >
-                                                    <MaterialCommunityIcons name="text-box-plus" size={20} color="#fff" />
-                                                    <Text style={styles.newCaptionButtonText}>{t('captioning.newCaptionWithModel').replace('{model}', selectedModel === 'default' ? t('captioning.travelModelFull') : t('captioning.defaultModelFull'))}</Text>
-                                                </LinearGradient>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-                                </Animatable.View>
-                            ) : (
-                                <Animatable.View 
-                                    animation="fadeInUp" 
-                                    duration={800}
-                                    style={styles.generateContainer}
-                                >
-                                    <View style={styles.modelSelectionContainer}>
-                                        <Text style={styles.modelSelectionTitle}>{t('captioning.selectModel')}</Text>
-                                        <View style={styles.modelOptions}>
-                                            <TouchableOpacity 
-                                                style={[styles.modelOption, selectedModel === 'default' && styles.selectedModelOption]}
-                                                onPress={() => setSelectedModel('default')}
-                                            >
-                                                <LinearGradient
-                                                    colors={selectedModel === 'default' ? AppTheme.primaryGradient as any : ['#f5f5f5', '#e0e0e0']}
-                                                    style={styles.modelOptionGradient}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                >
-                                                    <MaterialCommunityIcons 
-                                                        name="robot" 
-                                                        size={24} 
-                                                        color={selectedModel === 'default' ? '#fff' : AppTheme.primary} 
-                                                    />
-                                                    <Text style={[styles.modelOptionText, selectedModel === 'default' && styles.selectedModelOptionText]}>{t('captioning.defaultModelFull')}</Text>
-                                                </LinearGradient>
-                                            </TouchableOpacity>
-                                            
-                                            <TouchableOpacity 
-                                                style={[styles.modelOption, selectedModel === 'travel' && styles.selectedModelOption]}
-                                                onPress={() => setSelectedModel('travel')}
-                                            >
-                                                <LinearGradient
-                                                    colors={selectedModel === 'travel' ? AppTheme.secondaryGradient as any : ['#f5f5f5', '#e0e0e0']}
-                                                    style={styles.modelOptionGradient}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                >
-                                                    <MaterialCommunityIcons 
-                                                        name="airplane" 
-                                                        size={24} 
-                                                        color={selectedModel === 'travel' ? '#fff' : AppTheme.secondary} 
-                                                    />
-                                                    <Text style={[styles.modelOptionText, selectedModel === 'travel' && styles.selectedModelOptionText]}>{t('captioning.travelModelFull')}</Text>
-                                                </LinearGradient>
-                                            </TouchableOpacity>
-                                        </View>
-                                        
-
-                                    </View>
-                                    
-                                    <TouchableOpacity 
-                                        style={styles.generateButton} 
-                                        onPress={generateCaption}
-                                        activeOpacity={0.7}
-                                    >
-                                        <LinearGradient
-                                            colors={AppTheme.primaryGradient as any}
-                                            style={styles.generateButtonGradient}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 1 }}
-                                        >
-                                            <MaterialCommunityIcons name="text-recognition" size={24} color="#fff" />
-                                            <Text style={styles.generateButtonText}>{t('captioning.generateButton')}</Text>
-                                        </LinearGradient>
-                                    </TouchableOpacity>
-                                    
-                                    <TouchableOpacity 
-                                        style={styles.resetButton} 
-                                        onPress={resetImage}
-                                    >
-                                        <Text style={styles.resetButtonText}>{t('captioning.chooseAnotherImage')}</Text>
-                                    </TouchableOpacity>
+                                    </BlurView>
                                 </Animatable.View>
                             )}
+
+                            <TouchableOpacity 
+                                style={styles.resetButton} 
+                                onPress={resetImages}
+                            >
+                                <Text style={styles.resetButtonText}>{t('captioning.chooseAnotherImage')}</Text>
+                            </TouchableOpacity>
                         </Animatable.View>
                     )}
                     </ScrollView>
@@ -1188,6 +1185,45 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    imageGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    imageGridItem: {
+        width: '48%',
+        marginBottom: 15,
+    },
+    gridImage: {
+        width: '100%',
+        height: 150,
+        borderRadius: 15,
+    },
+    removeImageButton: {
+        position: 'absolute',
+        top: 5,
+        right: 5,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 12,
+        padding: 2,
+    },
+    editModal: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    editModalContent: {
+        width: '90%',
+        borderRadius: 15,
+        overflow: 'hidden',
+        padding: 20,
     },
 });
 
