@@ -28,20 +28,14 @@ AI Image Captioning Application là một hệ thống hoàn chỉnh bao gồm:
 
 Xem video demo để hiểu rõ hơn về cách sử dụng ứng dụng:
 
-### 📹 Video Embed
-```html
-<video width="100%" controls>
-    <source src="./Demo.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
-```
-
-### 🔗 Direct Links
-[![Demo Video](https://img.shields.io/badge/📹_Xem_Demo-Video-red?style=for-the-badge)](./[Demo.mp4](https://drive.google.com/file/d/1IFpTmOt0mjY87Ig1XcArPYH9vTOKXvRC/view?usp=sharing))
+### 📹 Video Demo
+<a href="https://drive.google.com/file/d/1IFpTmOt0mjY87Ig1XcArPYH9vTOKXvRC/view?usp=sharing" target="_blank">
+  <img src="https://img.shields.io/badge/📹_Xem_Demo-Video-red?style=for-the-badge" alt="Demo Video" />
+</a>
 
 *Video demo hiển thị đầy đủ quy trình từ đăng nhập, chụp ảnh, tạo chú thích AI đến chia sẻ kết quả.*
 
-> **📁 File demo**: Kích thước ~XX MB | Thời lượng: ~X phút | Format: MP4
+> **📁 File demo**: [Xem/Download tại đây](https://drive.google.com/file/d/1IFpTmOt0mjY87Ig1XcArPYH9vTOKXvRC/view?usp=sharing) | Format: MP4
 
 ## ✨ Tính năng chính
 
