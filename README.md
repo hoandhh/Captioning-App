@@ -67,7 +67,7 @@ Xem video demo để hiểu rõ hơn về cách sử dụng ứng dụng:
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Mobile App    │    │   Backend API   │    │   AI Services   │
-│  (React Native) │◄──►│     (Flask)     │◄──►│  BLIP + GTTs    │
+│  (React Native) │◄──►│     (Flask)     │◄──►│   BLIP + GTTs   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
