@@ -22,7 +22,7 @@ AI Image Captioning Application là một hệ thống hoàn chỉnh bao gồm:
 
 - **Backend API** (Flask): Xử lý upload ảnh, tạo chú thích AI, quản lý người dùng
 - **Mobile App** (React Native + Expo): Giao diện người dùng trên di động
-- **AI Models**: Tích hợp BLIP (Bootstrapping Language-Image Pre-training) và Google Gemini
+- **AI Models**: Tích hợp BLIP (đã fine-tune lại với bộ dữ liệu tự thu thập và gán nhãn) và Google Gemini
 
 ## 🎬 Demo Video
 
@@ -40,7 +40,7 @@ Xem video demo để hiểu rõ hơn về cách sử dụng ứng dụng:
 ## ✨ Tính năng chính
 
 ### 🤖 Tạo chú thích AI
-- **Mô hình BLIP**: Tạo chú thích tự động cho hình ảnh
+- **Mô hình BLIP đã fine-tune**: Tạo chú thích tự động cho hình ảnh, sử dụng model BLIP đã được fine-tune lại với bộ dữ liệu do mình tự thu thập và gán nhãn
 - **Hai loại mô hình**: Default và Travel (chuyên biệt cho ảnh du lịch)
 - **Đa ngôn ngữ**: Hỗ trợ tiếng Anh và tiếng Việt
 - **Text-to-Speech**: Phát âm chú thích bằng giọng nói
@@ -171,7 +171,8 @@ npm start
 ### Cài đặt AI Models
 
 1. **BLIP Models**
-   - Mô hình mặc định sẽ được tải tự động từ Hugging Face
+   - Sử dụng model BLIP đã được fine-tune lại với bộ dữ liệu tự thu thập và gán nhãn
+   - Mô hình mặc định sẽ được tải tự động từ Hugging Face nếu chưa có
    - Mô hình du lịch cần được huấn luyện riêng và đặt trong `pretrain/blip_trained/`
 
 2. **Google Gemini**
